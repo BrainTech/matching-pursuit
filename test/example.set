@@ -1,0 +1,320 @@
+#
+# PLIK KONFIGURACYJNY PROGRAMU mp5 - SPECYFIKACJA
+#
+# Plik konfiguracyjny sklada sie z argumentow i ich wartosci oraz komentarzy
+# Komentarzem jest linia rozpoczynajaca sie od znaku '#'. Komentarzy moze byc dowolna ilosc.
+# Lista argumentow jest scisle okreslona. Brak lub dopisanie jakiegos argumentu
+# powoduje przerwanie dzialalani programu mp5Parameters. 
+# Obecnie program mp5Parameters rozpoznaje 14 nastepujacych argumentow: 
+#
+#	nameOfDataFile
+#	extensionOfResultFile
+#	writingMode
+#	sizeOfHeader
+#	sizeOfTail
+#	samplingFrequency
+#	formatOfData
+#	numberOfChannels
+#	chosenChannels
+#	numberOfPointsInOffset
+#	chosenOffsets
+#	typeOfDictionary 
+#	dilationFactor
+#	reinitDictionary
+#       DOT_EPS
+#	maxNumberOfIterations
+#	energyPercent
+#	MP
+#
+# Argumenty oraz ich wartosci moga byc podane w dowolnej kolejnosci.
+#
+# W skladni pliku konfiguracyjnego wyrozniono nastepujace znaki specjalne:
+#
+# 1. '#' - komentarz
+# 2. '\' - lamanie linii
+# 3. '-' - zakres wartosci
+# 4. ' ' - znak przestankowy
+#
+# Adn. 1 '#'
+# Wszytkie linie zaczynajace sie od '#' sa traktowane jak komentarze
+# i nie sa poddawane dalszej analizie.
+# Komentarzy moze byc w pliku konfiguracyjmym dowolna ilosc
+# Mozna je takze na wlasny uzytek dopisywac. Aby jednak uchronic
+# uzytkownikow przed pozniejszym krazeniem po sieci plikow konfiguracujnych
+# z roznymi wersjami komentarzy, zawsze mozna wygenerowac domyslny
+# plik konfiguracyjny wydajac polecenie mp5 -g.
+#
+# Adn. 2 '\'
+# Polecenia wydawane dla programu mp5Parameters moga byc dosyc dlugie,
+# o czym przekonamy sie dalej. Aby nie pisac nieskonczenie dlugich linii
+# dopusczono ich lamanie tak samo jak w jezyku C.
+#
+# And. 3 '-'
+# Analizie programem mp5Parameters moga byc poddane dane zawierajace wiele kanalow i skladek.
+# Kanaly lub skladki, ktore maja byc analizowane przez program nalezy wymienic w pliku konfiguracyjnym.
+# W przypadku gdy lista kanalow lub skladek bylaby dluga, aby uniknac zmudnego ich wypisywania
+# mozna podac zakres kanalow 'od-do', np. 1-23.
+# UWAGA I:
+#	Miedzy liczbami nie moze wystapic spacja !!!
+# UWAGA II.:
+#	Lamanie linii ('-') oraz uzywanie znaku zakres ('') jest dopuszczone tylko dla argumentow
+# 	chosenChannels i chosenOffsets
+# 	Wartosci wszystkich pozostalych parametrow powinny byc jednoargumentowe !!
+#
+
+
+#
+# Nazwa pliku z danymi.
+#
+
+nameOfDataFile test/transien2cNeg.dat
+
+#
+# Nazwa rozszerzenia pliku z wynikami.
+# Nazwy plikow wyjsciowych sa generowane automatycznie.
+# Do nazwy pliku z danymi dodawane jest rozszerzenie
+# postaci _ch_x.b, gdzie x - to numer kanalu, wymieniony dalej w pliku konfiguracyjnym
+# Pelna nazwa pliku wyjsciowego jest zatem nastepujaca:
+# nameOfDataFile_ch_x.b
+# W przypadku, gdy taki sposob tworzenia nazwy pliku wyjsciowego jest niewystarczajacy
+# mozna dodac do nazwy wlasne rozszerzenie. W takim przypadku pelna nazwa pliku wyjsciowego
+# jest postaci: 
+# nameOfDataFile_extensionOfResultFile_ch_x.b.
+# Jezeli wartosc argumentu jest rowna NONE, nazwa pliku wyjsciowego jest generowana
+# bez rzadnego dodatkowego rozszerzenia.
+#
+
+extensionOfResultFile NONE
+
+#
+# Mozna podac nazwe katalogu, do ktorego maja byc zrzucane wyniki
+#
+
+
+
+nameOfOutputDirectory ./
+#
+#
+# Tryb zapisu wynikow.
+# Dowzolone sa nastepujace wartosci:
+# CREATE - utworz nowy plik do zapisu wynikow. Jesli juz plik o takiej nazwie istnieje,
+#          to go zamaz.
+# APPEND - dolacz wyniki do istniejacego juz pliku/utworz nowy plik, jesli plik o danej nazwie
+#
+
+writingMode CREATE
+
+#
+# Wielkosc naglowka w pliku z danymi.
+# W przypadku, gdy plik z danymi jest plikiem tesktowym
+# sizeOfHeader oznacza liczbe linii w naglowku.
+# W przypadku gdy dane sa zapisane w pliku binarnym, rozmiar naglowka
+# powinna byc wyrazona w bajtach.
+# Wartosc argumentu: liczba calkowita dodatnia lub zero.
+#
+
+sizeOfHeader 0
+
+#
+# Czasami do danych EEG dolaczany jest jeszcze "ogon".
+# Jego rozmiar powinien byc podany w taki sam sposob jak zostalo okreslone 
+# dla rozmiaru naglowka
+# Wartosc argumentu: liczba calkowita dodatnia lub zero.
+#
+
+sizeOfTail 0
+
+#
+# Czestosc probkowania.
+# Wartosc argumentu: liczba zmiennoprzecinkowa, dodatnia.
+# Obowiazkowo w wartosci musi wystapic kropka dziesietna.
+#
+
+samplingFrequency 128.0
+
+#
+# Format danych.
+# W przypadku formatu ASCII zaklada sie, ze w pliku nie ma pustych linii
+# Wartosc argumentu: ASCII/SHORT/FLOAT
+#
+
+formatOfData FLOAT
+
+#
+# Liczba kanalow w pliku.
+# Wartosc argumentu: liczba calkowita dodatnia.
+#
+
+numberOfChannels 2
+
+#
+# Kanaly, ktore maja zostac poddane analizie.
+# Liczby calkowite dodatanie, oddzielone przecinkami lub laczone znakiem '-'.
+# Kanaly sa numerowane od 1.
+# Przyklad skladni:
+# Plik zawiera 128 kanalow. Analizie maja zostac poddane nastepujace kanaly
+# 1 2 3 4 5 6 7 8 9 25 27 29 31 33 35 37 45 65 66 67 121 122 123 124 125 126 127 128
+# Mozna je wymienic w pliku w nastepujacy sposob:
+#
+# chosenChannels 1-9 25 27 29 31 \
+#		  33 35 37 45 65-67 \
+#		  121-128
+#
+
+chosenChannels 1-2
+
+#
+# Dlugosc skladki sygnalu, mierzona w ilosci probek, ktora
+# jednorazowo ma zostac poddana analizie.
+# Wartosc argumentu: liczba calkowita dodatnia.
+#
+
+numberOfPointsInOffset 512
+
+#
+# Numery skladek, ktore chcemy analizowac.
+# Nomenklatura taka sama jak przy chosenChannels
+#
+
+chosenOffsets 1
+
+#
+# Rodzaj slownika
+# Wartosc argumentu: liczba calkowita dodatnia.
+#
+# OCTAVE_FIXED: Slownik optymalizowany. Wartosci parametery gaborow {u,f,s} sa obliczane w taki sposob, by  
+#                   zbudowany slownik jak najefektywniej pokrywal przestrzen parametrow Gabora 
+# OCTAVE_STOCH  Slownik optymalny obliczany taj jak wyzej, z ta roznica, ze parametry {u,f,s} sa losowane wokol 
+#		    obliczonych optymalnych wartosci.
+#
+
+typeOfDictionary OCTAVE_FIXED
+
+#
+#"Gestosc slownika" 
+# Wartosc argumentu: liczba zmiennoprzecinkowa dodatnia.
+#
+
+dilationFactor 2.0
+
+#
+# Obecna wersja programu MP - MP5 ma zaprogramowany Slownik Optymalny. Stwarza to mozliwosc dokonania pewnych optymalizacji
+# numerycznych m.in zapamietywania talbic z wartosciami funkcji sin/cos/exp. Niestety takie tablice zabieraja bardzo duza
+# ilosc pamieci, co czesto uniemozliwia dokonywanie obliczen. Aby zmniejszyc zapotrzebowanie na RAM, postanowiono zapaktywac
+# wartosci sin/cos w specjalny sposob. Po zapozmniu sie ze slownikiem optymalnym mozna zauwazyc, ze dla danej sakli DS
+# zostaje obliczony krok w czestosci DF. Gabory dla zadanej skali powinny miec czestosci rozlozone co DF w zakrecie (0 PI).
+# w zwiazku z tym dla skali DS czestosc gabora jest wielokrotnoscia pewnej podstawoehj czestosci, dalej nazywanej DF0.
+# Pakowanie tablic sin/cos w pamieci komputera polega na tym, ze majac stablicowana funkcje sin o okresie np. 10 probek
+# mozna poprzez wybieranie z opdowiednim skokiem tych problek szybko wygenerowac funkcje sin o okresach 9x, 8x, .... 2x
+# mniejszych !. Podobna sytucacje mamy w slowniku optymalnym, gdzie czestosci sa wielokrotnoscia pewnej czestosci bazowej
+# a zatem ich okresy sa dzielnikami pewnego okresu podstawowego. W programie MP5 zapoamietywane sa zatem dla zadanej skali DS
+# tylko sinusy o podstawowym okresie DF0. Niestety powstaja pewne problemy jezeli chcemy miec slownik stochastyczny.
+# Nie mamy jak losowac czestosci, poniewaz unimowliwia to siatka na ktorej sa zapisane gabory. Parametr periodDenstiy umozliwia
+# zageszczenie tej siatki. W przypadku slownika "FIXED" dla zadnej czestosci DS czestosci gaborow sa rozlozone w nastepujacy
+# sposob:
+# DF0 2DF0 3DF0 ... PI
+# W przypadku slownika stochastycznego podstawowy czestosc to DF0' = DF0/periodDensity i wtedy czestosci sa rozlozone gesciej:
+# DF0/periodDenstiy 2*DF0/periodDensity ... PI
+# Mozna zauwazyc, ze czestosc dokladnie wyliczone ze wzorow na Optymalny Slownik znajduja sie w pozycjach
+# k*periodDensity*DF, gdzie k = 0 ..., zas pomiedzy tymi czestosciami mamy periodDensity posrednich czestosci
+# wsrod ktorych mozemy dokonac losowania. Im wieksze jest periodDensity, tym slosnik bedzie bardziej stochastyczny,
+# ale zuzycie pamieci bedzie wieksze, a dokladnie periodDensity razy wieksze nw w przypadku slownika zafiksowanego
+#
+
+periodDensity 10
+
+#
+# Reinicjalizacja slownika.
+# Dozwolone wartosci argumentu:
+#
+# NO_REINIT_AT_ALL         - do dekompozcji sygnalow w poszczegolnych kanalach i skladkach
+#                            bedzie uzywany jeden, ten sam slownik
+# REINIT_IN_CHANNEL_DOMAIN - dane beda analizowane kanalami. Wygnerowany slownik zostnie uzyty do dekompozycji
+#			     wszystkich skladek (offsetow) wchodzacych w sklad danego kanalu.
+#			     Przed dekompozycja sygnalu w nastepnym kanale, zostanie wygnerowany nowy slownik.
+#			     Ta opcja jest dozwolona tylko w przypadku metody jednokanalowej (single matching pursuit - SMP)
+# REINIT_IN_OFFSET_DOMAIN  - dane beda analizowane skladkami. Wygnerowany slownik zostnie uzyty do dekompozycji
+#			     wszystkich kanalow wchodzacych w sklad danej skladki (offsetu).
+#			     Przed dekompozycja sygnalu w nastepnym offsecie, zostanie wygnerowany nowy slownik.
+# REINIT_AT_ALL            - Przed dekompozycja jakiegokolwiek fragmentu sygnalu (kanalu/skladki) bedzie generowany nowy
+#			     slownik.
+#
+
+reinitDictionary NO_REINIT_AT_ALL
+
+#
+# Parametr umozliwiajacy budowe slownika oscylacyjnego 
+# Wszystkie gabory, dla ktorych w ramach jednej skali nie miesci sie okres oscylacji 
+# zostana odrzucone ze slownika. 
+#
+
+scaleToPeriodFactor 0.00000001 
+
+#
+# Dokladnosc obliczania iloczynu skalarnego dwoch gaborow.
+# Obliczanie iloczynu skalarnego dwoch gaborow, mozna rozbic na dwie operacje:
+# 1. mnozenie punkt po punkcie obydwu funkcji.
+# 2. sumowanie otrzymanych punktow.
+# Po wykonaniu kroku pierwszego dostajemy gabora (iloczyn 2 gaborow daje gabora).
+# Polozenie i skale tego gabora, mozna wyliczyc analitycznie. Dzieki temu mozna oszacowac
+# przedzial, na ktorym  krok drugi - sumowanie elementow do iloczynu skalarnego,
+# jest najbardziej efektywne numerycznie. Przedzial ten jest oczywiscie krotszy niz dlugosc skladki
+# wraz wraz z warunkami brzegowymi i dobrany tak, by dokladnosc wyliczenia iloczynu skalarnego
+# byla wieksza niz DOT_EPS. Zastosowana metoda oszacowania iloczynu skalarnego nie tylko pomaga
+# w skroceniu obliczen lecz takze umozliwia znajdowanie ortogonalnych gaborow, dla ktorych obliczanie
+# iloczynu skalarnego nie ma sensu. Jak zostalo to opisane wyzej, iloczyn dwoch gaborow daje gabora.
+# We wzorze tego gabora znajduje sie pewna stala, ktora moze byc zastosowana do szacowania ortogonalnosci
+# gaborow. Gabory, dla ktorych iloczyn daje te stala mniejsza niz DOT_EPS sa traktowane jako funkcje ortogonalne.
+# UWAGI:
+# a) w pierwszym kroku obliczen nie stosuje sie zadnej z powyzszcyh optymalizacji
+# b) w MP4 DOT_EPS domyslnie ustawione jest na wartosc rowna 1E-8.
+#
+
+DOT_EPS 1E-16
+
+#
+# Maks. ilosc gaborow, ktora moze byc uzyta do rozlozenia sygnalu
+# Wartosc argumentu: liczba calkowita dodatnia.
+#
+
+maxNumberOfIterations 10
+
+#
+# Zatrzymaj, jesli dokompozycja opisala conajmniej x%  energii sygnalu
+# Wartosc argumentu: liczba zmiennoprzecinkowa, dodatnia.
+# Obowiazkowo w wartosci musi wystapic kropka dziesietna.
+#
+
+energyPercent 99.0
+
+#
+# Rodzaj algorytmu MP
+# Wartosc argumentu: liczba calkowita dodatnia.
+# Do wyboru sa nastepujace algorytmy: 
+#  SMP  - SINGLE CHANNEL MATCHING PURSUIT
+#  MMP1 - MULTICHANNEL MATCHING PURSUIT, first algorithm
+#  MMP2 - MULTICHANNEL MATCHING PURSUIT, second algorithm
+#  MMP3 - MULTICHANNEL MATCHING PURSUIT, third algorithm (not existing now)
+#
+
+MP MMP1
+
+#
+# Stala konwersji probka ->napiecie w uV
+# Obowiazkowo w wartosci musi wystapic kropka dziesietna.
+#
+
+convRate 100.0
+
+#
+# VERBOSE:
+# 1 - wypisuje na ekran krok iteracji, modulus gabora i procent wytlumaczonej energii
+# 2 - zapisuje do pliku tekstowego wygenerowany slownik
+# 4 - zapisuje do pliku tekstowego dopasowane gabory
+# Uwaga argumenty opcji verbose mozna ze soba laczyc, np. wpisujac 5 wypiszemy na ekran infromacje o kolejnych iteracjach
+# oraz zapiszemy do pliku tekstowego dopasowane gabory
+#
+
+VERBOSE 2
+
+

@@ -798,40 +798,6 @@ void findResidue(double *residueTable, const double *gaborTable, double modulus,
     for(sample=0;sample<dimExpand;sample++)
 	*(residueTable + sample) = *(residueTable + sample) - modulus*(*(gaborTable + sample));
 }
-/*
-void returnAmplitudeAndModulus(Gabor *gabor,
-double *amplitude,
-double *modulus,
-unsigned short int channelNumber,
-char *info)
-{
-(*/
-/* This function is implemented to find parameters, which were counted
-but due to econimize memory problems were not save.
-Generaly the algorithm, which is apllied to find the optimial
-phase, need a lot of memory. Much more, then can be offered by
-modern computers (October 2006). For this reason we allocate memory
-only for most important parameters: RS, RC, KS, KC, KM.
-Other variables, like phase or amplitude can by found by means
-of RS, RC, KS, KC, KM. */
-/*
-double KS = gabor->KS;
-double KC = gabor->KC;
-double KM = gabor->KM;
-
-double RS = *(gabor->RS + channelNumber);
-double RC = *(gabor->RC + channelNumber);
-double phase = *(gabor->phase + channelNumber);
-
-double sinPhase, cosPhase;
-
-sincos(phase,&sinPhase,&cosPhase);
-
-*amplitude = (float)(sqrt(KS*(sinPhase*sinPhase) + KC*(cosPhase*cosPhase) - 2.0*KM*sinPhase*cosPhase));
-*modulus   = (float)((RC*cosPhase - RS*sinPhase)/(*amplitude));
-}
-
-*/
 
 /* Implementation of Dobieslaw Ircha Optimal Phase Algorithm */
 
@@ -995,46 +961,43 @@ STATUS findUnknowPhaseDI(Gabor *gabor, double *modulus, unsigned short int chann
 
 }
 
-STATUS findUnknowPhaseAM(Gabor *gabor, double *modulus, unsigned short int numberOfAnalysedChannels)
+STATUS findUnknowPhaseAM(Gabor *gabor, double *modulusTable, unsigned short int numberOfAnalysedChannels)
 {
-    unsigned short int channel;
-
-    double tmpSumX = 0.0;
-    double tmpSumY = 0.0;
-    double sinPhase, cosPhase;
-    double amplitude;
-
-    const double KS = gabor->KS;
-    const double KC = gabor->KC;
-    const double KM = gabor->KM;
-
-    double phase;
-
     if(!(gabor->feature & DIRACDELTA))
     {   
-	tmpSumX = 0.0;
-	tmpSumY = 0.0;
-		
-	for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
+	unsigned short int channel;
+
+        double tmpSumX = 0.0;
+        double tmpSumY = 0.0;
+        double sinPhase, cosPhase;
+        double amplitude;
+
+        const double KS = gabor->KS;
+        const double KC = gabor->KC;
+        const double KM = gabor->KM;
+	double modulus;
+        double phase;
+
+	for (channel=0;channel<numberOfAnalysedChannels;channel++) 
 	{
+	    modulus =  *(modulusTable + channel);
 	    phase   =  *(gabor->phase + channel);
-	    tmpSumX += *modulus* sin( 2.0 * phase);    
-	    tmpSumY += *modulus* cos( 2.0 * phase);    
+	    tmpSumX += modulus*sin(2.0 * phase);    
+	    tmpSumY += modulus*cos(2.0 * phase);    
 	} 
 
 	const double tmpPhase = atan2(tmpSumX,tmpSumY)/2.0;
 
 	for(channel=0;channel<numberOfAnalysedChannels;channel++) 
 	{
-	    if ((*(gabor->RS + channel))>0.0) { 
+	    if ((*(gabor->RS + channel))>0.0)
 		sincos(tmpPhase,&sinPhase,&cosPhase);
-	    }
-	    else {   
+	    else
 		sincos(tmpPhase+M_PI,&sinPhase,&cosPhase);
-	    }
+
 	    amplitude = sqrt(KS*(sinPhase*sinPhase) + KC*(cosPhase*cosPhase) - 2.0*KM*sinPhase*cosPhase);
 
-	    *(modulus + channel) = ((*(gabor->RC + channel))* cosPhase - (*(gabor->RS + channel))*sinPhase)/amplitude;
+	    *(modulusTable + channel) = ((*(gabor->RC + channel))* cosPhase - (*(gabor->RS + channel))*sinPhase)/amplitude;
 	    *(gabor->phase + channel) = (float)tmpPhase; 
 	}
 

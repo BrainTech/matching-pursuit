@@ -1026,11 +1026,12 @@ STATUS findUnknowPhaseAM(Gabor *gabor, double *modulus, unsigned short int numbe
 
 	for(channel=0;channel<numberOfAnalysedChannels;channel++) 
 	{
-	    if ((*(gabor->RS + channel))>0.0) 
+	    if ((*(gabor->RS + channel))>0.0) { 
 		sincos(tmpPhase,&sinPhase,&cosPhase);
-	    else    
+	    }
+	    else {   
 		sincos(tmpPhase+M_PI,&sinPhase,&cosPhase);
-
+	    }
 	    amplitude = sqrt(KS*(sinPhase*sinPhase) + KC*(cosPhase*cosPhase) - 2.0*KM*sinPhase*cosPhase);
 
 	    *(modulus + channel) = ((*(gabor->RC + channel))* cosPhase - (*(gabor->RS + channel))*sinPhase)/amplitude;

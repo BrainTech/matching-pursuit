@@ -31,7 +31,7 @@
 #include"include/types.h"
 
 #ifdef __MINGW32__
-#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
+	#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
 /* MMP1 - MULTICHANNEL MATCHING PURSUIT */
@@ -58,8 +58,8 @@ void firstIterationMMP1(MP5Parameters *mp5Parameters, DataParameters *dataParame
     double t1, t2;
 
     double modulusesTable[numberOfAnalysedChannels];
-    double sumOfSqrOfModuluses;
-    double bestSumOfSqrOfModuluses;
+    double sumOfModuluses;
+    double bestSumOfModuluses;
     double *bestModulusesTable = mp5Parameters->bestModulusesTable;
     double tmpBestModulusesTable[numberOfAnalysedChannels];
 
@@ -79,7 +79,7 @@ void firstIterationMMP1(MP5Parameters *mp5Parameters, DataParameters *dataParame
 
     t1 = Clock();
 
-    bestSumOfSqrOfModuluses = 0.0;
+    bestSumOfModuluses = 0.0;
     mp5Parameters->totalResidueEnergy = 0.0;
 
     for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
@@ -102,53 +102,19 @@ void firstIterationMMP1(MP5Parameters *mp5Parameters, DataParameters *dataParame
 
 		//am-start
 		sumOfSqrOfModuluses = 0.0;
-		double tmpSumX,tmpSumY,tmpPhase,sinPhasePlus,cosPhasePlus,sinPhaseMinus,cosPhaseMinus,amplitudePlus,amplitudeMinus;
-		if(!(gabor->feature & DIRACDELTA))
-		{   
-			tmpSumX = 0.0;
-			tmpSumY = 0.0;
-			for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
-			{
-				tmpSumX += *(modulusesTable + channel) * sin( 2.0 * *(gabor->phase+channel) );    
-				tmpSumY += *(modulusesTable + channel) * cos( 2.0 * *(gabor->phase+channel) );    
-			} 
-			tmpPhase = atan2(tmpSumX,tmpSumY)/2.0;
-			sincos(tmpPhase,&sinPhasePlus,&cosPhasePlus);
-			sincos(tmpPhase+M_PI,&sinPhaseMinus,&cosPhaseMinus);
-			amplitudePlus = sqrt(gabor->KS * (sinPhasePlus*sinPhasePlus) + gabor->KC * (cosPhasePlus*cosPhasePlus) - 2.0 * gabor->KM * sinPhasePlus*cosPhasePlus);
-			amplitudeMinus = sqrt(gabor->KS * (sinPhaseMinus*sinPhaseMinus) + gabor->KC * (cosPhaseMinus*cosPhaseMinus) - 2.0 * gabor->KM * sinPhaseMinus*cosPhaseMinus);
-			for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
-			{ 
-				if (*(gabor->RC + channel) > 0 ) 
-				{                   
-					*(modulusesTable+channel)  = (double)((*(gabor->RC + channel) * cosPhasePlus - *(gabor->RS + channel) * sinPhasePlus)/amplitudePlus);
-					*(gabor->phase + channel) = (float)tmpPhase; 
-				} 
-				else 
-				{
-					*(modulusesTable+channel)  = (double)((*(gabor->RC + channel) * cosPhaseMinus - *(gabor->RS + channel) * sinPhaseMinus)/amplitudeMinus);
-					*(gabor->phase + channel) = (float)tmpPhase+M_PI;               
-				}              
-				sumOfSqrOfModuluses += *(modulusesTable+channel);  
-			}
-		} 
-		else 
-		{ 
-			for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
-			{                     
-				sumOfSqrOfModuluses += *(modulusesTable+channel);  
-			}
+		for (channel= 0;channel<numberOfAnalysedChannels;channel++) 
+		{                     
+			fidUnknowPhaseAm(gabor,*(modulusTable + channel),channelNumber); 
+			sumOfSqrOfModuluses += *(modulusesTable+channel);  
 		}  
 		//am-end
 
-	    //sumOfSqrOfModuluses = ddot(&tmpNumberOfAnalysedChannels,modulusesTable,&inc,modulusesTable,&inc);
-
-	    if(sumOfSqrOfModuluses>bestSumOfSqrOfModuluses)
-	    {
-		bestSumOfSqrOfModuluses = sumOfSqrOfModuluses;
-		indexGabor = gaborsCounter;
-	        memcpy((void *)tmpBestModulusesTable,(void *)modulusesTable,numberOfAnalysedChannels*sizeof(double));
-	    }
+		if(sumOfModuluses>bestSumOfSqrOfModuluses)
+		{
+			bestSumOfOfModuluses = sumOfOfModuluses;
+			indexGabor = gaborsCounter;
+	        	memcpy((void *)tmpBestModulusesTable,(void *)modulusesTable,numberOfAnalysedChannels*sizeof(double));
+	    	}
 
 	    if(dataParameters->verbose & VERBOSE_PRINT_PROCESSBAR)
 		if(gaborsCounter%stepInToolbar==0)

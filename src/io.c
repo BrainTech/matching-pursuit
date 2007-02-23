@@ -327,6 +327,7 @@ void printInfoAboutData(DataParameters *dataParameters, MP5Parameters *mp5Parame
 	printf("                                                 %s\n",*(dataParameters->namesOfResultFiles + channel));
 
     printf(" \n");
+    fflush(stdout);
 }
 
 STATUS openBinaryDataFile(DataParameters *dataParameters, char *info)
@@ -520,6 +521,7 @@ STATUS analyseBinaryDataFile(DataParameters *dataParameters, char *info)
 	if((sizeOfData/sizeof(short))%dataParameters->numberOfChannels!=0)
 	{
 	    printf("\n DATA WARNING: \n CHANNELS DO NOT CONTAIN THE SAME NUMBER OF SAMPLES IN FILE: %s\n THE ERROR WILL OCCUR ERROR WHILE READING THE LAST OFFSET\n",dataParameters->nameOfDataFile);
+	    fflush(stdout);
 	    sleep(1);
 	}
 
@@ -536,6 +538,7 @@ STATUS analyseBinaryDataFile(DataParameters *dataParameters, char *info)
 	    if(dataParameters->numberOfOffsets < dataParameters->numberOfChosenOffsets)
 	    {
 		printf("\n DATA WARNING: \n TO LESS SAMPLES IN DATA FILE: %s\n NUMBER OF CHOSEN OFFSETS > NUMBER OF OFFSETS IN FILE \n",dataParameters->nameOfDataFile);
+		fflush(stdout);
 		sleep(1);
 	    }
 
@@ -547,6 +550,7 @@ STATUS analyseBinaryDataFile(DataParameters *dataParameters, char *info)
 	if((sizeOfData/sizeof(float))%dataParameters->numberOfChannels!=0)
 	{
 	    printf("\n DATA WARNING: \n CHANNELS DO NOT CONTAIN THE SAME NUMBER OF SAMPLES IN FILE: %s\n THE ERROR WILL OCCUR ERROR WHILE READING THE LAST OFFSET\n",dataParameters->nameOfDataFile);
+	    fflush(stdout);
 	    sleep(1);
 	}
 
@@ -563,6 +567,7 @@ STATUS analyseBinaryDataFile(DataParameters *dataParameters, char *info)
 	    if(dataParameters->numberOfOffsets < dataParameters->numberOfChosenOffsets)
 	    {
 		printf("\n DATA ERROR: \n TO LESS SAMPLES IN DATA FILE: %s\n NUMBER OF CHOSEN OFFSETS > NUMBER OF OFFSETS IN FILE \n",dataParameters->nameOfDataFile);
+		fflush(stdout);
 		sleep(1);
 	    }
 
@@ -619,6 +624,7 @@ STATUS analyseAsciiDataFile(DataParameters *dataParameters, char *info)
     if(dataParameters->numberOfOffsets < dataParameters->numberOfChosenOffsets)
     {
 	printf("\n DATA ERROR: \n TO LESS SAMPLES IN DATA FILE: %s\n NUMBER OF CHOSEN OFFSETS > NUMBER OF OFFSETS IN FILE \n",dataParameters->nameOfDataFile);	
+	fflush(stdout);
 	sleep(1);
     }
 

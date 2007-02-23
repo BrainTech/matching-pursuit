@@ -67,7 +67,7 @@ static void dictionaryToString(const GaborDictionary *gaborDictionary)
                        *(gaborDictionary->tableOfPeriodsInOptimalDictionary     + scaleIndex), 
                        *(gaborDictionary->tableOfFrequenciesInOptimalDictionary + scaleIndex), 
                        *(gaborDictionary->tableOfPositionsInOptimalDictionary   + scaleIndex)); 
-        
+		       fflush(stdout);
         }
 }
 
@@ -225,6 +225,7 @@ void printSizeOfDictionaryAndSizeOfSinCosExpTables(const MP5Parameters *mp5Param
     printf(" SIZE OF ALOCATED SIN/COS/EXP TABLES:         %10.3lf (MB)\n",(1.0*totalNumberOfPoints*sizeof(double))/megaByte); 
     printf(" \n");
     printf(" TOTAL MEMORY USAGE BY DICTIONARY:            %10.3lf (MB)\n",(1.0*gaborDictionary->sizeOfDictionary*(sizeof(Gabor) + sizeOfRSRCPhaseTablesOfOneGabor) + 1.0*totalNumberOfPoints*sizeof(double))/megaByte);
+    fflush(stdout);
     
 }
 
@@ -575,6 +576,7 @@ void printDictionaryToAsciFile(const DataParameters *dataParameters, const Gabor
 		frequency = *(gaborDictionary->tableOfFrequenciesInOptimalDictionary + gabor->scaleIndex)*gabor->rifling;
 
 		fprintf(dataParameters->dictionaryFile," %12u   %c   %5hu   %5hu   %7.6lf   %12u   %012.6lf   %5c \n",gaborCounter,typeOfGabor,gabor->position,*(gaborDictionary->tableOfScalesInOptimalDictionary + gabor->scaleIndex),frequency,gabor->rifling,frequency*dataParameters->samplingFrequency/M_2PI,statusOfGabor);
+		fflush(stdout);
 	}
 }
 
@@ -598,7 +600,8 @@ void testGaborFeature(GaborDictionary *gaborDictionary)
 
     printf(" THE INCORRECT GABORS ARE BEING REMOVED FROM DICTIONARY \n");
     printf(" UNCORRECT GABORS ARE GABORS WHICH SCALE IS SMALLER THEN K*PERIOD WAVE IN GABOR\n");
-
+    fflush(stdout);
+    
     for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
     {
 	gaborPointer = gaborDictionary->gaborsTable + gaborsCounter;
@@ -617,6 +620,8 @@ void testGaborFeature(GaborDictionary *gaborDictionary)
     }
 
     printf("\n AFTER PREPROCESSING, THE NUMBER OF CORRECT GABORS IS: %u \n",correctGaborsCounter);
+    fflush(stdout);
+
 }
 
 void resetDictionary(GaborDictionary *gaborDictionary)

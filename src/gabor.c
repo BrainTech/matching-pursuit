@@ -162,5 +162,6 @@ void printFitedGabors(const DataParameters *dataParameters, const MP5Parameters 
 		fprintf(fileOut,"  phase:      %-1.16lf  \n",phase);
 		fprintf(fileOut,"  modulus:    %-23.16lf \n",modulus);
 		fprintf(fileOut,"  amplitude:  %-23.16lf \n",amplitude);
+		fflush(stdout);
 	}
 }

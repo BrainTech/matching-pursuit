@@ -808,7 +808,7 @@ STATUS writeMultiChannelResults(DataParameters *dataParameters, MP5Parameters *m
 	{
 
 	    gabor = (Gabor *)readNNode(mp5Parameters->fitted,atomNumber);
-	    phase = *(gabor->phase);
+	    phase = *(gabor->phase+channelNumber);
 
 	    returnAmplitudeAndModulusDI(gabor,&amplitude,&modulus,channelNumber);
 

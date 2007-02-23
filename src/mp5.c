@@ -995,53 +995,67 @@ STATUS findUnknowPhaseDI(Gabor *gabor, double *modulus, unsigned short int chann
 
 }
 
-void findUnknowPhaseAm(Gabor *gabor, double *modulus, unsigned short int channelNumber)
+STATUS findUnknowPhaseAM(Gabor *gabor, double *modulus, unsigned short int numberOfAnalysedChannels)
 {
+    unsigned short int channel;
 
-	double tmpSumX = 0.0;
-	double tmpSumY = 0.0;
+    double tmpSumX = 0.0;
+    double tmpSumY = 0.0;
+    double sinPhase, cosPhase;
+    double amplitude;
 
-	const double KS = gabor->KS;
-	const double KC = gabor->KC;
-	const double KM = gabor->KM;
+    const double KS = gabor->KS;
+    const double KC = gabor->KC;
+    const double KM = gabor->KM;
 
-	const double RS     = *(gabor->RS + channel);
-	double       *phase = *(gabor->phase + channel);
+    double phase;
 
-	if(!(gabor->feature & DIRACDELTA))
-	{   
-		tmpSumX = 0.0;
-		tmpSumY = 0.0;
+    if(!(gabor->feature & DIRACDELTA))
+    {   
+	tmpSumX = 0.0;
+	tmpSumY = 0.0;
 		
-		for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
-		{
-			tmpSumX += *modulus* sin( 2.0 * phase);    
-			tmpSumY += *modulus* cos( 2.0 * phase);    
-		} 
+	for (channel = 0;channel<numberOfAnalysedChannels;channel++ ) 
+	{
+	    phase   =  *(gabor->phase + channel);
+	    tmpSumX += *modulus* sin( 2.0 * phase);    
+	    tmpSumY += *modulus* cos( 2.0 * phase);    
+	} 
 
-		const double tmpPhase = atan2(tmpSumX,tmpSumY)/2.0;
-			
-		if (RC>0.0) 
-		{                   
-			double sinPhasePlus, cosPhasePlusl;
-			double amplitudePlus;
-			sincos(tmpPhase,&sinPhasePlus,&cosPhasePlus);
-			amplitudePlus = sqrt(KS * (sinPhasePlus*sinPhasePlus) + KC * (cosPhasePlus*cosPhasePlus) - 2.0 * KM * sinPhasePlus*cosPhasePlus);
-	
-			*modulus = (RC* cosPhasePlus - RS* sinPhasePlus)/amplitudePlus;
-			*phase   = (float)tmpPhase; 
-		} 
-		else 
-		{
-			double sinPhaseMinus, cosPhaseMinus;
-			double amplitudeMinus;
+	if(tmpSumX<EPS_DOUBLE)
+	{
+	    fprintf(stderr,"\n\nGabor with following parameters:");
+	    fprintf(stderr,"\n POSITION:  %hu      \
+	    		    \n RIFLING:   %u      \
+	    		    \n SCALE:     %hu\n",gabor->position,gabor->rifling,gabor->scaleIndex);
+	    fprintf(stderr," Is being marked as a incorrect gabor\n");
+	    fprintf(stderr," Because one can not estimate phase of this gabor \n");
+	    fprintf(stderr," according to Dobieslaw Ircha algorithms \n");
 
-			sincos(tmpPhase+M_PI,&sinPhaseMinus,&cosPhaseMinus);
-			amplitudeMinus = sqrt(KS * (sinPhaseMinus*sinPhaseMinus) + KC * (cosPhaseMinus*cosPhaseMinus) - 2.0 * KM * sinPhaseMinus*cosPhaseMinus);
+	    for (channel = 0;channel<numberOfAnalysedChannels;channel++ )     
+		*(gabor->phase + channel) = 0.0;
+
+	    *modulus = 0.0;
+	    gabor->feature|= INCORRECTGABOR;
 	
-			*modulus = (RC*cosPhaseMinus - RS*sinPhaseMinus)/amplitudeMinus;
-			*phase   = (float)tmpPhase + M_PI;               
-		}              
+	    return ERROR;
+	}
+		
+	const double tmpPhase = atan2(tmpSumX,tmpSumY)/2.0;
+
+	for(channel=0;channel<numberOfAnalysedChannels;channel++) 
+	{
+	    if ((*(gabor->RS + channel))>0.0) 
+		sincos(tmpPhase,&sinPhase,&cosPhase);
+	    else    
+		sincos(tmpPhase+M_PI,&sinPhase,&cosPhase);
+
+	    amplitude = sqrt(KS*(sinPhase*sinPhase) + KC*(cosPhase*cosPhase) - 2.0*KM*sinPhase*cosPhase);
+
+	    *modulus = ((*(gabor->RC + channel))* cosPhase - (*(gabor->RS + channel))*sinPhase)/amplitude;
+	    *(gabor->phase + channel) = (float)tmpPhase; 
 	}
 
+    }
+	return SUCCESS;
 }

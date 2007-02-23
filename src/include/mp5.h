@@ -37,6 +37,7 @@
 	void findResidue(double *residueTable, const double *gaborTable, double modulus, unsigned int dimExpand);
 	STATUS returndAmplitudeAndModulus(const Gabor *gabor, float *amplitude, float *modulus, unsigned short int channelNumber, char *info);
 	void findGaborDataDotProduct(const MP5Parameters *mp5Parameters, const GaborDictionary *gaborDictionary, Gabor *currentGabor, const double *dataTable, unsigned short int channelNumber, unsigned char mode);
-	STATUS findUnknowPhaseDI(Gabor *currentGabor, double *modulus,unsigned short int channelNumber);
+	STATUS findUnknowPhaseDI(Gabor *currentGabor, double *modulus, unsigned short int channelNumber);
+	STATUS findUnknowPhaseAM(Gabor *currentGabor, double *modulus, unsigned short int numberOfAnalysedChannels);
 
 #endif

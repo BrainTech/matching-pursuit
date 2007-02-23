@@ -122,8 +122,10 @@ void firstIterationSMP(MP5Parameters *mp5Parameters, const DataParameters *dataP
 	printf(" G\n");
     else if(gabor->feature & FFTWAVE)	
 	printf(" F\n");
-	printf("\n");
 
+    printf("\n");
+    fflush(stdout);
+    
     if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',1);
 	
@@ -213,6 +215,7 @@ void nextIterationSMP(MP5Parameters *mp5Parameters, const DataParameters *dataPa
 
 	t2 = Clock();
 	
+    
 	printf(" ATOM: [%-3d], SEC.: %-6.2lf, SIG: %-6.2lf, MOD: %-6.2lf, RES: %-6.2lf, RES/SIG: %-6.2lf %% ",iterationsCounter,(t2-t1),*(mp5Parameters->signalEnergyInEachChannel),pow((*(mp5Parameters->bestModulusesTable)),2.0),*(mp5Parameters->residueEnergyInEachChannel),((*(mp5Parameters->residueEnergyInEachChannel))/(*(mp5Parameters->signalEnergyInEachChannel))*100.0));
 
 	if(gabor->feature & DIRACDELTA)	
@@ -223,6 +226,8 @@ void nextIterationSMP(MP5Parameters *mp5Parameters, const DataParameters *dataPa
 	    printf(" F\n");
 	printf("\n");
 
+	fflush(stdout);
+	
 	if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	    printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',(unsigned short int)iterationsCounter);
 	

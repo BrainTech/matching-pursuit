@@ -39,7 +39,8 @@
 #include"include/vector.h"
 
 #ifdef __MINGW32__
-	#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
+#define bzero(ptr,size) memset (ptr, 0, size);
+#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
 static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)

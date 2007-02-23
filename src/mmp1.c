@@ -21,6 +21,7 @@
  ***************************************************************************/
 
 #include<stdlib.h>
+#include<stdio.h>
 #include<string.h>
 #include<math.h>
 #include"include/gabor.h"
@@ -163,6 +164,7 @@ void firstIterationMMP1(MP5Parameters *mp5Parameters, DataParameters *dataParame
         printf(" F\n");
     
     printf("\n");
+    fflush(stdout);
 
     if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',1);
@@ -290,6 +292,7 @@ void nextIterationMMP1(MP5Parameters *mp5Parameters, DataParameters *dataParamet
 	    printf(" F\n");
     
 	printf("\n");
+	fflush(stdout);
 
         if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	    printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',iterationCounter);

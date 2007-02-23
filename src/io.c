@@ -810,7 +810,7 @@ STATUS writeMultiChannelResults(DataParameters *dataParameters, MP5Parameters *m
 	    gabor = (Gabor *)readNNode(mp5Parameters->fitted,atomNumber);
 	    phase = *(gabor->phase);
 
-	    returnAmplitudeAndModulusDI(gabor,&amplitude,&modulus,0);
+	    returnAmplitudeAndModulusDI(gabor,&amplitude,&modulus,channelNumber);
 
 	    atom.modulus   = modulus;
 	    atom.position  = (float)(gabor->position);

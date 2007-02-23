@@ -152,6 +152,7 @@ void firstIterationMMP3(MP5Parameters *mp5Parameters, DataParameters *dataParame
         printf(" F\n");
     
     printf("\n");
+    fflush(stdout);
 
     if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',1);
@@ -275,6 +276,7 @@ void nextIterationMMP3(MP5Parameters *mp5Parameters, DataParameters *dataParamet
 	    printf(" F\n");
     
 	printf("\n");
+	fflush(stdout);
 
         if(dataParameters->verbose & VERBOSE_PRINT_FITED_GABORS)
 	    printFitedGabors(dataParameters,mp5Parameters,gaborDictionary,bestGabor,'F',iterationCounter);

@@ -6,17 +6,14 @@ OBJDIR  = obj
 BINDIR  = bin
 TARGET  = mp5
 
-#          $(OBJDIR)/mmp1.o        \
 #          $(OBJDIR)/mmp2.o        \
-#          $(OBJDIR)/mmp3.o        \
-
-#          $(OBJDIR)/mmp3.o        \
 
 OBJECTS = $(OBJDIR)/cmd.o         \
           $(OBJDIR)/dic.o         \
           $(OBJDIR)/gabor.o       \
           $(OBJDIR)/io.o          \
           $(OBJDIR)/main.o        \
+          $(OBJDIR)/mmp1.o        \
           $(OBJDIR)/mmp3.o        \
           $(OBJDIR)/mp5.o         \
           $(OBJDIR)/matrix.o      \
@@ -29,13 +26,12 @@ OBJECTS = $(OBJDIR)/cmd.o         \
           $(OBJDIR)/vector.o
 
 .PHONY: all
+.PHONY: clean
 
 all: mp5
 
 $(TARGET): $(OBJECTS)
 	$(CC) $^ $(LIBS) -lm -o $(BINDIR)/$@
-
-.PHONY: clean
 
 clean:
 	rm -f obj/*.o
@@ -94,15 +90,15 @@ $(OBJDIR)/matrix.o: src/matrix.c                \
                     src/include/matrix.h
 	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
 
-#$(OBJDIR)/mmp1.o: src/mmp1.c                    \
-#                  src/include/def.h             \
-#                  src/include/gabor.h           \
-#                  src/include/mp5.h             \
-#                  src/include/queue.h           \
-#                  src/include/tools.h           \
-#		  src/include/types.h           \
-#		  src/include/vector.h           
-#	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
+$(OBJDIR)/mmp1.o: src/mmp1.c                    \
+                  src/include/def.h             \
+                  src/include/gabor.h           \
+                  src/include/mp5.h             \
+                  src/include/mmp1.h            \
+                  src/include/queue.h           \
+                  src/include/tools.h           \
+                  src/include/types.h           
+	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
 
 #$(OBJDIR)/mmp2.o: src/mmp2.c          \
 #                  src/include/mp5.h   \

@@ -762,7 +762,7 @@ VERBOSE 4\n\
 		    }
 		}
 	    }
-	    //am-start
+	    // writen by Artur Matysiak
 	    else if(mp5Parameters.MPType & MMP1)
 	    {
 		if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
@@ -819,7 +819,7 @@ VERBOSE 4\n\
 		    }
 		}
 	    }    
-	    //am-end
+	    //Artur Matysiak end
 	} 
     }
 

@@ -975,7 +975,7 @@ STATUS findUnknowPhaseAM(Gabor *gabor, double *modulusTable, unsigned short int 
         const double KS = gabor->KS;
         const double KC = gabor->KC;
         const double KM = gabor->KM;
-	double modulus;
+		double modulus;
         double phase;
 
 	for (channel=0;channel<numberOfAnalysedChannels;channel++) 
@@ -991,14 +991,28 @@ STATUS findUnknowPhaseAM(Gabor *gabor, double *modulusTable, unsigned short int 
 	for(channel=0;channel<numberOfAnalysedChannels;channel++) 
 	{
 	    if ((*(gabor->RS + channel))>0.0)
-		sincos(tmpPhase,&sinPhase,&cosPhase);
+	    {
+			sincos(tmpPhase,&sinPhase,&cosPhase);
+	    }
 	    else
-		sincos(tmpPhase+M_PI,&sinPhase,&cosPhase);
-
+	    {
+			sincos(tmpPhase+M_PI,&sinPhase,&cosPhase);
+	    }
+	    
 	    amplitude = sqrt(KS*(sinPhase*sinPhase) + KC*(cosPhase*cosPhase) - 2.0*KM*sinPhase*cosPhase);
 
 	    *(modulusTable + channel) = ((*(gabor->RC + channel))* cosPhase - (*(gabor->RS + channel))*sinPhase)/amplitude;
-	    *(gabor->phase + channel) = (float)tmpPhase; 
+	    
+	     if ((*(gabor->RS + channel))>0.0)
+	    {
+			*(gabor->phase + channel) = (float)tmpPhase;
+	    }
+	    else
+	    {
+			*(gabor->phase + channel) = (float)tmpPhase+M_PI;
+	    }
+	    
+	     
 	}
 
     }

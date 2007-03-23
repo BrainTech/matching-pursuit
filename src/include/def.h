@@ -34,6 +34,7 @@
 	#define LENGTH_OF_OUTPUT_DIRECTORY           256
 	#define LENGTH_OF_INFO_MESSAGE               4096
 	#define LENGTH_OF_TMP_STRING		     256
+	#define SIZE_OF_OUTPUT_BUFFOR		     32	
 
 	#define NUMBER_OF_COMMANDS 23
 

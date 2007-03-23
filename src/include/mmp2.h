@@ -24,6 +24,8 @@
 
 	#define _MMP2_H_
 
+	void firstIterationMMP2(MP5Parameters *mp5Parameters, DataParameters *dataParameters, GaborDictionary *gaborDictionary);
 
+	void nextIterationMMP2(MP5Parameters *mp5Parameters, DataParameters *dataParameters, GaborDictionary *gaborDictionary);
 
 #endif

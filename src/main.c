@@ -27,7 +27,7 @@
 #include"include/dic.h"
 #include"include/io.h"
 #include"include/mmp1.h"
-//#include"include/mmp2.h"
+#include"include/mmp2.h"
 #include"include/mmp3.h"
 #include"include/mp5.h"
 #include"include/smp.h"
@@ -706,62 +706,6 @@ VERBOSE 4\n\
 		    }
 		}
 	    }
-	    else if(mp5Parameters.MPType & MMP3)
-	    {
-		if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-		{
-		    /* create dicionary */
-		    makeDictionary(&mp5Parameters,&gaborDictionary);
-
-		    /* test gabor's feature, for example find INCORRECT gabors */
-		    testGaborFeature(&gaborDictionary);
-                
-		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
-		    {
-			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
-			    goto ERROR_PROCEDURE;
-
-			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
-
-			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
-
-			firstIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
-			nextIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
-
-			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
-			    goto ERROR_PROCEDURE;
-
-			resetDictionary(&gaborDictionary);
-		    }
-		}
-		if(mp5Parameters.reinitDictionary &  REINIT_IN_OFFSET_DOMAIN)
-		{
-
-		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
-		    {
-			/* create dicionary */
-			reinitDictionary(&mp5Parameters,&gaborDictionary);
-
-			/* test gabor's feature, for example find INCORRECT gabors */
-			testGaborFeature(&gaborDictionary);
-
-			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
-			    goto ERROR_PROCEDURE;
-
-			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
-
-			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
-
-			firstIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
-			nextIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
-
-			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
-			    goto ERROR_PROCEDURE;
-
-			resetDictionary(&gaborDictionary);
-		    }
-		}
-	    }
 	    // writen by Artur Matysiak
 	    else if(mp5Parameters.MPType & MMP1)
 	    {
@@ -820,7 +764,119 @@ VERBOSE 4\n\
 		}
 	    }    
 	    //Artur Matysiak end
-	} 
+	    else if(mp5Parameters.MPType & MMP2)
+	    {
+		if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
+		{
+		    /* create dicionary */
+		    makeDictionary(&mp5Parameters,&gaborDictionary);
+
+		    /* test gabor's feature, for example find INCORRECT gabors */
+		    testGaborFeature(&gaborDictionary);
+                
+		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
+		    {
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
+
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+
+			firstIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+
+			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			resetDictionary(&gaborDictionary);
+		    }
+		}
+		if(mp5Parameters.reinitDictionary &  REINIT_IN_OFFSET_DOMAIN)
+		{
+
+		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
+		    {
+			/* create dicionary */
+			reinitDictionary(&mp5Parameters,&gaborDictionary);
+
+			/* test gabor's feature, for example find INCORRECT gabors */
+			testGaborFeature(&gaborDictionary);
+
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
+
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+
+			firstIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+
+			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			resetDictionary(&gaborDictionary);
+		    }
+		}
+	    }
+	    else if(mp5Parameters.MPType & MMP3)
+	    {
+		if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
+		{
+		    /* create dicionary */
+		    makeDictionary(&mp5Parameters,&gaborDictionary);
+
+		    /* test gabor's feature, for example find INCORRECT gabors */
+		    testGaborFeature(&gaborDictionary);
+                
+		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
+		    {
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
+
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+
+			firstIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
+
+			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			resetDictionary(&gaborDictionary);
+		    }
+		}
+		if(mp5Parameters.reinitDictionary &  REINIT_IN_OFFSET_DOMAIN)
+		{
+
+		    for(offsetNumber=0;offsetNumber<dataParameters.numberOfChosenOffsets;offsetNumber++)
+		    {
+			/* create dicionary */
+			reinitDictionary(&mp5Parameters,&gaborDictionary);
+
+			/* test gabor's feature, for example find INCORRECT gabors */
+			testGaborFeature(&gaborDictionary);
+
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
+
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+
+			firstIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationMMP3(&mp5Parameters,&dataParameters,&gaborDictionary);
+
+			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+
+			resetDictionary(&gaborDictionary);
+		    }
+		}
+	    }
+		} 
     }
 
     freeConfigFile(&configFile);

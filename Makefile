@@ -6,15 +6,12 @@ OBJDIR  = obj
 BINDIR  = bin
 TARGET  = mp5
 
-#          $(OBJDIR)/mmp2.o        \
-
 OBJECTS = $(OBJDIR)/cmd.o         \
           $(OBJDIR)/dic.o         \
           $(OBJDIR)/gabor.o       \
           $(OBJDIR)/io.o          \
           $(OBJDIR)/main.o        \
           $(OBJDIR)/mmp1.o        \
-          $(OBJDIR)/mmp2.o        \
           $(OBJDIR)/mmp3.o        \
           $(OBJDIR)/mp5.o         \
           $(OBJDIR)/matrix.o      \
@@ -69,19 +66,19 @@ $(OBJDIR)/io.o: src/io.c                      \
                 src/include/gabor.h           \
                 src/include/io.h              \
                 src/include/matrix.h          \
+                src/include/mp5.h             \
                 src/include/new_io.h          \
                 src/include/queue.h           \
                 src/include/types.h           \
                 src/include/vector.h
 	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
-      
+  
 $(OBJDIR)/main.o: src/main.c                    \
                   src/include/cmd.h             \
                   src/include/def.h             \
                   src/include/dic.h             \
                   src/include/io.h              \
                   src/include/mmp1.h            \
-                  src/include/mmp2.h            \
                   src/include/mmp3.h            \
                   src/include/mp5.h             \
                   src/include/smp.h             \
@@ -101,17 +98,6 @@ $(OBJDIR)/mmp1.o: src/mmp1.c                    \
                   src/include/queue.h           \
                   src/include/tools.h           \
                   src/include/types.h           
-	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
-
-$(OBJDIR)/mmp2.o: src/mmp2.c                    \
-                  src/include/def.h             \
-                  src/include/gabor.h           \
-                  src/include/mmp2.h            \
-                  src/include/mp5.h             \
-                  src/include/queue.h           \
-                  src/include/tools.h           \
-                  src/include/types.h           \
-                  src/include/vector.h           
 	$(CC) -c -I $(INCPATH) $(CCFLAGS) -o $@ $<
 
 $(OBJDIR)/mmp3.o: src/mmp3.c                    \

@@ -808,6 +808,9 @@ VERBOSE 4\n\
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
+	
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
 
@@ -837,6 +840,9 @@ VERBOSE 4\n\
 
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
+
+			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
+			    goto ERROR_PROCEDURE;
 
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;

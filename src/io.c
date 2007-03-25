@@ -33,6 +33,7 @@
 #include"include/gabor.h"
 #include"include/io.h"
 #include"include/matrix.h"
+#include"include/mp5.h"
 #include"include/new_io.h"
 #include"include/queue.h"
 #include"include/types.h"
@@ -43,6 +44,10 @@
 #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
+
+    findResidue(residueTable,*(mp5Parameters->prevGaborTable),*bestModulusesTable,dimExpand);
+    *(mp5Parameters->residueEnergyInEachChannel) = findSignalEnergy(signalTable,dimOffset);
+
 static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)
 {
 	unsigned long int line;
@@ -50,6 +55,27 @@ static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)
 
 	for(line=0;line<lineNumber;line++)
 	    fscanf(asciiFile,"%*[^\n]\n");
+}
+
+static void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, GaborDictionary *gaborDictionary, Gabor *gabor, float *amplitude, float *modulus, unsigned short int channelNumber)
+{
+	unsigned int sample;
+	double       tmpModulus = 0.0;
+	unsigned int dimExpand = mp5Parameters->dimExpand;
+	
+	double *signalInParticularChannel = *(dataParameters.processedDataMatrix + channelNumber);
+	
+	makeSinCosGaborTable(mp5Parameters,gaborDictionary,gabor);
+	makeGaborTable(mp5Parameters,gabor,0);	
+	
+	for(sample=0;sample<dimExpand;sample++)
+	{
+		tmpModulus+= (*(signalInParticularChannel + sample))*(*(gaborTable + sample));
+	}
+
+    findResidue(signalInParticularChannel,signalInParticularChannel,&tmpModulus,dimExpand);	
+
+	*modulus = (float)(tmpModulus);
 }
 
 static void returnAmplitudeAndModulusDI(Gabor *gabor, float *amplitude, float *modulus, unsigned short int channelNumber)
@@ -814,10 +840,18 @@ STATUS writeMultiChannelResults(DataParameters *dataParameters, MP5Parameters *m
 	{
 
 	    gabor = (Gabor *)readNNode(mp5Parameters->fitted,atomNumber);
-	    phase = *(gabor->phase+channelNumber);
 
-	    returnAmplitudeAndModulusDI(gabor,&amplitude,&modulus,channelNumber);
-
+		if(mp5Parameters.MPType & MMP2)
+		{
+			phase = *(gabor->phase);
+			returnAmplitudeAndModulusForMMP2DI(mp5Parameters,gaborDictionary,gabor,amplitude,modulus,channelNumber);
+		}
+		else
+		{
+			phase = *(gabor->phase+channelNumber);
+			returnAmplitudeAndModulusDI(gabor,&amplitude,&modulus,channelNumber);
+		}
+		
 	    atom.modulus   = modulus;
 	    atom.position  = (float)(gabor->position);
 

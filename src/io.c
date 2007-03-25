@@ -59,7 +59,7 @@ static void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Gab
 	double       tmpModulus = 0.0;
 	unsigned int dimExpand = mp5Parameters->dimExpand;
 	
-	double *signalInParticularChannel = *(dataParameters.processedDataMatrix + channelNumber);
+	double *signalInParticularChannel = *(mp5Parameters->multiChannelSignalTable + channelNumber);
 	double *prevGaborTable            = *(mp5Parameters->prevGaborTable);
 
 	makeSinCosGaborTable(mp5Parameters,gaborDictionary,gabor);
@@ -838,10 +838,10 @@ STATUS writeMultiChannelResults(DataParameters *dataParameters, MP5Parameters *m
 
 	    gabor = (Gabor *)readNNode(mp5Parameters->fitted,atomNumber);
 
-		if(mp5Parameters.MPType & MMP2)
+		if(mp5Parameters->MPType & MMP2)
 		{
 			phase = *(gabor->phase);
-			returnAmplitudeAndModulusForMMP2DI(mp5Parameters,gaborDictionary,gabor,amplitude,modulus,channelNumber);
+			returnAmplitudeAndModulusForMMP2DI(mp5Parameters,gaborDictionary,gabor,&amplitude,&modulus,channelNumber);
 		}
 		else
 		{

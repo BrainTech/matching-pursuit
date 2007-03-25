@@ -60,16 +60,17 @@ static void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Gab
 	unsigned int dimExpand = mp5Parameters->dimExpand;
 	
 	double *signalInParticularChannel = *(dataParameters.processedDataMatrix + channelNumber);
-	
+	double *prevGaborTable            = *(mp5Parameters->prevGaborTable);
+
 	makeSinCosGaborTable(mp5Parameters,gaborDictionary,gabor);
 	makeGaborTable(mp5Parameters,gabor,0);	
 	
 	for(sample=0;sample<dimExpand;sample++)
 	{
-		tmpModulus+= (*(signalInParticularChannel + sample))*(*(gaborTable + sample));
+		tmpModulus+= (*(signalInParticularChannel + sample))*(*(prevGaborTable + sample));
 	}
 
-    findResidue(signalInParticularChannel,signalInParticularChannel,&tmpModulus,dimExpand);	
+    findResidue(signalInParticularChannel,prevGaborTable,tmpModulus,dimExpand);	
 
 	*modulus = (float)(tmpModulus);
 }

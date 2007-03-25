@@ -804,7 +804,7 @@ VERBOSE 4\n\
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
 			countMeanSignalOverChannels(&mp5Parameters);
-			mp5Parameters.singleChannelSignalTable = mp5Parameters->meanSignalTable;
+			mp5Parameters.singleChannelSignalTable = mp5Parameters.meanSignalTable;
 				
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
@@ -834,7 +834,7 @@ VERBOSE 4\n\
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
 			countMeanSignalOverChannels(&mp5Parameters);
-			mp5Parameters.singleChannelSignalTable = mp5Parameters->meanSignalTable;
+			mp5Parameters.singleChannelSignalTable = mp5Parameters.meanSignalTable;
 
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);

@@ -44,10 +44,6 @@
 #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
-
-    findResidue(residueTable,*(mp5Parameters->prevGaborTable),*bestModulusesTable,dimExpand);
-    *(mp5Parameters->residueEnergyInEachChannel) = findSignalEnergy(signalTable,dimOffset);
-
 static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)
 {
 	unsigned long int line;

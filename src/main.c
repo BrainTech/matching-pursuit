@@ -810,7 +810,9 @@ VERBOSE 4\n\
 
 			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
-	
+
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+				
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
 
@@ -844,6 +846,8 @@ VERBOSE 4\n\
 			if(readDataFile(&dataParameters,dataParameters.chosenOffsets[offsetNumber],infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
 
+			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
+	
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
 

@@ -27,7 +27,6 @@
 #include"include/dic.h"
 #include"include/io.h"
 #include"include/mmp1.h"
-#include"include/mmp2.h"
 #include"include/mmp3.h"
 #include"include/mp5.h"
 #include"include/smp.h"
@@ -39,22 +38,22 @@
 #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
-static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters)
+static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParameters *dataParameters )
 {
 	unsigned short int sample;
 	double tmpDataValue;
 	
 	double **multiChannelSignalTable = mp5Parameters->multiChannelSignalTable;
-	double **meanSignalTable         = mp5Parameters->meanSignalTable;
-	
-	for(sample=0;sample<dimOffset;sample++)
+	double *meanSignalTable         = mp5Parameters->meanSignalTable;
+	int channel;
+	for(sample=0;sample<mp5Parameters->dimOffset;sample++)
 	{
 		tmpDataValue = 0.0;
 		
-		for(channel=0;channel<numberOfChosenChannels;channel++)
+		for(channel=0;channel<dataParameters->numberOfChosenChannels;channel++)
 			tmpDataValue+= *(*(multiChannelSignalTable + channel) + sample);
 
-		*(meanSignalTable + sample) = tmpDataValue/numberOfAnalysedChannels;
+		*(meanSignalTable + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
 		mp5Parameters->meanSignalEnergy+= (*(meanSignalTable + sample))*(*(meanSignalTable + sample));
 	}
 }
@@ -803,7 +802,7 @@ VERBOSE 4\n\
 
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
-			countMeanSignalOverChannels(&mp5Parameters);
+			countMeanSignalOverChannels(&mp5Parameters,&dataParameters);
 			mp5Parameters.singleChannelSignalTable = mp5Parameters.meanSignalTable;
 				
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
@@ -833,7 +832,7 @@ VERBOSE 4\n\
 
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
-			countMeanSignalOverChannels(&mp5Parameters);
+			countMeanSignalOverChannels(&mp5Parameters,&dataParameters);
 			mp5Parameters.singleChannelSignalTable = mp5Parameters.meanSignalTable;
 
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);

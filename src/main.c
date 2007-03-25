@@ -39,6 +39,26 @@
 #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
+static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters)
+{
+	unsigned short int sample;
+	double tmpDataValue;
+	
+	double **multiChannelSignalTable = mp5Parameters->multiChannelSignalTable;
+	double **meanSignalTable         = mp5Parameters->meanSignalTable;
+	
+	for(sample=0;sample<dimOffset;sample++)
+	{
+		tmpDataValue = 0.0;
+		
+		for(channel=0;channel<numberOfChosenChannels;channel++)
+			tmpDataValue+= *(*(multiChannelSignalTable + channel) + sample);
+
+		*(meanSignalTable + sample) = tmpDataValue/numberOfAnalysedChannels;
+		mp5Parameters->meanSignalEnergy+= (*(meanSignalTable + sample))*(*(meanSignalTable + sample));
+	}
+}
+
 int main(int argc, char *argv[])
 {
     unsigned char mode;
@@ -783,8 +803,11 @@ VERBOSE 4\n\
 
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
-			firstIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
-			nextIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+			countMeanSignalOverChannels(&mp5Parameters);
+			mp5Parameters.singleChannelSignalTable = mp5Parameters->meanSignalTable;
+				
+			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;
@@ -810,8 +833,11 @@ VERBOSE 4\n\
 
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
-			firstIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
-			nextIterationMMP2(&mp5Parameters,&dataParameters,&gaborDictionary);
+			countMeanSignalOverChannels(&mp5Parameters);
+			mp5Parameters.singleChannelSignalTable = mp5Parameters->meanSignalTable;
+
+			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
+			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 
 			if(writeMultiChannelResults(&dataParameters,&mp5Parameters,&gaborDictionary,offsetNumber,infoMessage)==ERROR)
 			    goto ERROR_PROCEDURE;

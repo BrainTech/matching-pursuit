@@ -38,23 +38,23 @@
 #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
 #endif
 
-static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParameters *dataParameters )
+static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParameters *dataParameters)
 {
 	unsigned short int sample;
 	double tmpDataValue;
 	
 	double **multiChannelSignalTable = mp5Parameters->multiChannelSignalTable;
-	double *meanSignalTable         = mp5Parameters->meanSignalTable;
+	double *meanSignalTable          = mp5Parameters->meanSignalTable;
 	int channel;
+
 	for(sample=0;sample<mp5Parameters->dimOffset;sample++)
 	{
 		tmpDataValue = 0.0;
 		
-		for(channel=0;channel<dataParameters->numberOfChosenChannels;channel++)
+		for(channel=0;channel<dataParameters->numberOfAnalysed;channel++)
 			tmpDataValue+= *(*(multiChannelSignalTable + channel) + sample);
 
 		*(meanSignalTable + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
-		mp5Parameters->meanSignalEnergy+= (*(meanSignalTable + sample))*(*(meanSignalTable + sample));
 	}
 }
 

@@ -58,6 +58,19 @@ static void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Gab
 	unsigned int sample;
 	double       tmpModulus = 0.0;
 	unsigned int dimExpand = mp5Parameters->dimExpand;
+
+        const double phase = (*(gabor->phase + channelNumber));
+        const double KS = gabor->KS;
+	const double KC = gabor->KC;
+	const double KM = gabor->KM;
+
+	double sinPhase, cosPhase;
+
+	sincos(phase,&sinPhase,&cosPhase);
+
+	const double sinPart    = KS*(sinPhase*sinPhase);
+	const double cosPart    = KC*(cosPhase*cosPhase);
+	const double sinCosPart = 2.0*KM*sinPhase*cosPhase;
 	
 	double *signalInParticularChannel = *(mp5Parameters->multiChannelSignalTable + channelNumber);
 	double *prevGaborTable            = *(mp5Parameters->prevGaborTable);
@@ -66,11 +79,11 @@ static void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Gab
 	makeGaborTable(mp5Parameters,gabor,0);	
 	
 	for(sample=0;sample<dimExpand;sample++)
-	{
-		tmpModulus+= (*(signalInParticularChannel + sample))*(*(prevGaborTable + sample));
-	}
+	    tmpModulus+= (*(signalInParticularChannel + sample))*(*(prevGaborTable + sample));
 
-    findResidue(signalInParticularChannel,prevGaborTable,tmpModulus,dimExpand);	
+	findResidue(signalInParticularChannel,prevGaborTable,tmpModulus,dimExpand);	
+
+	*amplitude = (float)sqrt((sinPart + cosPart ) - sinCosPart);
 
 	*modulus = (float)(tmpModulus);
 }

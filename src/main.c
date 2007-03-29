@@ -53,9 +53,9 @@ static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParamet
 		tmpDataValue = 0.0;
 		
 		for(channel=0;channel<mp5Parameters->numberOfAnalysedChannels;channel++)
-			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + sample + dimOffset));
+			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + dimOffset + sample));
 
-		*(meanSignalTable + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
+		*(meanSignalTable + dimOffset + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
 	}
 }
 
@@ -800,8 +800,6 @@ VERBOSE 4\n\
 			    goto ERROR_PROCEDURE;
 
 			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
-
-			int i;
 
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 

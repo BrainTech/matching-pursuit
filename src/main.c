@@ -40,6 +40,7 @@
 
 static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParameters *dataParameters)
 {
+	const unsigned short int dimOffset = mp5Parameters->dimOffset;
 	unsigned short int sample;
 	double tmpDataValue;
 	
@@ -47,12 +48,12 @@ static void countMeanSignalOverChannels(MP5Parameters *mp5Parameters,DataParamet
 	double *meanSignalTable          = mp5Parameters->meanSignalTable;
 	int channel;
 
-	for(sample=0;sample<mp5Parameters->dimOffset;sample++)
+	for(sample=0;sample<dimOffset;sample++)
 	{
 		tmpDataValue = 0.0;
 		
-		for(channel=0;channel<dataParameters->numberOfAnalysed;channel++)
-			tmpDataValue+= *(*(multiChannelSignalTable + channel) + sample);
+		for(channel=0;channel<mp5Parameters->numberOfAnalysedChannels;channel++)
+			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + sample + dimOffset));
 
 		*(meanSignalTable + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
 	}
@@ -800,11 +801,13 @@ VERBOSE 4\n\
 
 			printf("\n --OFFSET--: %d\n\n",dataParameters.chosenOffsets[offsetNumber]);
 
+			int i;
+
 			mp5Parameters.multiChannelSignalTable = dataParameters.processedDataMatrix;
 
 			countMeanSignalOverChannels(&mp5Parameters,&dataParameters);
 			mp5Parameters.singleChannelSignalTable = mp5Parameters.meanSignalTable;
-				
+			
 			firstIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 			nextIterationSMP(&mp5Parameters,&dataParameters,&gaborDictionary);
 

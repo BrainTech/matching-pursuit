@@ -1,276 +1,297 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus       *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl                  *
- *   Department of Biomedical Physics at Warsaw University                 *
- *   http://brain.fuw.edu.pl, http://eeg.pl                                *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
+ *   Department of Biomedical Physics at Warsaw University			     		*
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
+ *												     		*
+ *   This program is free software; you can redistribute it and/or modify	     		*
+ *   it under the terms of the GNU General Public License as published by	     		*
+ *   the Free Software Foundation; either version 2 of the License, or 		     	*
+ *   (at your option) any later version.							     		*
+ *												     		*
+ *   This program is distributed in the hope that it will be useful,		     		*
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
+ *   GNU General Public License for more details.					     		*
+ *												     		*
+ *   You should have received a copy of the GNU General Public License		     	*
+ *   along with this program; if not, write to the					     		*
+ *   Free Software Foundation, Inc.,							     		*
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
  ***************************************************************************/
 
 #include<math.h>
 #include<stdlib.h>
+#include<string.h>
 #include<time.h>
-#include"include/def.h"
-#include"include/dic.h"
-#include"include/gabor.h"
-#include"include/r250.h"
-#include"include/types.h"
-#include"include/vector.h"
+#include"atom.h"
+#include"def.h"
+#include"dic.h"
+#include"matrix.h"
+#include"mp5.h"
+#include"r250.h"
+#include"types.h"
+#include"vector.h"
 
 #define kiloByte 1024.0
 #define megaByte 1048576.0
 
+extern unsigned char applicationMode;
 
-static void dictionaryToString(const GaborDictionary *gaborDictionary)
+static unsigned int findInterval(double gaborScale, unsigned char mode)
 {
-        unsigned short int scaleIndex;
- 		
-	printf("\n");
- 	printf(" GaborDictionary\n");
-        printf(" sizeOfDictionary:                        %u\n",gaborDictionary->sizeOfDictionary);
-	if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
-	    printf(" typeOfDictionary:                        OCTAVE_FIXED\n");       
-        else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
-	    printf(" typeOfDictionary:                        OCTAVE_STOCH\n");  
-                       
-        printf(" scaleToPeriodFactor:                     %lf\n",gaborDictionary->scaleToPeriodFactor);
-        printf(" dilationFactor:                          %lf\n",gaborDictionary->dilationFactor);
-        printf(" numberOfstepsInScale                     %hu\n",gaborDictionary->numberOfStepsInScale);
-        printf(" basicStepInPositionInSignal:             %lf\n",gaborDictionary->basicStepInPositionInSignal);
-        printf(" basicStepInFrequencyInSignal:            %lf\n",gaborDictionary->basicStepInFrequencyInSignal);
-        printf(" basicStepInFrequencyInOptimalDictionary: %lf\n",gaborDictionary->basicStepInFrequencyInOptimalDictionary);
-        printf(" basicStepInPeriodInOptimalDictionary:    %u\n",gaborDictionary->basicStepInPeriodInOptimalDictionary);
-        printf(" basicStepInPositionInOptimalDictionary:  %lf\n",gaborDictionary->basicStepInPositionInOptimalDictionary);
-                
-        for(scaleIndex=0;scaleIndex<gaborDictionary->numberOfStepsInScale;scaleIndex++)
-        {
-              printf(" [%hu]                                         \
-                       tableOfScalesInOptimalDictionary:      %5hu   \
-                       tableOfPeriodsInOptimalDictionary:     %12u     \
-                       tableOfFrequenciesInOptimalDictionary: %7.6lf \
-                       tableOfPositionsInOptimalDictionary:   %11.6lf \n", 
-                       scaleIndex,
-                       *(gaborDictionary->tableOfScalesInOptimalDictionary      + scaleIndex),     
-                       *(gaborDictionary->tableOfPeriodsInOptimalDictionary     + scaleIndex), 
-                       *(gaborDictionary->tableOfFrequenciesInOptimalDictionary + scaleIndex), 
-                       *(gaborDictionary->tableOfPositionsInOptimalDictionary   + scaleIndex)); 
-		       fflush(stdout);
-        }
+	unsigned int intervalRange;
+
+	if(mode & GAUSS_NON_GAUSS)
+		intervalRange    = (unsigned int)(sqrt(-LOG_EPS_DOT_PRODUCT/M_PI)*gaborScale + 1.5);
+	else if(mode & GAUSS_GAUSS)
+		intervalRange  = (unsigned int)(sqrt(-LOG_EPS_DOT_PRODUCT/M_2PI)*gaborScale + 1.5);
+
+	return intervalRange;
 }
 
-static void findIntegerScalesForDilationFactorParameters(const MP5Parameters *mp5Parameters, GaborDictionary *gaborDictionary)
+
+void setMP5Dimensions(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 {
-	const unsigned short int dimOffset = mp5Parameters->dimOffset;
-	const          double numerator    =  log(mp5Parameters->dimOffset);
-	const          double denominator  =  log(gaborDictionary->dilationFactor);
-	const unsigned short int numberOfStepsInScale = (unsigned short int)floor(numerator/denominator);
-	unsigned short int numberOfDifferentScales = 1;
-	unsigned short int scaleIndex,differentScalesCounter;
-	unsigned short int currentScale  = 1;
-	unsigned short int previousScale = 1;
-
-	for(scaleIndex=1;scaleIndex<=numberOfStepsInScale;scaleIndex++)
-	{
-		currentScale = (unsigned short int)(pow(gaborDictionary->dilationFactor,(double)scaleIndex));
+	/* in this place one has to estimate the size of the tables, required by mp5 algorithms.
+	      The gabor function presented in following way:
+			g = K*exp(-pi*(t-u)^2/s^2)*exp(-2piwt)
+	      has scale = s/sqrt(pi)
+	     If we want to get accurate results, the decomposition should be procceded in the range at least 4*scale
+ 	     In case of FFT optimalisation the FFT frequencies must be equal to optimal dictionary frequencies:
+		A = ln(0.5*(a + a^-1))
+		DF_fft = 2pi/N
+		DF = (2/s)sqrt(pi*A)
+		DF = DF_fft
+		2pi/N = (2/s)sqrt(pi*A)
+		N = s*sqrt(pi/A)
 		
-		if(currentScale==previousScale)
-			continue;
-		else
-        	{
-			numberOfDifferentScales++;
-			previousScale=currentScale;
-		}
-	}
+		On the other hand N = s*sqrt(pi/A) is a basic period for the particular scale.
+		If one reads this file, he founds, that the smaller stepi in period (and the in frequency = 2pi/period)
+		is equal to sqrt(pi/A). Periods for scales are equal to s*sqrt(pi/A).
+		To sum it up, if one has gabor period, this is  at the same time a dimension of FFT at which
+		one gets frequencies for optimalal dictionary.	
+	*/
 
-	if(currentScale!=dimOffset)
-		numberOfDifferentScales++;
+	// maximal scale is set to maximal scale o gabor
+	double maximalScale  = *(dictionary->tableOfScalesInOptimalDictionary  + dictionary->numberOfStepsInScale - 2);
+	double maximalPeriod = *(dictionary->tableOfPeriodsInOptimalDictionary + dictionary->numberOfStepsInScale - 2);
+	/* Now we check, whether the FFT dimension is at lest equal to or larger then range, for which dot product has required accurancy */
 
-	gaborDictionary->numberOfStepsInScale = numberOfDifferentScales;
+	unsigned int intervalRange;
 	
-	gaborDictionary->tableOfScalesInOptimalDictionary      = (unsigned short int *)usiVectorAllocate(numberOfDifferentScales);
-	gaborDictionary->tableOfPeriodsInOptimalDictionary     = (unsigned int *)uiVectorAllocate(numberOfDifferentScales);
-	gaborDictionary->tableOfFrequenciesInOptimalDictionary = (double *)dVectorAllocate(numberOfDifferentScales);
-	gaborDictionary->tableOfPositionsInOptimalDictionary   = (double *)dVectorAllocate(numberOfDifferentScales);
+	intervalRange = findInterval(maximalScale,GAUSS_NON_GAUSS);
 
-	if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
+	if(mp5Parameters->accuracy & FULL)
 	{
-		currentScale  = 1;
-		previousScale = 1;
-		*(gaborDictionary->tableOfScalesInOptimalDictionary) = currentScale;
-                                      
-		differentScalesCounter = 1;
-       
-		for(scaleIndex=1;scaleIndex<=numberOfStepsInScale;scaleIndex++)
+		double maximalFFTDimensionForGaborAtoms = 0.0;						 
+
+		if(mp5Parameters->FFT)
 		{
-			currentScale = (unsigned short int)(pow(gaborDictionary->dilationFactor,(double)scaleIndex));
-	   
-			if(currentScale==previousScale)
-				continue;
+			const double factor   = (2.0*intervalRange + 1)/maximalPeriod; // the dot product is calculated in the range:  position of atom +-interval -> 2*interval + 1 points*/
+
+			if(factor>1.0)
+				maximalFFTDimensionForGaborAtoms = ((unsigned int)(factor + 1.0))*maximalPeriod;
 			else
-			{
-				*(gaborDictionary->tableOfScalesInOptimalDictionary + differentScalesCounter) = currentScale;
-
-				differentScalesCounter++;
-				previousScale=currentScale;
-			}
-		}             
-    
-		*(gaborDictionary->tableOfScalesInOptimalDictionary + numberOfDifferentScales - 1) = dimOffset;
-
+				maximalFFTDimensionForGaborAtoms = maximalPeriod;
+		}
+		else
+			maximalFFTDimensionForGaborAtoms = 8000;//maximalFFTDimensionForGaborAtoms = 2.0*intervalRange + 1;
+	
+		mp5Parameters->marginalDimension       = maximalFFTDimensionForGaborAtoms/2 + 1;	
+		mp5Parameters->exponensTableDimension  = mp5Parameters->offsetDimension + mp5Parameters->marginalDimension;
+		mp5Parameters->offsetExpandedDimension = mp5Parameters->offsetDimension + 2*mp5Parameters->marginalDimension;
+		mp5Parameters->fftTableDimension       = mp5Parameters->offsetExpandedDimension;
+	
+		// printf(" period: %lf %u\n",maximalPeriod,intervalRange);
+		// printf(" mp5Parameters->marginalDimension: %u\n",mp5Parameters->marginalDimension);
+		// printf(" mp5Parameters->exponensTableDimension:  %u\n",mp5Parameters->exponensTableDimension);
+		// printf(" mp5Parameters->marginalDimension:       %u\n",mp5Parameters->marginalDimension);
+		// printf(" mp5Parameters->offsetExpandedDimension: %u\n",mp5Parameters->offsetExpandedDimension);
+		// printf(" mp5Parameters->fftTableDimension:       %u\n",mp5Parameters->fftTableDimension);
+		// printf(" calkowity rozmiar tablicy wynosi %u \n",mp5Parameters->offsetExpandedDimension);
 	}
-	else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
+	else if(mp5Parameters->accuracy & FLOATING)
 	{
-		time_t       seedTime;
-		long int     seed;
-		seed = time(&seedTime);
+		mp5Parameters->marginalDimension       = (maximalPeriod/2 + 1) > mp5Parameters->offsetDimension ? (maximalPeriod/2 + 1) : mp5Parameters->offsetDimension;
+		mp5Parameters->exponensTableDimension  = mp5Parameters->offsetDimension + mp5Parameters->marginalDimension;
+		mp5Parameters->offsetExpandedDimension = mp5Parameters->offsetDimension + 2*mp5Parameters->marginalDimension;
+		mp5Parameters->fftTableDimension       = mp5Parameters->offsetExpandedDimension;
+	}
+}
+
+static void findIntegerScalesForDilationFactorParameters(MP5Parameters *mp5Parameters, Dictionary *dictionary)
+{
+	const double       numerator            = log(mp5Parameters->offsetDimension);
+	const double       denominator          = log(dictionary->dilationFactor);
+	unsigned short int numberOfStepsInScale = (unsigned short int)(numerator/denominator + 0.5) + 1; // the last scale is for sin/cos wave.
+	unsigned short int scaleIndex = 0;
+	
+	if(mp5Parameters->maxGaborScale>0.0)
+	{
+		unsigned short int tmpNumberOfScales = 0;
+		unsigned short int counter;
+
+		for(counter=0;counter<numberOfStepsInScale;counter++)
+		{
+			if(pow(dictionary->dilationFactor,(counter + 1.0))>mp5Parameters->maxGaborScale)
+				break;
+			tmpNumberOfScales++;
+		}
+		numberOfStepsInScale = tmpNumberOfScales + 1;
+	}
+	
+	dictionary->numberOfStepsInScale = numberOfStepsInScale; 
+	
+	dictionary->tableOfScalesInOptimalDictionary                 = (double *)dVectorAllocate(numberOfStepsInScale);
+	dictionary->tableOfPeriodsInOptimalDictionary                = (unsigned int *)uiVectorAllocate(numberOfStepsInScale);
+	dictionary->tableOfFrequenciesInOptimalDictionary            = (double *)dVectorAllocate(numberOfStepsInScale);
+	
+	dictionary->tableOfPositionsInOptimalDictionary              = (double *)dVectorAllocate(numberOfStepsInScale);
+
+	if(dictionary->typeOfDictionary & OCTAVE_FIXED)
+	{                               
+		for(scaleIndex=0;scaleIndex<(numberOfStepsInScale-1);scaleIndex++)
+			*(dictionary->tableOfScalesInOptimalDictionary + scaleIndex) = pow(dictionary->dilationFactor,(scaleIndex + 1.0));
+		
+		*(dictionary->tableOfScalesInOptimalDictionary + numberOfStepsInScale - 1) = *(dictionary->tableOfScalesInOptimalDictionary + numberOfStepsInScale - 2);
+	}
+	else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+	{
+		time_t   seedTime;
+		long int seed;
+		double   exponent = 0.0;
+		
+		if(dictionary->randomSeed==AUTO_RANDOM_SEED)
+			seed = time(&seedTime);
+		else
+			seed = dictionary->randomSeed;
 
 		r250_init(seed);	
 
-		unsigned short int tmpTableOfPeriodsInOptimalDictionary[numberOfDifferentScales];
-		unsigned short int firstScale  = 0;
-		unsigned short int secondScale = 0;
-
-		currentScale  = 1;
-		previousScale = 1;
-		*tmpTableOfPeriodsInOptimalDictionary = currentScale;
-                                      
-		differentScalesCounter = 1;
-       
-		for(scaleIndex=1;scaleIndex<=numberOfStepsInScale;scaleIndex++)
+		for(scaleIndex=0;scaleIndex<(numberOfStepsInScale-1);scaleIndex++)
 		{
-			currentScale = (unsigned short int)(pow(gaborDictionary->dilationFactor,(double)scaleIndex));
-	   
-			if(currentScale==previousScale)
-				continue;
-			else
-			{
-				*(tmpTableOfPeriodsInOptimalDictionary + differentScalesCounter) = currentScale;
-
-				differentScalesCounter++;
-				previousScale=currentScale;
-			}
-		}             
-    
-		*(tmpTableOfPeriodsInOptimalDictionary + numberOfDifferentScales - 1) = dimOffset;
-
-		for(scaleIndex=0;scaleIndex<numberOfDifferentScales-1;scaleIndex++)
-		{
-			firstScale  = *(tmpTableOfPeriodsInOptimalDictionary + scaleIndex);
-			secondScale = *(tmpTableOfPeriodsInOptimalDictionary + scaleIndex + 1);
-			*(gaborDictionary->tableOfScalesInOptimalDictionary + scaleIndex) = (unsigned short int)(firstScale + r250n((unsigned int)(secondScale - firstScale)));
-		}
+			exponent = scaleIndex+(dr250() + 0.5);	
+			*(dictionary->tableOfScalesInOptimalDictionary + scaleIndex) = pow(dictionary->dilationFactor,exponent);
+		}			
 		
-		*(gaborDictionary->tableOfScalesInOptimalDictionary + numberOfDifferentScales - 1) = dimOffset;
-	
+		*(dictionary->tableOfScalesInOptimalDictionary + numberOfStepsInScale - 1) = *(dictionary->tableOfScalesInOptimalDictionary + numberOfStepsInScale - 2);
 	}
 
-	gaborDictionary->numberOfStepsInFrequencyAtParticularScale = uiVectorAllocate((unsigned int)numberOfDifferentScales);
-	gaborDictionary->numberOfStepsInPositionAtParticularScale  = usiVectorAllocate(numberOfDifferentScales);
-	
-	gaborDictionary->memoryAllocated|=FIRST_PART_OF_TABLES_IN_DICTIONARY_ALLOCATED;
+	// for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
+		// printf(" Ala ma kota %lf \n",*(dictionary->tableOfScalesInOptimalDictionary + scaleIndex));
+	// printf("\n");
+	dictionary->numberOfStepsInFrequencyAtParticularScale = uiVectorAllocate((unsigned int)numberOfStepsInScale);
+	dictionary->numberOfStepsInPositionAtParticularScale  = uiVectorAllocate(numberOfStepsInScale);
 
 }
 
-static void testScaleToPeriodFactorGabor(const GaborDictionary *gaborDictionary, Gabor *gabor, double scaleToPeriodFactor)
+static BOOLEAN testScaleToPeriodFactorAtom(const Dictionary *dictionary, unsigned short int scaleIndex, unsigned int rifling, double scaleToPeriodFactor)
 {
-    const unsigned int period = (unsigned int)((*(gaborDictionary->tableOfPeriodsInOptimalDictionary +  gabor->scaleIndex))/((double)gabor->rifling) + 0.5);
-    const double       scale  = (*(gaborDictionary->tableOfScalesInOptimalDictionary  +  gabor->scaleIndex))/sqrt(M_PI);
 
-    if(scale<scaleToPeriodFactor*period)
-	gabor->feature|=INCORRECTGABOR;
+	const unsigned int period = (unsigned int)((*(dictionary->tableOfPeriodsInOptimalDictionary + scaleIndex))/((double)rifling) + 0.5);
+	const double       scale  = (*(dictionary->tableOfScalesInOptimalDictionary  + scaleIndex))/sqrt(M_PI);
+
+	if(scale<scaleToPeriodFactor*period)
+		return FALSE;
+	
+	return TRUE;
 }
 
+static void atomToString(const MP5Parameters *mp5Parameters, const Dictionary *dictionary, const Atom *atom, FILE* file)
+{
+	fprintf(file," scale:           %lf\n",(*(dictionary->tableOfScalesInOptimalDictionary + atom->scaleIndex))/sqrt(M_PI));
+	fprintf(file," position:        %u\n",atom->position);
+	fprintf(file," rifling:         %u\n",atom->rifling);
+	fprintf(file," frequency:       %lf\n",(atom->rifling + 1)*M_2PI/(*(dictionary->tableOfPeriodsInOptimalDictionary + atom->scaleIndex)));
+	fprintf(file," basicFrequency:  %lf\n",*(dictionary->tableOfFrequenciesInOptimalDictionary + atom->scaleIndex));
+	fprintf(file," basicPeriod:     %u\n",*(dictionary->tableOfPeriodsInOptimalDictionary + atom->scaleIndex));
+	fprintf(file," \n");
+}
 
-void printSizeOfDictionaryAndSizeOfSinCosExpTables(const MP5Parameters *mp5Parameters, const GaborDictionary *gaborDictionary)
+static void printSizeOfDictionaryAndSizeOfSinCosExpTables(const Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 {
     unsigned short int scaleIndex;
-
     unsigned long int numberOfPointsInSinCosTables = 0;
     unsigned long int numberOfPointsInExpTables    = 0;
     unsigned long int totalNumberOfPoints          = 0;
+	unsigned int sizeOfDictionary = dictionary->numberOfDiracFunctions  +
+									dictionary->numberOfGaussFunctions  +
+									dictionary->numberOfSinCosFunctions + 
+									dictionary->numberOfCorrectGabors;
 
-    unsigned int sizeOfRSRCPhaseTablesOfOneGabor = 3*sizeof(float)*mp5Parameters->numberOfAnalysedChannels; // 3x because we have tables OF RS RC and phase
+    unsigned int sizeOfRSRCPhaseTablesOfOneAtom = 3*sizeof(float)*mp5Parameters->numberOfAllocatedChannels; // 3x because we have tables OF RS RC and phase
 
-    for(scaleIndex=0;scaleIndex<gaborDictionary->numberOfStepsInScale;scaleIndex++)
-	numberOfPointsInSinCosTables+= (*(gaborDictionary->tableOfPeriodsInOptimalDictionary + scaleIndex));
+    for(scaleIndex=0;scaleIndex<dictionary->numberOfStepsInScale;scaleIndex++)
+		numberOfPointsInSinCosTables+= (*(dictionary->tableOfPeriodsInOptimalDictionary + scaleIndex));
 
-    numberOfPointsInExpTables = mp5Parameters->dimExpTable*gaborDictionary->numberOfStepsInScale;
+    numberOfPointsInExpTables = mp5Parameters->offsetExpandedDimension*dictionary->numberOfStepsInScale;
     
     totalNumberOfPoints = 2*numberOfPointsInSinCosTables + numberOfPointsInExpTables;
 
-    printf(" INFORMATION ABOUT DICTIONARY: \n");	
+    printf(" INFORMATION ABOUT DICTIONARY: \n");
     printf(" \n");
-    printf(" NUMBER OF DIRAC'S DELTAS:  %12hu\n",mp5Parameters->dimOffset);
-    printf(" NUMBER OF GABORS:          %12u\n",gaborDictionary->sizeOfDictionary - mp5Parameters->dimOffset - gaborDictionary->numberSinCosFunctions + 1);
-    printf(" NUMBER OF SIN/COS:         %12u\n",gaborDictionary->numberSinCosFunctions);
+    printf(" NUMBER OF DIRAC'S DELTAS:  %12hu\n",dictionary->numberOfDiracFunctions);
+    printf(" NUMBER OF GAUSS FUNCTIONS: %12u\n",dictionary->numberOfGaussFunctions);
+    printf(" NUMBER OF SIN/COS:         %12u\n",dictionary->numberOfSinCosFunctions);
+    printf(" NUMBER OF CORRECT GABORS:  %12u\n",dictionary->numberOfCorrectGabors);
     printf(" \n");
-    printf(" TOTAL NUMBER OF GABORS:    %12u      %10.3lf (MB)\n",gaborDictionary->sizeOfDictionary,(1.0*gaborDictionary->sizeOfDictionary*(sizeof(Gabor) + sizeOfRSRCPhaseTablesOfOneGabor))/megaByte);
+    printf(" TOTAL NUMBER OF ATOMS:     %12u      %10.3lf (MB)\n",sizeOfDictionary,(1.0*dictionary->sizeOfDictionary*(sizeof(Atom) + sizeOfRSRCPhaseTablesOfOneAtom))/megaByte);
     printf(" \n");
     printf(" SIZE OF SIN TABLES:                          %10.3lf (MB)\n",(1.0*numberOfPointsInSinCosTables*sizeof(double))/megaByte);
     printf(" SIZE OF COS TABLES:                          %10.3lf (MB)\n",(1.0*numberOfPointsInSinCosTables*sizeof(double))/megaByte);
     printf(" SIZE OF EXP TABLES:                          %10.3lf (MB)\n",(1.0*numberOfPointsInExpTables*sizeof(double))/megaByte);
     printf(" SIZE OF ALOCATED SIN/COS/EXP TABLES:         %10.3lf (MB)\n",(1.0*totalNumberOfPoints*sizeof(double))/megaByte); 
     printf(" \n");
-    printf(" TOTAL MEMORY USAGE BY DICTIONARY:            %10.3lf (MB)\n",(1.0*gaborDictionary->sizeOfDictionary*(sizeof(Gabor) + sizeOfRSRCPhaseTablesOfOneGabor) + 1.0*totalNumberOfPoints*sizeof(double))/megaByte);
+    printf(" TOTAL MEMORY USAGE BY DICTIONARY:            %10.3lf (MB)\n",(1.0*dictionary->sizeOfDictionary*(sizeof(Atom) + sizeOfRSRCPhaseTablesOfOneAtom) + 1.0*totalNumberOfPoints*sizeof(double))/megaByte);
     fflush(stdout);
-    
 }
 
-
-void analyseDictionarySizeAndType(MP5Parameters *mp5Parameters,GaborDictionary *gaborDictionary)
+void analyseDictionarySizeAndType(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 {
-    printf("\n ANALYSIS OF DICTIONARY TYPE AND DICTIONARY SIZE \n");
+	if(applicationMode & PROCESS_USER_MODE)
+		printf("\n ANALYSIS OF DICTIONARY TYPE AND DICTIONARY SIZE \n");
 
-    unsigned short int dimOffset = mp5Parameters->dimOffset;
-    unsigned int gaborsCounter;
-
-    gaborDictionary->basicStepInPositionInSignal  = 1.0;
-    gaborDictionary->basicStepInFrequencyInSignal = 0.0; //?; now we don now how much
+	unsigned int offsetDimension = mp5Parameters->offsetDimension;
+    unsigned int gaussCounter;
+	unsigned int gaborsCounter;
     
-    if((gaborDictionary->typeOfDictionary & OCTAVE_FIXED) || (gaborDictionary->typeOfDictionary & OCTAVE_STOCH))
+    dictionary->basicStepInPositionInSignal  = 1.0;
+    dictionary->basicStepInFrequencyInSignal = 0.0; //?; now we don't now how much
+    	
+    if((dictionary->typeOfDictionary & OCTAVE_FIXED) || (dictionary->typeOfDictionary & OCTAVE_STOCH))
     {
 
-        findIntegerScalesForDilationFactorParameters(mp5Parameters,gaborDictionary);
+        findIntegerScalesForDilationFactorParameters(mp5Parameters,dictionary);
 
-	const unsigned short int numberOfStepsInScale = gaborDictionary->numberOfStepsInScale;
-        double       		 basicStepInFrequencyInOptimalDictionary;
-	unsigned int basicStepInPeriodInOptimalDictionary = 0;
+		const unsigned short int numberOfStepsInScale = dictionary->numberOfStepsInScale;
+        double					 basicStepInFrequencyInOptimalDictionary = 0.0;
+		unsigned int             basicStepInPeriodInOptimalDictionary    = 0;
+		double                   basicStepInPositionInOptimalDictionary  = 0;
 
-	unsigned short int *tableOfScalesInOptimalDictionary;
-        unsigned       int *tableOfPeriodsInOptimalDictionary;
-	double		   *tableOfFrequenciesInOptimalDictionary;
-	double		   *tableOfPositionsInOptimalDictionary;
-        unsigned       int numberOfStepsInFrequency = 0;
-	unsigned short int numberOfStepsInPosition  = 0;
+		double	     *tableOfScalesInOptimalDictionary      = NULL;
+        unsigned int *tableOfPeriodsInOptimalDictionary     = NULL;
+		double	     *tableOfFrequenciesInOptimalDictionary = NULL;
+		double	     *tableOfPositionsInOptimalDictionary   = NULL;
+        unsigned int numberOfStepsInFrequency = 0;
+		unsigned int numberOfStepsInPosition  = 0;
 	
-	unsigned short int scaleIndex;
-	unsigned       int DT;
-        double             DF;	
-	double             DU;
+		unsigned short int scaleIndex = 0;
+		unsigned       int DT         = 0;
+        double             DF         = 0.0;	
+		double             DU         = 0.0;
+		
+		double stepInFrequency = 0.0;
 
-	double stepInFrequency = 0.0;
+        double constA = 0.0;
 
-        double constA;
+		gaussCounter  = 0U;
+		gaborsCounter = 0U;
 
-	gaborsCounter = 0U;
+        constA = log(0.5*(dictionary->dilationFactor + 1.0/dictionary->dilationFactor));
 
-        constA = log(0.5*(gaborDictionary->dilationFactor + 1.0/gaborDictionary->dilationFactor));
-
-	if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
-	    basicStepInPeriodInOptimalDictionary = ((unsigned int)ceil(M_2PI/(2.0*sqrt(M_PI*constA))))*gaborDictionary->periodDensity;
+		if(dictionary->typeOfDictionary & OCTAVE_FIXED)
+			basicStepInPeriodInOptimalDictionary = (unsigned int)(sqrt(M_PI/constA)); // ((unsigned int)(M_2PI/(2.0*sqrt(M_PI*constA))));
                                                 // basicStepInFrequencyInOptimalDictionary is in radians degree
                                                 // if we want to get period in samples, we have to use the following, simple equation:
                                                 // T = 2pi/w
@@ -278,358 +299,539 @@ void analyseDictionarySizeAndType(MP5Parameters *mp5Parameters,GaborDictionary *
                                                 // basicStepInPeriodInOptimalDictionary should be integer.
                                                 // thanks to it, we will be able to generate all sin/cos
                                                 // functions from one sin/cos
-	else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
-	    basicStepInPeriodInOptimalDictionary = 2*((unsigned int)ceil(M_2PI/(2.0*sqrt(M_PI*constA))))*gaborDictionary->periodDensity;
-						// in comparizon with equation above we multpily basicStepInPeriodInOptimalDictionary by 2
-						// because the range between randomed gabors must be DF.
-						// In case of OCTAVE_FIXED Dictionary gabors in frequency domain are positioned every DF
-						// Now we want random gabor. To avoid situation when the range betwean two nearest gabors is
-						// larger then DF, estimated from equations, we have divided it by 2, this mean we
-						// multiply period by 2
-
-	if(basicStepInPeriodInOptimalDictionary<4)
-	    basicStepInPeriodInOptimalDictionary = 4;
-	
-	// Why minimal step in period is set to 4?
-	// The smallest period in digital signal is 2.
-	// If someone malicious set dilationFactor very small, he would get very large basicStepInPeriodInOptimalDictionary,
-	// but on the other hand, if he set dilationFactor very large, he colud get basicStepInPeriodInOptimalDictionary smallest
-	// then one sample !
-	// to avoid such a situation, we have to give some minmal value. But why not 2?
-	// Other periods are estimated as a multiplication of basicStepInPeriodInOptimalDictionary in a such way,
-	// that frequencies related with these periods are not higher then PI - 2*PI/basicStepInPeriodInOptimalDictionary.
-	// After some short modification of equeations one can find, that in order to get frequencies consisted
-	// with the condition above, basicStepInPeriodInOptimalDictionary must be at least 4.
-	    
-	
-	// basicStepInFrequencyInOptimalDictionary might have been non integer. 
-	// We have found integer basicStepInPeriodInOptimalDictionary, and now we calculate
-	// basicStepInFrequencyInOptimalDictionary for it.
-  
+												
+		else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+		{
+			if(mp5Parameters->FFT)
+				basicStepInPeriodInOptimalDictionary = ((unsigned int)(sqrt(M_PI/constA)));
+			else
+				basicStepInPeriodInOptimalDictionary = ((unsigned int)(sqrt(M_PI/constA)))*dictionary->periodDensity;		
+		}
+			
         basicStepInFrequencyInOptimalDictionary = M_2PI/basicStepInPeriodInOptimalDictionary;
    
-        gaborDictionary->basicStepInFrequencyInOptimalDictionary = basicStepInFrequencyInOptimalDictionary;
-	gaborDictionary->basicStepInPeriodInOptimalDictionary    = basicStepInPeriodInOptimalDictionary;
+        dictionary->basicStepInFrequencyInOptimalDictionary = basicStepInFrequencyInOptimalDictionary;
+		dictionary->basicStepInPeriodInOptimalDictionary    = basicStepInPeriodInOptimalDictionary;
   
-	if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
-    	    gaborDictionary->basicStepInPositionInOptimalDictionary = sqrt(constA/M_PI);
-	else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
-    	    gaborDictionary->basicStepInPositionInOptimalDictionary = sqrt(constA/M_PI)/2.0; // why we do this, it is described above
+		basicStepInPositionInOptimalDictionary = sqrt(constA/M_PI);
+
+		tableOfScalesInOptimalDictionary       = dictionary->tableOfScalesInOptimalDictionary;
+        tableOfPeriodsInOptimalDictionary      = dictionary->tableOfPeriodsInOptimalDictionary;
+		tableOfFrequenciesInOptimalDictionary  = dictionary->tableOfFrequenciesInOptimalDictionary;
+        tableOfPositionsInOptimalDictionary    = dictionary->tableOfPositionsInOptimalDictionary;
+
+		for(scaleIndex=0;scaleIndex<(numberOfStepsInScale - 1);scaleIndex++)
+		{				
+			DT = *(tableOfPeriodsInOptimalDictionary     + scaleIndex) = (unsigned int)(basicStepInPeriodInOptimalDictionary*(*(tableOfScalesInOptimalDictionary + scaleIndex)) + 0.5);
+			DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex) = M_2PI/DT;
+			DU = (*(tableOfScalesInOptimalDictionary + scaleIndex))*basicStepInPositionInOptimalDictionary;
+				
+			 // printf(" %u %lf\n",scaleIndex,*(tableOfScalesInOptimalDictionary + scaleIndex));
+			 // printf(" DT %u\n",DT);
+			 // printf(" DF %lf\n",DF);
+			 // printf(" DU %lf \n\n",DU);
+
+			fflush(stdout);
+				
+			if(DU<=(double)(dictionary->basicStepInPositionInSignal))
+				DU = (double)(dictionary->basicStepInPositionInSignal);
+				
+			*(tableOfPositionsInOptimalDictionary + scaleIndex) = DU;
 	    
-	if(gaborDictionary->basicStepInPositionInOptimalDictionary<=(double)(gaborDictionary->basicStepInPositionInSignal))
-	    gaborDictionary->basicStepInPositionInOptimalDictionary = (double)(gaborDictionary->basicStepInPositionInSignal);
-      
-	tableOfScalesInOptimalDictionary      = gaborDictionary->tableOfScalesInOptimalDictionary;
-        tableOfPeriodsInOptimalDictionary     = gaborDictionary->tableOfPeriodsInOptimalDictionary;
-	tableOfFrequenciesInOptimalDictionary = gaborDictionary->tableOfFrequenciesInOptimalDictionary;
-        tableOfPositionsInOptimalDictionary   = gaborDictionary->tableOfPositionsInOptimalDictionary;
+			if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+			{
+				if(mp5Parameters->FFT)
+					stepInFrequency = DF;
+				else
+					stepInFrequency = DF*dictionary->periodDensity;
+			}
+			else
+				stepInFrequency = DF;
+				
+			numberOfStepsInFrequency = (unsigned int)((M_PI - 1.5*stepInFrequency)/stepInFrequency + 1);
+			*(dictionary->numberOfStepsInFrequencyAtParticularScale + scaleIndex) = numberOfStepsInFrequency;
 
-        for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
-	{
-	    DT = *(tableOfPeriodsInOptimalDictionary     + scaleIndex) = basicStepInPeriodInOptimalDictionary*(*(tableOfScalesInOptimalDictionary + scaleIndex));
-	    DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex) = M_2PI/DT;
-	    DU = (*(tableOfScalesInOptimalDictionary     + scaleIndex))*sqrt(constA/M_PI);
+			numberOfStepsInPosition  = (unsigned int)((offsetDimension - 1.5*DU)/DU + 1);		
+			*(dictionary->numberOfStepsInPositionAtParticularScale + scaleIndex) = numberOfStepsInPosition;
+			
+			if(dictionary->gaussInDictionary)
+				gaussCounter +=numberOfStepsInPosition;
+				
+			gaborsCounter+=numberOfStepsInFrequency*numberOfStepsInPosition;
+		
+			if(scaleIndex==(numberOfStepsInScale-2)) // at this moment we know the longest period (it is for highest scale), so we have to set up
+			{
+				/* find the size of tables, which are required by algorithms 
+				the size of tables depends on maximal scale of atoms */			
+				setMP5Dimensions(dictionary,mp5Parameters);
+			}
+		}
 
-	    if(DU<=gaborDictionary->basicStepInPositionInSignal)
-		DU = gaborDictionary->basicStepInPositionInOptimalDictionary; // this means that DU = gaborDictionary->basicStepInPositionInOptimalDictionary = gaborDictionary->basicStepInPositionInSignal
-         
-	    *(tableOfPositionsInOptimalDictionary + scaleIndex) = DU;
-	    
-	    stepInFrequency = DF*gaborDictionary->periodDensity;
+		if(dictionary->diracInDictionary)
+			dictionary->numberOfDiracFunctions = offsetDimension;
 
-	    if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
-	    {
-		numberOfStepsInFrequency = (unsigned int)((M_PI - 2.0*stepInFrequency)/stepInFrequency + 1);
-		*(gaborDictionary->numberOfStepsInFrequencyAtParticularScale + scaleIndex) = numberOfStepsInFrequency;
-
-		numberOfStepsInPosition  = (unsigned short int)((dimOffset - 2.0*DU)/DU + 1);		
-		*(gaborDictionary->numberOfStepsInPositionAtParticularScale + scaleIndex)  = numberOfStepsInPosition;
-	    }
-	    else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
-	    {
-		numberOfStepsInFrequency = (unsigned int)((M_PI - 3.0*stepInFrequency)/stepInFrequency + 1);
-		*(gaborDictionary->numberOfStepsInFrequencyAtParticularScale + scaleIndex) = numberOfStepsInFrequency;
-
-		numberOfStepsInPosition  = (unsigned short int)((dimOffset - 3.0*DU)/DU + 1);		
-		*(gaborDictionary->numberOfStepsInPositionAtParticularScale + scaleIndex)  = numberOfStepsInPosition;	    
-	    }
-	    
-	    if(scaleIndex==(numberOfStepsInScale-1))
-		gaborDictionary->numberSinCosFunctions = numberOfStepsInFrequency;
-
-	    gaborsCounter+=numberOfStepsInFrequency*numberOfStepsInPosition;	
+		dictionary->numberOfGaussFunctions = gaussCounter;
+	
+		if(dictionary->sinCosInDictionary)
+		{						 
+			DT = *(tableOfPeriodsInOptimalDictionary      + numberOfStepsInScale - 1) = *(tableOfPeriodsInOptimalDictionary      + numberOfStepsInScale - 2);
+ 			DF = *(tableOfFrequenciesInOptimalDictionary  + numberOfStepsInScale - 1) = M_2PI/DT;
+									    			
+			numberOfStepsInFrequency = *(dictionary->numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 2);
+			*(dictionary->numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1) = numberOfStepsInFrequency;
+		
+			dictionary->numberOfSinCosFunctions = numberOfStepsInFrequency;
+		}
+				
+		dictionary->sizeOfDictionary = dictionary->numberOfDiracFunctions  + /* number of Dirac Delta          */
+									   dictionary->numberOfGaussFunctions  + /* number of  Gauss Functions  */
+									   dictionary->numberOfSinCosFunctions + /* number of  Sin/Cos Waves   */
+									   gaborsCounter;                        /* number of Gabor Waves */
+	
+		dictionary->numberOfNonFFTAtoms = dictionary->numberOfDiracFunctions + dictionary->numberOfGaussFunctions;
 	}
-        
-	gaborDictionary->sizeOfDictionary = dimOffset     +                              /* number of Dirac Delta    */
-					    gaborsCounter +                              /* number of Gabors Waves   */
-					    gaborDictionary->numberSinCosFunctions;      /* number of  Sin/Cos Waves */
-
-    }
 
 }
 
-void allocateDictionary(const MP5Parameters *mp5Parameters, GaborDictionary *gaborDictionary)
+void allocateDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 {
-    unsigned int gaborsCounter;
-    const unsigned short int numberOfAnalysedChannels = mp5Parameters->numberOfAnalysedChannels;
-    Gabor *gaborPointer;
+    unsigned int             atomsCounter = 0;
+    const unsigned short int numberOfAllocatedChannels = mp5Parameters->numberOfAllocatedChannels;
+    Atom *atomPointer = NULL;
 
-    gaborDictionary->gaborsTable = (Gabor *)malloc(gaborDictionary->sizeOfDictionary*sizeof(Gabor));
+    dictionary->atomsTable = (Atom *)malloc(dictionary->sizeOfDictionary*sizeof(Atom));
 
-    for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
+    for(atomsCounter=0;atomsCounter<dictionary->sizeOfDictionary;atomsCounter++)
     {
-	gaborPointer = (gaborDictionary->gaborsTable + gaborsCounter);
-	allocateGaborElements(gaborPointer,numberOfAnalysedChannels);
-    }
-
-    gaborDictionary->memoryAllocated|=SECOND_PART_OF_TABLES_IN_DICTIONARY_ALLOCATED;
-}
-
-void freeDictionary(GaborDictionary *gaborDictionary)
-{
-    unsigned int gabor;
-
-    if(gaborDictionary->memoryAllocated & FIRST_PART_OF_TABLES_IN_DICTIONARY_ALLOCATED)
-    {
-	usiVectorFree(gaborDictionary->tableOfScalesInOptimalDictionary);
-	uiVectorFree(gaborDictionary->tableOfPeriodsInOptimalDictionary);
-	dVectorFree(gaborDictionary->tableOfFrequenciesInOptimalDictionary);
-	dVectorFree(gaborDictionary->tableOfPositionsInOptimalDictionary);    
-	uiVectorFree(gaborDictionary->numberOfStepsInFrequencyAtParticularScale);
-	usiVectorFree(gaborDictionary->numberOfStepsInPositionAtParticularScale);
-    }
-    else if(gaborDictionary->memoryAllocated & SECOND_PART_OF_TABLES_IN_DICTIONARY_ALLOCATED)
-    {
-	for(gabor=0;gabor<gaborDictionary->sizeOfDictionary;gabor++)
-	    freeGaborElements(gaborDictionary->gaborsTable + gabor);
-
-	free(gaborDictionary->gaborsTable);
+		atomPointer = (dictionary->atomsTable + atomsCounter);
+		allocateAtomElements(atomPointer,numberOfAllocatedChannels, mp5Parameters->MPType);
     }
 }
 
-void makeDictionary(const MP5Parameters *mp5Parameters, GaborDictionary *gaborDictionary)
+void freeDictionary(Dictionary *dictionary)
 {
-    time_t       seedTime;
-    long int     seed;
-    Gabor        *gaborPointer = NULL;
+    unsigned int atom;
 
-    const unsigned short int dimOffset = mp5Parameters->dimOffset;
-    unsigned short int leftSize, rightSize;
+	if(dictionary->tableOfScalesInOptimalDictionary!=NULL)
+		dVectorFree(dictionary->tableOfScalesInOptimalDictionary);
+	if(dictionary->tableOfPeriodsInOptimalDictionary!=NULL)
+		uiVectorFree(dictionary->tableOfPeriodsInOptimalDictionary);
+	if(dictionary->tableOfFrequenciesInOptimalDictionary!=NULL)
+		dVectorFree(dictionary->tableOfFrequenciesInOptimalDictionary);
+	if(dictionary->tableOfPositionsInOptimalDictionary!=NULL)
+		dVectorFree(dictionary->tableOfPositionsInOptimalDictionary);    
+	if(dictionary->numberOfStepsInFrequencyAtParticularScale!=NULL)
+		uiVectorFree(dictionary->numberOfStepsInFrequencyAtParticularScale);
+	if(dictionary->numberOfStepsInPositionAtParticularScale!=NULL)
+		uiVectorFree(dictionary->numberOfStepsInPositionAtParticularScale);
 
-    const unsigned short int numberOfStepsInScale = gaborDictionary->numberOfStepsInScale;
+	if(dictionary->atomsTable!=NULL)
+	{
+		for(atom=0;atom<dictionary->sizeOfDictionary;atom++)
+			if((dictionary->atomsTable + atom)!=NULL)
+				freeAtomElements(dictionary->atomsTable + atom);
+				
+		free(dictionary->atomsTable);
+	}
+	
+}
 
-    const double *tableOfFrequenciesInOptimalDictionary  = gaborDictionary->tableOfFrequenciesInOptimalDictionary;
-    const double *tableOfPositionsInOptimalDictionary    = gaborDictionary->tableOfPositionsInOptimalDictionary;
+void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
+{	
+	unsigned int numberOfCorrectGabors = 0;
+	
+	time_t       seedTime = 0;
+    long int     seed     = 0;
+    Atom        *atomPointer = NULL;
+	
+	double scaleToPeriodFactor = dictionary->scaleToPeriodFactor;
+    const unsigned int offsetDimension = mp5Parameters->offsetDimension;
+          unsigned int leftSize = 0, rightSize = 0;
 
-    const unsigned       int *numberOfStepsInFrequencyAtParticularScale = gaborDictionary->numberOfStepsInFrequencyAtParticularScale;
-    const unsigned short int *numberOfStepsInPositionAtParticularScale  = gaborDictionary->numberOfStepsInPositionAtParticularScale;
+    const unsigned short int numberOfStepsInScale = dictionary->numberOfStepsInScale;
 
-    const unsigned int periodDensity = gaborDictionary->periodDensity;
+    const double *tableOfFrequenciesInOptimalDictionary  = dictionary->tableOfFrequenciesInOptimalDictionary;
+    const double *tableOfPositionsInOptimalDictionary    = dictionary->tableOfPositionsInOptimalDictionary;
 
-    unsigned       int numberOfStepsInFrequency;
-    unsigned short int numberOfStepsInPosition;
+    const unsigned int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
+    const unsigned int *numberOfStepsInPositionAtParticularScale  = dictionary->numberOfStepsInPositionAtParticularScale;
+
+    const unsigned int periodDensity = dictionary->periodDensity;
+
+    unsigned int numberOfStepsInFrequency = 0;
+    unsigned int numberOfStepsInPosition  = 0;
     
-    unsigned short int scaleIndex = 0;
-    unsigned       int frequencyIndex;
-    unsigned short int positionIndex;
-    unsigned       int rifling    = 0;
-    double             frequency  = 0.0;
-
+    unsigned short int scaleIndex     = 0;
+    unsigned       int frequencyIndex = 0;
+    unsigned       int positionIndex  = 0;
+    unsigned       int rifling        = 0;
+    double             frequency      = 0.0;
 
     double DF              = 0.0;
     double DU              = 0.0;
     double stepInFrequency = 0.0; 
-    
+    double        dr250Position  = 0.0;
+    short  int    dn250Frequency = 0;
+    double        dr250Frequency = 0.0;
+	
     seed = time(&seedTime);
 
     r250_init(seed);	
 
-    printf("\n START DICTIONARY GENERAITING \n\n");
-
-    gaborPointer = gaborDictionary->gaborsTable;
-
-    unsigned counter = 0;
-
-    /* set Dirac Delta */
-    for(positionIndex=0;positionIndex<(double)(dimOffset);positionIndex++)
-    {
-	gaborPointer->scaleIndex  = 0; // although scaleIndex = 0 means scale = 1, we set this value, 
-    				       // because this fild cand not be empty. However in case of Dirac Delta 
-				       // this fild is not used, so it will not cause any disturbance 
-	gaborPointer->rifling     = 0;
-	gaborPointer->position    = (unsigned short int)positionIndex;
-	gaborPointer->feature|=DIRACDELTA;
-
-	leftSize  = gaborPointer->position;
-	rightSize = (unsigned short int)(dimOffset - gaborPointer->position - 1);
-
-	if(leftSize<=rightSize)
-	    gaborPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+    atomPointer = dictionary->atomsTable;
 		
-	gaborPointer++;
-	counter++;
-    }
-
-    /* set Gabor waves */
-    for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
-    {
-	DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex);
-        DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);  
-
-	numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);	
-	numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale + scaleIndex);	
-
-	stepInFrequency = DF*periodDensity;
-
-	if(gaborDictionary->typeOfDictionary & OCTAVE_FIXED)
-	{            
-	    for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling=rifling+periodDensity)
-    	    {
-		for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
-		{
-		    gaborPointer->scaleIndex = scaleIndex;
-		    gaborPointer->rifling    = rifling;
-		    gaborPointer->position   = (unsigned short int)(DU*(positionIndex + 1));	
-
-		    gaborPointer->feature|=GABORWAVE;
-		    leftSize  = gaborPointer->position;
-		    rightSize = (unsigned short int)(dimOffset - gaborPointer->position - 1);
-
-		    if(leftSize<=rightSize)
-			gaborPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
-
-		    gaborPointer++;
-		    counter++;
-		}  	    
-	    }
-	}
-	else if(gaborDictionary->typeOfDictionary & OCTAVE_STOCH)
+	if(applicationMode & PROCESS_USER_MODE)
+		printf("\n START DICTIONARY GENERAITING \n\n");
+		
+    /* set Dirac Delta */
+	if(dictionary->diracInDictionary)
 	{
-	    for(frequencyIndex=0;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++)
-    	    {
-		for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
-		{
-		    gaborPointer->scaleIndex = scaleIndex;
-		    frequency                = stepInFrequency*(frequencyIndex + 1) + DF*r250n(periodDensity);                     
-		    gaborPointer->rifling    = (unsigned int)(frequency/DF + 0.5);
+		for(positionIndex=0;positionIndex<(double)(offsetDimension);positionIndex++)
+		{			
+			atomPointer->scaleIndex  = 0; // although scaleIndex = 0 means scale = 1, we set this value, 
+										  // because this fild cand not be empty. However in case of Dirac Delta 
+									      // this fild is not used, so it will not cause any disturbance 
 
-		    gaborPointer->position   = (unsigned short int)(DU*(positionIndex + 1) + DU*dr250());	
+			atomPointer->rifling     = 0;
+			atomPointer->position    = (unsigned int)positionIndex;
+			atomPointer->feature|=DIRACDELTA;
 
-		    gaborPointer->feature|=GABORWAVE;
-		    leftSize  = gaborPointer->position;
-		    rightSize = (unsigned short int)(dimOffset - gaborPointer->position - 1);
+			leftSize  = atomPointer->position;
+			rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1);
 
-		    if(leftSize<=rightSize)
-			gaborPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
-
-		    gaborPointer++;
-		    counter++;
-		}
-	    }
+			if(leftSize<=rightSize)
+				atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+		
+			atomPointer++;
+		} 
 	}
+	
+	if(dictionary->gaussInDictionary)
+	{
+		/* set Gauss Functions */
+		for(scaleIndex=0;scaleIndex<(numberOfStepsInScale-1);scaleIndex++) // scaleindex form 0 to numberOfStepsInScale-2 is for gauss/gabor function
+		{																   // scale for scaleIndex= numberOfStepsInScale-1 us for sin/cos wave
+			DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);
+			numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale + scaleIndex);	
+			
+			if(dictionary->typeOfDictionary & OCTAVE_FIXED)
+			{        
+				for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
+				{
+					atomPointer->scaleIndex = scaleIndex;
+					atomPointer->position   = (unsigned int)(DU*(positionIndex + 1));	
+
+					atomPointer->feature|=GAUSSFUNCTION;
+					leftSize  = atomPointer->position;
+					rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1);
+					
+					if(leftSize<=rightSize)
+						atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+
+					atomPointer++;
+				}
+			}
+			else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+			{		
+				for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
+				{
+					atomPointer->scaleIndex = scaleIndex;
+					atomPointer->position   = (unsigned int)(DU*(positionIndex + 1) + DU*(dr250() - 0.5) + 0.5);	
+
+					atomPointer->feature|=GAUSSFUNCTION;
+					leftSize  = atomPointer->position;
+					rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1); 
+
+					if(leftSize<=rightSize)
+						atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+					atomPointer++;
+				}
+			}
+		}
+	}
+
+	/* set Sin/Cos Waves */
+	if(dictionary->sinCosInDictionary)
+	{
+		DF = *(tableOfFrequenciesInOptimalDictionary + numberOfStepsInScale - 1);
+
+		if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+		{
+			if(mp5Parameters->FFT)
+				stepInFrequency = DF;
+			else
+				stepInFrequency = DF*periodDensity;			
+		}
+		else
+			stepInFrequency = DF;
+			
+		numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);	
+
+		if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+		{
+			if(mp5Parameters->FFT)
+				dr250Frequency = DF*(r250() - 0.5);
+			else
+				dn250Frequency = r250n(periodDensity) - periodDensity/2;
+		}
+		
+		for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling=rifling+periodDensity)
+		{
+			atomPointer->scaleIndex = (unsigned short int)(numberOfStepsInScale - 1);  // although scaleIndex = numberOfScale - 1 means scale = offsetDimension, we set this value, 
+																					   // because this fild can not be empty. However in case of FFT WAVE 
+																				       // this fild is not used, so it will not cause any disturbance 
+					
+			if(dictionary->typeOfDictionary & OCTAVE_FIXED)
+			{            
+				frequency               = stepInFrequency*(frequencyIndex + 1);
+				atomPointer->rifling    = rifling;
+				atomPointer->randomShiftInFrequency = 0;
+
+				if((offsetDimension%2)==0)
+					atomPointer->position = (offsetDimension - 1)/2;
+				else
+					atomPointer->position = offsetDimension/2;
+
+				atomPointer->feature|=SINCOSWAVE;
+
+				leftSize  = atomPointer->position;
+				rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1);
+
+				if(leftSize<=rightSize)
+					atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+
+				atomPointer++;
+			}
+			else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+			{
+				if(mp5Parameters->FFT)
+					frequency = stepInFrequency*(frequencyIndex + 1);
+				else
+					frequency = stepInFrequency*(frequencyIndex + 1) + DF*(r250n(periodDensity) - periodDensity/2);					
+                 
+				atomPointer->rifling    = (unsigned int)(frequency/DF + 0.5);
+				
+				if(mp5Parameters->FFT)
+					atomPointer->randomShiftInFrequency = dr250Frequency;
+				else
+					atomPointer->randomShiftInFrequency = 0;
+				
+				if((offsetDimension%2)==0)
+					atomPointer->position = (offsetDimension - 1)/2;
+				else
+					atomPointer->position = offsetDimension/2;
+				
+				atomPointer->feature|=SINCOSWAVE;
+
+				leftSize  = atomPointer->position;
+				rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1); 
+
+				if(leftSize<=rightSize)
+					atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+
+				atomPointer++;		
+			}
+		}
+	}
+	
+	/* set Gabor waves */
+    for(scaleIndex=0;scaleIndex<(numberOfStepsInScale-1);scaleIndex++)
+	{
+		DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex);
+		DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);
+
+		if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+		{
+			if(mp5Parameters->FFT)
+				stepInFrequency = DF;
+			else
+				stepInFrequency = DF*periodDensity;			
+		}
+		else
+			stepInFrequency = DF;
+			
+		numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);	
+		numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale + scaleIndex);	
+
+		if(dictionary->typeOfDictionary & OCTAVE_FIXED)
+		{            
+			for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
+    	    {
+				for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling=rifling+1)
+				{				
+					atomPointer->scaleIndex = scaleIndex;
+					frequency               = stepInFrequency*(frequencyIndex + 1);
+					atomPointer->rifling    = rifling;
+					atomPointer->randomShiftInFrequency = 0;
+					atomPointer->position   = (unsigned int)(DU*(positionIndex + 1));	
+
+					atomPointer->feature|=GABORWAVE;
+					leftSize  = atomPointer->position;
+					rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1); 
+
+					if(leftSize<=rightSize)
+						atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+
+					if(testScaleToPeriodFactorAtom(dictionary,scaleIndex,rifling,scaleToPeriodFactor))
+						numberOfCorrectGabors++;
+					else
+						atomPointer->feature|=INCORRECTGABOR;
+					
+					atomPointer++;
+				}  	    
+			}
+		}
+		else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+		{		
+			for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
+			{
+				dr250Position = dr250();
+				
+				if(mp5Parameters->FFT)
+					dr250Frequency = DF*(dr250() - 0.5);
+				else
+					dn250Frequency = r250n(periodDensity) - periodDensity/2;
+				
+				for(frequencyIndex=0;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++)
+				{
+					if(mp5Parameters->FFT)
+						frequency = stepInFrequency*(frequencyIndex + 1);                     
+					else
+						frequency = stepInFrequency*(frequencyIndex + 1) + DF*(r250n(periodDensity) - periodDensity/2);					
+		
+					atomPointer->rifling = (unsigned int)(frequency/DF + 0.5);
+		
+					if(mp5Parameters->FFT)
+						atomPointer->randomShiftInFrequency = dr250Frequency;
+					else
+						atomPointer->randomShiftInFrequency = 0;
+										
+					atomPointer->scaleIndex = scaleIndex;
+										
+					if(mp5Parameters->FFT)
+						atomPointer->position   = (unsigned int)(DU*(positionIndex + 1) + DU*(dr250Position -0.5) + 0.5);
+					else
+						atomPointer->position   = (unsigned int)(DU*(positionIndex + 1) + DU*(dr250() - 0.5) + 0.5);	
+						
+					atomPointer->feature|=GABORWAVE;
+					leftSize  = atomPointer->position;
+					rightSize = (unsigned int)(offsetDimension - atomPointer->position - 1);
+
+					if(leftSize<=rightSize)
+						atomPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
+						
+					if(testScaleToPeriodFactorAtom(dictionary,scaleIndex,rifling,scaleToPeriodFactor))
+						numberOfCorrectGabors++;
+					else
+						atomPointer->feature|=INCORRECTGABOR;
+	
+					atomPointer++;
+				}
+			}
+		}
     }
+	
+	/*atomPointer = dictionary->atomsTable;
+	unsigned int atomsCounter;
+	for(atomsCounter=0;atomsCounter<dictionary->sizeOfDictionary;atomsCounter++)
+	{
+		scaleIndex = atomPointer->scaleIndex;
+		
+		printf("%u %hu %lf %hu %u %hu %hu %lf %lf\n",atomsCounter,
+												 scaleIndex,
+												 *(dictionary->tableOfScalesInOptimalDictionary + atomPointer->scaleIndex),
+												 atomPointer->position,
+												 atomPointer->rifling,
+												 (atomPointer->feature & LEFT_SIDE_POSITION_IN_OFFSET),
+												 (atomPointer->feature & DIRACDELTA)    |
+												 (atomPointer->feature & GAUSSFUNCTION) |
+												 (atomPointer->feature & SINCOSWAVE)    |
+												 (atomPointer->feature & GABORWAVE),			 
+												 *(tableOfFrequenciesInOptimalDictionary + scaleIndex),
+												 *(tableOfPositionsInOptimalDictionary   + scaleIndex));
+		
+		atomPointer++;
+	}
+	getchar();*/
+	
+	dictionary->numberOfCorrectGabors = numberOfCorrectGabors;
 
-    DF = *(tableOfFrequenciesInOptimalDictionary + numberOfStepsInScale - 1);
-    stepInFrequency = DF*periodDensity;
-    numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);	
+	if(applicationMode & PROCESS_USER_MODE)
+		printSizeOfDictionaryAndSizeOfSinCosExpTables(dictionary,mp5Parameters);	
 
-    for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling=rifling+periodDensity)
-    {
-	gaborPointer->scaleIndex = (unsigned short int)(numberOfStepsInScale - 1);  // although scaleIndex = numberOfScale - 1 means scale = dimOffset, we set this value, 
-							    			    // because this fild cand not be empty. However in case of FFT WAVE 
-							    			    // this fild is not used, so it will not cause any disturbance 
-	gaborPointer->rifling    = rifling;
-	gaborPointer->position   = (unsigned short int)(dimOffset/2);
-	gaborPointer->feature|=FFTWAVE;
-
-	leftSize  = gaborPointer->position;
-	rightSize = (unsigned short int)(dimOffset - gaborPointer->position - 1);
-
-	if(leftSize<= rightSize)
-	    gaborPointer->feature|=LEFT_SIDE_POSITION_IN_OFFSET;
-
-	gaborPointer++;
-	counter++;
-    }
+	atomPointer = dictionary->atomsTable;
+	
+	#ifdef DICTIONARY_DUMPING
+		unsigned int atomNumber;
+		FILE *file = fopen("dictionary.dump","wt");
+		for(atomNumber=0;atomNumber<dictionary->sizeOfDictionary;atomNumber++)
+		{
+			atomToString(mp5Parameters,dictionary,atomPointer,file);
+			atomPointer++;
+		}
+		fclose(file);
+	#endif
+	
 }
 
-void printDictionaryToAsciFile(const DataParameters *dataParameters, const GaborDictionary *gaborDictionary)
+void reinitDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 {
-	unsigned int gaborCounter;
-	char typeOfGabor;
-	char statusOfGabor;
-	Gabor *gabor;
-	double frequency;
+    unsigned int atomsCounter;
+    
+    for(atomsCounter=0;atomsCounter<dictionary->sizeOfDictionary;atomsCounter++)
+		(dictionary->atomsTable + atomsCounter)->feature = 0x0;
 
-	for(gaborCounter=0;gaborCounter<gaborDictionary->sizeOfDictionary;gaborCounter++)
+    makeDictionary(dictionary,mp5Parameters);
+	
+}
+
+/*
+void testAtomFeature(Dictionary *dictionary)
+{
+    Atom     *atomPointer = NULL;
+    unsigned int correctAtomsCounter = 0;
+    unsigned int atomsCounter = 0;
+
+	dictionary->numberOfCorrectGabors = 0;
+
+	if(applicationMode & PROCESS_USER_MODE)
 	{
-		gabor = gaborDictionary->gaborsTable + gaborCounter;
+		printf(" THE INCORRECT GABORS ARE BEING REMOVED FROM DICTIONARY \n");
+		printf(" UNCORRECT GABORS ARE GABORS WHICH SCALE IS SMALLER THEN K*PERIOD WAVE IN GABOR\n");
+		fflush(stdout);
+	}
+	
+    for(atomsCounter=0;atomsCounter<dictionary->sizeOfDictionary;atomsCounter++)
+    {
+		atomPointer = dictionary->atomsTable + atomsCounter;
+		if(atomPointer->feature & GABORWAVE)
+			if(testScaleToPeriodFactorAtom(dictionary,atomPointer,dictionary->scaleToPeriodFactor))
+				dictionary->numberOfCorrectGabors++;
+    }
 
-		if(gabor->feature & DIRACDELTA)
-			typeOfGabor = 'D';
-		else if(gabor->feature & GABORWAVE)
-			typeOfGabor = 'G';
-		else
-			typeOfGabor = 'F';
+    correctAtomsCounter = 0;
 
-		statusOfGabor = (char)(gabor->feature & INCORRECTGABOR ? 'I' : 'C');
-		frequency = *(gaborDictionary->tableOfFrequenciesInOptimalDictionary + gabor->scaleIndex)*gabor->rifling;
+    for(atomsCounter=0;atomsCounter<dictionary->sizeOfDictionary;atomsCounter++)
+    {
+		atomPointer = dictionary->atomsTable + atomsCounter;
+	
+		if(!(atomPointer->feature & INCORRECTGABOR))
+			correctAtomsCounter++;
+	}
 
-		fprintf(dataParameters->dictionaryFile," %12u   %c   %5hu   %5hu   %7.6lf   %12u   %012.6lf   %5c \n",gaborCounter,typeOfGabor,gabor->position,*(gaborDictionary->tableOfScalesInOptimalDictionary + gabor->scaleIndex),frequency,gabor->rifling,frequency*dataParameters->samplingFrequency/M_2PI,statusOfGabor);
+	if(applicationMode & PROCESS_USER_MODE)
+	{
+		printf("\n AFTER PREPROCESSING, THE NUMBER OF CORRECT GABORS IS: %u\n",correctAtomsCounter);
 		fflush(stdout);
 	}
 }
-
-void reinitDictionary(const MP5Parameters *mp5Parameters, GaborDictionary *gaborDictionary)
+*/
+void resetDictionary(Dictionary *dictionary)
 {
-    unsigned int gaborsCounter;
-    
-    for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
-	(gaborDictionary->gaborsTable + gaborsCounter)->feature = 0x0;
+    unsigned int atomsCounter;
+    const unsigned int sizeOfDictionary = dictionary->sizeOfDictionary;
 
-    makeDictionary(mp5Parameters,gaborDictionary);
-
-}
-
-void testGaborFeature(GaborDictionary *gaborDictionary)
-{
-    Gabor     *gaborPointer = NULL;
-
-    unsigned int correctGaborsCounter = 0;
-    unsigned int gaborsCounter = 0;
-
-    printf(" THE INCORRECT GABORS ARE BEING REMOVED FROM DICTIONARY \n");
-    printf(" UNCORRECT GABORS ARE GABORS WHICH SCALE IS SMALLER THEN K*PERIOD WAVE IN GABOR\n");
-    fflush(stdout);
-    
-    for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
-    {
-	gaborPointer = gaborDictionary->gaborsTable + gaborsCounter;
-	if(gaborPointer->feature & GABORWAVE)
-	    testScaleToPeriodFactorGabor(gaborDictionary,gaborPointer,gaborDictionary->scaleToPeriodFactor);
-    }
-
-    correctGaborsCounter = 0;
-
-    for(gaborsCounter=0;gaborsCounter<gaborDictionary->sizeOfDictionary;gaborsCounter++)
-    {
-	gaborPointer = gaborDictionary->gaborsTable + gaborsCounter;
-	
-	if(!(gaborPointer->feature & INCORRECTGABOR))
-	    correctGaborsCounter++;
-    }
-
-    printf("\n AFTER PREPROCESSING, THE NUMBER OF CORRECT GABORS IS: %u \n",correctGaborsCounter);
-    fflush(stdout);
-
-}
-
-void resetDictionary(GaborDictionary *gaborDictionary)
-{
-    unsigned int gaborsCounter;
-    const unsigned int sizeOfDictionary = gaborDictionary->sizeOfDictionary;
-
-    for(gaborsCounter=0;gaborsCounter<sizeOfDictionary;gaborsCounter++)
-	(gaborDictionary->gaborsTable + gaborsCounter)->feature&= ~GABOR_WAS_HIT;
+    for(atomsCounter=0;atomsCounter<sizeOfDictionary;atomsCounter++)
+		(dictionary->atomsTable + atomsCounter)->feature&=~GABOR_WAS_HIT;
 
 }

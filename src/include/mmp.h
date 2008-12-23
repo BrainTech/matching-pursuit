@@ -19,28 +19,12 @@
  *   Free Software Foundation, Inc.,							     		*
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
  ***************************************************************************/
+#ifndef _MMP_H_
 
-#ifndef _RAND_H_
+	#define _MMP_H_
 
-	#define _RAND_H_
-
-	/**** Function: r250_init
-        	Description: initializes r250 random number generator. ****/
-
-	void r250_init(int seed);
-
-	/**** Function: r250 Description: returns a random unsigned integer k
-			uniformly distributed in the interval 0 <= k < 65536.  ****/
-
-	unsigned int r250(void);
-
-	/**** Function: r250n Description: returns a random unsigned integer k
-			uniformly distributed in the interval 0 <= k < n ****/
-	unsigned int r250n(unsigned n);
-
-	/**** Function: dr250
-                Description: returns a random double z in range 0 <= z < 1.  ****/
-
-	double dr250(void);
-
+	void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters);
+	void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters);
+	void firstAndNextIterationMMP4(Dictionary *dictionary, MP5Parameters *mp5Parameters);
+	
 #endif

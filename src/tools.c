@@ -1,31 +1,72 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus       *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl                  *
- *   Department of Biomedical Physics at Warsaw University                 *
- *   http://brain.fuw.edu.pl, http://eeg.pl                                *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
+ *   Department of Biomedical Physics at Warsaw University			     		*
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
+ *												     		*
+ *   This program is free software; you can redistribute it and/or modify	     		*
+ *   it under the terms of the GNU General Public License as published by	     		*
+ *   the Free Software Foundation; either version 2 of the License, or 		     	*
+ *   (at your option) any later version.							     		*
+ *												     		*
+ *   This program is distributed in the hope that it will be useful,		     		*
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
+ *   GNU General Public License for more details.					     		*
+ *												     		*
+ *   You should have received a copy of the GNU General Public License		     	*
+ *   along with this program; if not, write to the					     		*
+ *   Free Software Foundation, Inc.,							     		*
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
  ***************************************************************************/
+
 
 #include<stdio.h>
 #include<string.h>
 #include<time.h>
 #include<unistd.h>
-#include"include/def.h"
-#include"include/tools.h"
+#include"def.h"
+#include"tools.h"
+
+#ifdef INLINE
+
+	inline void sincos(double __x, double *__sinx, double *__cosx)
+	{
+		register double __cosr,__sinr;
+		__asm __volatile__
+		(
+			"fsincos\n\t"
+			"fnstsw    %%ax\n\t"
+			"testl     $0x400, %%eax\n\t"
+			"jz        1f\n\t"
+			"fldpi\n\t"
+			"fadd      %%st(0)\n\t"
+			"fxch      %%st(1)\n\t"
+			"2: fprem1\n\t"
+			"fnstsw    %%ax\n\t"
+			"testl     $0x400, %%eax\n\t"
+			"jnz       2b\n\t"
+			"fstp      %%st(1)\n\t"
+			"fsincos\n\t"
+			"1:"
+			: "=t" (__cosr), "=u" (__sinr) : "0" (__x));
+			*__sinx = __sinr;
+			*__cosx = __cosr;
+	}
+
+	inline double in_atan2(double __y, double __x)
+	{
+		register long double __value;
+		__asm __volatile__("fpatan" : "=t" (__value) : "0" (__x), "u" (__y) : "st(1)");
+		return __value;
+	}
+
+	#define atan2(X,Y) in_atan2( (X), (Y))
+
+#else
+	#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
+#endif
+
 
 double Clock(void)
 {
@@ -40,32 +81,31 @@ double Clock(void)
 STATUS solveSystemOfEquestions(const double *A11, const double *A12, const double *A21, const double *A22, double *X1, double *X2, const double *B1, const double *B2)
 {
 
-  /* This function solves system of linear equestions:
+	/* This function solves system of linear equestions:
 
-  | A11    A12 || X1 |    | B1 |
-  |            ||    | =  |    |
-  | A21    A22 || X2 |    | B2 | 
+		| A11    A12 || X1 |    | B1 |
+		|            ||    | =  |    |
+		| A21    A22 || X2 |    | B2 | 
+	*/
 
-  */
+	const double detA = (*A11)*(*A22) - (*A12)*(*A21);
 
-  const double detA = (*A11)*(*A22) - (*A12)*(*A21);
+	if(detA<=EPS_DET)
+		return ERROR;
 
-  if(detA<=EPS_DET)
-      return ERROR;
+	const double Y1 = (*A22)*(*B1) - (*A12)*(*B2);
+	const double Y2 = (*A11)*(*B2) - (*A21)*(*B1);
 
-  const double Y1 = (*A22)*(*B1) - (*A12)*(*B2);
-  const double Y2 = (*A11)*(*B2) - (*A21)*(*B1);
+	*X1 = Y1/detA;
+	*X2 = Y2/detA;
 
-  *X1 = Y1/detA;
-  *X2 = Y2/detA;
-
-  return SUCCESS;
+	return SUCCESS;
 }
 
 void toolbar(unsigned long int step)
 {
 //    printf(" step: %lu \n",step);
-    char bar[NUMBER_OF_STEPS_IN_TOOLBAR+2];
+	char bar[NUMBER_OF_STEPS_IN_TOOLBAR+2];
     int i;
 	
     for(i=0;i<NUMBER_OF_STEPS_IN_TOOLBAR+1;i++)
@@ -75,100 +115,17 @@ void toolbar(unsigned long int step)
 			
     for(i=0;i<=step;i++)
     {
-	bar[i]='=';
-	fprintf(stdout,"\r|%s| %d%%",bar,NUMBER_OF_STEPS_IN_TOOLBAR*i);
-	fflush(stdout);
+		bar[i]='=';
+		fprintf(stdout,"\r|%s| %d%%",bar,NUMBER_OF_STEPS_IN_TOOLBAR*i);
+		fflush(stdout);
     }
 							    
     if(step==NUMBER_OF_STEPS_IN_TOOLBAR)
-	fprintf(stdout, "\n");
+		fprintf(stdout, "\n");
 									
 }
 
-double ddot(const int *n, const double *dx, const int *incx, const double *dy, const int *incy)
+double findMax(double firstNumber, double secondNumber)
 {
-	/* System generated locals */
-	int i__1;
-	double ret_val;
-
-	/* Local variables */
-	static int i, m;
-	static double dtemp;
-	static int ix, iy, mp1;
-
-/*      forms the dot product of two vectors.   
-        uses unrolled loops for increments equal to one.   
-        jack dongarra, linpack, 3/11/78.   
-        modified 12/3/93, array(1) declarations changed to array(*)   
-   
-        Parameter adjustments   
-        Function Body */
-
-	#define DY(I) dy[(I)-1]
-	#define DX(I) dx[(I)-1]
-
-	ret_val = 0.;
-	dtemp = 0.;
-
-	if (*n <= 0)
-		return ret_val;
-
-	if (*incx == 1 && *incy == 1)
-		goto L20;
-
-	/* code for unequal increments or equal increments not equal to 1 */
-
-	ix = 1;
-	iy = 1;
-	if (*incx < 0)
-		ix = (-(*n) + 1) * *incx + 1;
-
-	if (*incy < 0)
-		iy = (-(*n) + 1) * *incy + 1;
-
-	i__1 = *n;
-
-	for (i = 1; i <= *n; ++i)
-	{
-		dtemp += DX(ix) * DY(iy);
-		ix += *incx;
-		iy += *incy;
-		/* L10: */
-	}
-
-	ret_val = dtemp;
-	return ret_val;
-
-	/* code for both increments equal to 1   
-           clean-up loop */
-
-	L20:
-		m = *n % 5;
-		if (m == 0)
-			goto L40;
-
-		i__1 = m;
-		for (i = 1; i <= m; ++i)
-		{
-			dtemp += DX(i) * DY(i);
-			/* L30: */
-		}
-		if (*n < 5)
-			goto L60;
-
-	L40:
-		mp1 = m + 1;
-		i__1 = *n;
-		for (i = mp1; i <= *n; i += 5)
-		{
-			dtemp = dtemp + DX(i) * DY(i) + DX(i + 1) * DY(i + 1) + DX(i + 2) * 
-			DY(i + 2) + DX(i + 3) * DY(i + 3) + DX(i + 4) * DY(i + 4);
-			/* L50: */
-		}
-
-	L60:
-		ret_val = dtemp;
-		return ret_val;
-
-} /* ddot_ */
-
+	return (firstNumber>=secondNumber) ? firstNumber : secondNumber;
+}

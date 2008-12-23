@@ -1,0 +1,21 @@
+To compile fftw mp5 do as follows:
+1. Go to lib directory
+   cd lib
+   unpack fftw-3.1.3.tar.gz archive
+   cd fftw-3.1.3
+2. Print:
+make clean
+/configure --with-our-malloc16 --disable-shared --enable-static --enable-threads --with-combined-threads --enable-sse2
+print make
+go for coffe :-)
+
+2. Go to main directory of mp5 (cd ../..)
+
+3. Print :
+rm src/.depands
+touch src/.depands
+make clean
+make dep
+make
+
+4. Have a fun with mp5.

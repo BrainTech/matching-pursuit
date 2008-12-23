@@ -20,27 +20,18 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
  ***************************************************************************/
 
-#ifndef _RAND_H_
+#ifndef _ATOM_H_
 
-	#define _RAND_H_
+	#define _ATOM_H_
 
-	/**** Function: r250_init
-        	Description: initializes r250 random number generator. ****/
+	#include"types.h"
 
-	void r250_init(int seed);
-
-	/**** Function: r250 Description: returns a random unsigned integer k
-			uniformly distributed in the interval 0 <= k < 65536.  ****/
-
-	unsigned int r250(void);
-
-	/**** Function: r250n Description: returns a random unsigned integer k
-			uniformly distributed in the interval 0 <= k < n ****/
-	unsigned int r250n(unsigned n);
-
-	/**** Function: dr250
-                Description: returns a random double z in range 0 <= z < 1.  ****/
-
-	double dr250(void);
+	Atom* allocateAtom(unsigned short int numberOfAllocatedChannels, unsigned char mp5Type);
+	void freeAtom(Atom *atom);
+	void allocateAtomElements(Atom *atom, unsigned short int numberOfAllocatedChannels, unsigned char mp5Type);
+	void freeAtomElements(Atom *atom);
+	void copyAtom(const Atom *sourceAtom, Atom *copyAtom, unsigned short int numberOfAllocatedChannels);
+	void printFitedAtoms(const MP5Parameters *mp5Parameters, const Dictionary *dictionary, Atom *atom, char where, unsigned short int orderIndex);
 
 #endif
+

@@ -35,11 +35,11 @@ $(TARGET): $(OBJECTS)
 	$(CC) $^ $(LIBS) -lpthread -lm -o $(BINDIR)/$@
 
 dep:
-	$(CC) -M $(INCPATH) -c src/*.c > src/.depands 
+	$(CC) -M $(INCPATH) -c src/*.c > src/.depends
 	
 clean:
 	rm -f obj/*.o
-	>src/.depands
+	>src/.depends
 
 $(OBJDIR)/atom.o: src/atom.c
 	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
@@ -83,4 +83,4 @@ $(OBJDIR)/tools.o: src/tools.c
 $(OBJDIR)/vector.o: src/vector.c
 	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
 
-include src/.depands
+-include src/.depends

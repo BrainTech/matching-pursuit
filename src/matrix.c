@@ -1,62 +1,62 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
- *   Department of Biomedical Physics at Warsaw University			     		*
- *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
- *												     		*
- *   This program is free software; you can redistribute it and/or modify	     		*
- *   it under the terms of the GNU General Public License as published by	     		*
- *   the Free Software Foundation; either version 2 of the License, or 		     	*
- *   (at your option) any later version.							     		*
- *												     		*
- *   This program is distributed in the hope that it will be useful,		     		*
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
- *   GNU General Public License for more details.					     		*
- *												     		*
- *   You should have received a copy of the GNU General Public License		     	*
- *   along with this program; if not, write to the					     		*
- *   Free Software Foundation, Inc.,							     		*
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
- ***************************************************************************/
+/*************************************************************************************
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	     *
+ *   Department of Biomedical Physics at Warsaw University			     		     *
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		         *
+ *												    								 *
+ *   This program is free software; you can redistribute it and/or modify			 *
+ *   it under the terms of the GNU General Public License as published by			 *
+ *   the Free Software Foundation; either version 2 of the License, or				 *
+ *   (at your option) any later version.											 *
+ *												     								 *
+ *   This program is distributed in the hope that it will be useful,	     		 *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     			 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 					 *
+ *   GNU General Public License for more details.					   		   		 *
+ *												     								 *
+ *   You should have received a copy of the GNU General Public License		     	 *
+ *   along with this program; if not, write to the					     			 *
+ *   Free Software Foundation, Inc.,							    				 *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
+ *************************************************************************************/
 
 
 #include<stdlib.h>
 #include<strings.h>
-#include"matrix.h"
+#include"types.h"
 
 #ifdef __MINGW32__
     #define bzero(ptr,size) memset (ptr, 0, size);
-#endif  
+#endif
 
 /* double matrix operation */
 
 double **dMatrixAllocate(unsigned int numberOfRows, unsigned int numberOfColumns)
 {
 	unsigned int row;
+	double **matrix = NULL;
+	double  *vector = NULL;
 
-	double **matrix = (double **)malloc(numberOfRows*sizeof(double *));
-	
+	vector = (double *)malloc(numberOfRows*numberOfColumns*sizeof(double));
+
+	matrix = (double **)malloc(numberOfRows*sizeof(double *));
+
 	for(row=0;row<numberOfRows;row++)
-		*(matrix + row) = (double *)malloc(numberOfColumns*sizeof(double));
-		
+		*(matrix + row) = vector + row*numberOfColumns;
+
 	return matrix;
 }
 
-void dMatrixFree(double **matrix, unsigned int numberOfRows)
+void dMatrixFree(double **matrix)
 {
-	unsigned int row;
-
-	for(row=0;row<numberOfRows;row++)
-		free(*(matrix + row));
-		
+	free(matrix[0]);
 	free(matrix);
 }
 
 void dSetMatrixZero(double **matrix, unsigned int numberOfRows, unsigned int numberOfColumns)
 {
 	unsigned int row;
-	
+
 	for(row=0;row<numberOfRows;row++)
 		bzero((void *)(*(matrix + row)),numberOfColumns*sizeof(double));
 }
@@ -64,9 +64,9 @@ void dSetMatrixZero(double **matrix, unsigned int numberOfRows, unsigned int num
 double **dVariableMatrixAllocate(unsigned int numberOfRows, unsigned int *tableOfNumbersOfColumns)
 {
     unsigned int row;
-    
+
     double **matrix = (double **)malloc(numberOfRows*sizeof(double *));
-    
+
     for(row=0;row<numberOfRows;row++)
 		*(matrix + row) = (double *)malloc((*(tableOfNumbersOfColumns + row))*sizeof(double));
 
@@ -79,15 +79,14 @@ void dVariableMatrixFree(double **matrix, unsigned int numberOfRows)
 
 	for(row=0;row<numberOfRows;row++)
 		free(*(matrix + row));
-		
+
 	free(matrix);
 }
-
 
 void dVariableSetMatrixZero(double **matrix, unsigned int numberOfRows, unsigned int *tableOfNumbersOfColumns)
 {
 	unsigned int row;
-	
+
 	for(row=0;row<numberOfRows;row++)
 		bzero((void *)(*(matrix + row)),(*(tableOfNumbersOfColumns + row))*sizeof(double));
 }
@@ -96,29 +95,132 @@ void dVariableSetMatrixZero(double **matrix, unsigned int numberOfRows, unsigned
 float **fMatrixAllocate(unsigned int numberOfRows, unsigned int numberOfColumns)
 {
 	unsigned int row;
+	float **matrix = NULL;
+	float  *vector = NULL;
 
-	float **matrix = (float **)malloc(numberOfRows*sizeof(float *));
-	
+	vector = (float *)malloc(numberOfRows*numberOfColumns*sizeof(float));
+
+	matrix = (float **)malloc(numberOfRows*sizeof(float *));
+
 	for(row=0;row<numberOfRows;row++)
-		*(matrix + row) = (float *)malloc(numberOfColumns*sizeof(float));
-		
+		*(matrix + row) = vector + row*numberOfColumns;
+
 	return matrix;
 }
 
-void fMatrixFree(float **matrix, unsigned int numberOfRows)
+void fMatrixFree(float **matrix)
 {
-	unsigned int row;
-
-	for(row=0;row<numberOfRows;row++)
-		free(*(matrix + row));
-		
+	free(matrix[0]);
 	free(matrix);
 }
 
 void fSetMatrixZero(float **matrix, unsigned int numberOfRows, unsigned int numberOfColumns)
 {
 	unsigned int row;
-	
+
 	for(row=0;row<numberOfRows;row++)
 		bzero((void *)(*(matrix + row)),numberOfColumns*sizeof(float));
+}
+
+void countMeanSignalOverChannelsInOneEpoch(MP5Parameters *mp5Parameters)
+{
+	const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
+	unsigned int sample;
+	double tmpDataValue;
+
+	double **multiChannelSignalTable = mp5Parameters->multiChannelSignalTable;
+	double *meanSignalTable          = *mp5Parameters->meanSignalTable;
+	unsigned int channel;
+
+	for(sample=0;sample<epochExpandedSize;sample++)
+	{
+		tmpDataValue = 0.0;
+
+		for(channel=0;channel<mp5Parameters->numberOfAnalysedChannels;channel++)
+			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + sample));
+
+		*(meanSignalTable + sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
+	}
+}
+
+void countMeanSignalOrResidumOverChannelsAndTrials(MP5Parameters *mp5Parameters)
+{
+	const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
+
+	unsigned int sample;
+	double tmpDataValue;
+	double **multiChannelSignalTable = mp5Parameters->multiChannelSignalTable;
+	double **meanSignalTable         = mp5Parameters->meanSignalTable;
+	unsigned int channel;
+
+	for(sample=0;sample<epochExpandedSize;sample++)
+	{
+		tmpDataValue = 0.0;
+		
+		for(channel=0;channel<mp5Parameters->numberOfAnalysedChannels;channel++)
+			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + sample));
+
+		*(*(meanSignalTable) +  sample) = tmpDataValue/mp5Parameters->numberOfAnalysedChannels;
+	}
+}
+
+void countMeanSignalOrResidumOverChannels(MP5Parameters *mp5Parameters, double **multiChannelSignalTable)
+{
+	const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
+
+	unsigned int sample;
+	double tmpDataValue;
+	double **meanSignalTable = mp5Parameters->meanSignalTable;
+	unsigned int channelEpochNumber;
+	unsigned short int channel;
+	unsigned short int epoch;
+						
+	for(sample=0;sample<epochExpandedSize;sample++)
+	{
+				
+		for(epoch=0;epoch<mp5Parameters->numberOfSelectedEpochs;epoch++)
+		{
+			tmpDataValue = 0.0;
+
+			for(channel=0;channel<mp5Parameters->numberOfSelectedChannels;channel++)
+			{
+				channelEpochNumber = epoch*mp5Parameters->numberOfSelectedChannels + channel;
+
+				tmpDataValue+= (*(*(multiChannelSignalTable + channelEpochNumber) + sample));
+			
+			}
+					
+			*(*(meanSignalTable + epoch) + sample)= tmpDataValue/mp5Parameters->numberOfSelectedChannels;
+	
+		}
+	}
+		
+}
+
+void countMeanSignalOrResidumOverEpochs(MP5Parameters *mp5Parameters, double **multiChannelSignalTable)
+{
+	const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
+
+	unsigned int sample;
+	double tmpDataValue;
+	double **meanSignalTable = mp5Parameters->meanSignalTable;
+	unsigned int channelEpochNumberNumber;
+	unsigned short int channel;
+	unsigned short int epoch;
+
+	for(sample=0;sample<epochExpandedSize;sample++)
+	{
+		for(channel=0;channel<mp5Parameters->numberOfSelectedChannels;channel++)
+		{
+			tmpDataValue = 0.0;
+
+			for(epoch=0;epoch<mp5Parameters->numberOfSelectedEpochs;epoch++)
+			{
+				channelEpochNumberNumber = epoch*mp5Parameters->numberOfSelectedChannels + channel;
+				tmpDataValue+= (*(*(multiChannelSignalTable + channelEpochNumberNumber) + sample));
+			}
+
+			*(*(meanSignalTable + channel) + sample)= tmpDataValue/mp5Parameters->numberOfSelectedEpochs;
+		}
+	}
 }

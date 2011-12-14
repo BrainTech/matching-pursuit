@@ -2,28 +2,29 @@ CC       = gcc
 CCFLAGS  = -O3 -Wall -DINTELSWP -DINLINE
 #CCFLAGS  = -O3 -Wall -DINTELSWP -DINLINE -DDICTIONARY_DUMPING
 
-OBJDIR   = obj
-BINDIR   = bin
+HOME     = /home/mati/mp_engine
+OBJDIR   = $(HOME)/obj
+BINDIR   = $(HOME)/bin
 TARGET   = mp5
-LIBDIR   = lib
-LIBS     = $(LIBDIR)/fftw-3.1.3/.libs/libfftw3.a $(LIBDIR)/fftw-3.1.3/threads/.libs/libfftw3_threads.a
-INCPATH  = -Isrc/include -I$(LIBDIR)/fftw-3.1.3/api
+LIBDIR   = $(HOME)/lib
+LIBS     = $(LIBDIR)/fftw-3.2.2/.libs/libfftw3.a
+INCPATH  = -Isrc/include -I$(LIBDIR)/fftw-3.2.2/api
 
 OBJECTS = $(OBJDIR)/atom.o        \
-		  $(OBJDIR)/cmd.o         \
-		  $(OBJDIR)/dic.o         \
-		  $(OBJDIR)/dic.o         \
-		  $(OBJDIR)/io_mp5.o      \
-          $(OBJDIR)/main.o        \
-          $(OBJDIR)/mp5.o         \
-          $(OBJDIR)/matrix.o      \
-          $(OBJDIR)/mmp.o         \
-          $(OBJDIR)/queue.o       \
-          $(OBJDIR)/r250.o        \
-          $(OBJDIR)/smp.o         \
-          $(OBJDIR)/stringTools.o \
-          $(OBJDIR)/tools.o       \
-          $(OBJDIR)/vector.o
+	$(OBJDIR)/cmd.o         \
+	$(OBJDIR)/dic.o         \
+	$(OBJDIR)/dic.o         \
+	$(OBJDIR)/io_mp5.o      \
+	$(OBJDIR)/main.o        \
+        $(OBJDIR)/mp5.o         \
+        $(OBJDIR)/matrix.o      \
+        $(OBJDIR)/mmp.o         \
+        $(OBJDIR)/queue.o       \
+        $(OBJDIR)/r250.o        \
+        $(OBJDIR)/smp.o         \
+        $(OBJDIR)/stringTools.o \
+        $(OBJDIR)/tools.o       \
+        $(OBJDIR)/vector.o
 
 .PHONY: all
 .PHONY: clean
@@ -41,6 +42,7 @@ clean:
 	rm -f obj/*.o
 	>src/.depands
 
+mp5:
 $(OBJDIR)/atom.o: src/atom.c
 	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
 

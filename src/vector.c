@@ -1,24 +1,24 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
- *   Department of Biomedical Physics at Warsaw University			     		*
- *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
- *												     		*
- *   This program is free software; you can redistribute it and/or modify	     		*
- *   it under the terms of the GNU General Public License as published by	     		*
- *   the Free Software Foundation; either version 2 of the License, or 		     	*
- *   (at your option) any later version.							     		*
- *												     		*
- *   This program is distributed in the hope that it will be useful,		     		*
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
- *   GNU General Public License for more details.					     		*
- *												     		*
- *   You should have received a copy of the GNU General Public License		     	*
- *   along with this program; if not, write to the					     		*
- *   Free Software Foundation, Inc.,							     		*
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
- ***************************************************************************/
+/*************************************************************************************
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	     *
+ *   Department of Biomedical Physics at Warsaw University			     		     *
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		         *
+ *												    								 *
+ *   This program is free software; you can redistribute it and/or modify			 *
+ *   it under the terms of the GNU General Public License as published by			 *
+ *   the Free Software Foundation; either version 2 of the License, or				 *
+ *   (at your option) any later version.											 *
+ *												     								 *
+ *   This program is distributed in the hope that it will be useful,	     		 *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     			 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 					 *
+ *   GNU General Public License for more details.					   		   		 *
+ *												     								 *
+ *   You should have received a copy of the GNU General Public License		     	 *
+ *   along with this program; if not, write to the					     			 *
+ *   Free Software Foundation, Inc.,							    				 *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
+ *************************************************************************************/
 
 #include<stdlib.h>
 #include<strings.h>
@@ -188,9 +188,9 @@ int dxypz(unsigned int n, const double *x, int incx, const double *y, int incy, 
 {
 
 /* the procedure performs fast operation:
-	z(i) = x(i)*y(i) 
-*/				
-	int i, ix, iy, iz, m; 
+	z(i) = x(i)*y(i)
+*/
+	int i, ix, iy, iz, m;
 
 	if((incx==1) && (incy==1) && (incz==1))
 	{
@@ -201,7 +201,7 @@ int dxypz(unsigned int n, const double *x, int incx, const double *y, int incy, 
 			{
 					z[i] = x[i]*y[i];
 			}
-			
+
 		if(n<4)
 			return 0;
 
@@ -219,25 +219,25 @@ int dxypz(unsigned int n, const double *x, int incx, const double *y, int incy, 
 		ix = 0;
 		iy = 0;
 		iz = 0;
-      
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
-       
+
 		if(incz<0)
 			iz = (-n+1)*incz;
 
 		for(i=0;i<n;i++)
 		{
 			z[iz] = x[ix]*y[iy];
-          
+
 			ix = ix + incx;
 			iy = iy + incy;
 			iz = iz + incz;
 		}
-			
+
 		return 0;
 	}
 }
@@ -246,10 +246,10 @@ int daxypz(unsigned int n, double alpha, const double *x, int incx, double *y, i
 {
 
 /* the procedure performs fast operation:
-	z(i) = alpha*x(i)*y(i) 
-*/				
+	z(i) = alpha*x(i)*y(i)
+*/
 	double temp;
-	int i, ix, iy, iz, m; 
+	int i, ix, iy, iz, m;
 
 	if((incx==1) && (incy==1) && (incz==1))
 	{
@@ -263,7 +263,7 @@ int daxypz(unsigned int n, double alpha, const double *x, int incx, double *y, i
 				z[i] = alpha*temp;
 			}
 		}
-			
+
 		if(n<4)
 			return 0;
 
@@ -288,13 +288,13 @@ int daxypz(unsigned int n, double alpha, const double *x, int incx, double *y, i
 		ix = 0;
 		iy = 0;
 		iz = 0;
-      
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
-       
+
 		if(incz<0)
 			iz = (-n+1)*incz;
 
@@ -302,12 +302,12 @@ int daxypz(unsigned int n, double alpha, const double *x, int incx, double *y, i
 		{
 			temp = x[ix]*y[iy];
 			z[iz] = alpha*temp;
-          
+
 			ix = ix + incx;
 			iy = iy + incy;
 			iz = iz + incz;
 		}
-			
+
 		return 0;
 	}
 }
@@ -317,8 +317,8 @@ int dxypbz(unsigned int n, const double *x, int incx, double *y, int incy, doubl
 
 /* the procedure performs fast operation:
 	z(i) = x(i)*y(i) +  beta*z(i)
-*/				
-	int i, ix, iy, iz, m; 
+*/
+	int i, ix, iy, iz, m;
 
 	if((incx==1) && (incy==1) && (incz==1))
 	{
@@ -332,7 +332,7 @@ int dxypbz(unsigned int n, const double *x, int incx, double *y, int incy, doubl
 				z[i] = x[i]*y[i] + z[i];
 			}
 		}
-			
+
 		if(n<4)
 			return 0;
 
@@ -357,13 +357,13 @@ int dxypbz(unsigned int n, const double *x, int incx, double *y, int incy, doubl
 		ix = 0;
 		iy = 0;
 		iz = 0;
-      
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
-       
+
 		if(incz<0)
 			iz = (-n+1)*incz;
 
@@ -371,12 +371,12 @@ int dxypbz(unsigned int n, const double *x, int incx, double *y, int incy, doubl
 		{
 			z[iz] = beta*z[iy];
 			z[iz] = x[ix]*y[iy] + z[iz];
-          
+
 			ix = ix + incx;
 			iy = iy + incy;
 			iz = iz + incz;
 		}
-			
+
 		return 0;
 	}
 }
@@ -386,9 +386,9 @@ int daxypbz(unsigned int n, double alpha, double *x, int incx, const double *y, 
 
 /* the procedure performs fast operation:
 	z(i) = alpha*x(i)*y(i) +  beta*z(i)
-*/				
+*/
 	double temp;
-	int i, ix, iy, iz, m; 
+	int i, ix, iy, iz, m;
 
 	if((incx==1) && (incy==1) && (incz==1))
 	{
@@ -403,7 +403,7 @@ int daxypbz(unsigned int n, double alpha, double *x, int incx, const double *y, 
 				z[i] = alpha*temp + z[i];
 			}
 		}
-			
+
 		if(n<4)
 			return 0;
 
@@ -425,7 +425,7 @@ int daxypbz(unsigned int n, double alpha, double *x, int incx, const double *y, 
 			temp   = x[i+3]*y[i+3];
 			z[i+3] = alpha*temp + z[i+3];
 		}
-		
+
 		return 0;
 	}
 	else
@@ -433,13 +433,13 @@ int daxypbz(unsigned int n, double alpha, double *x, int incx, const double *y, 
 		ix = 0;
 		iy = 0;
 		iz = 0;
-      
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
-       
+
 		if(incz<0)
 			iz = (-n+1)*incz;
 
@@ -448,12 +448,12 @@ int daxypbz(unsigned int n, double alpha, double *x, int incx, const double *y, 
 			z[iz] = beta*z[iz];
 			temp = x[ix]*y[iy];
 			z[iz] = alpha*temp + z[iz];
-          
+
 			ix = ix + incx;
 			iy = iy + incy;
 			iz = iz + incz;
 		}
-			
+
 		return 0;
 	}
 }
@@ -462,13 +462,13 @@ double ddot(unsigned int n, const double *x, const int incx, const double *y, in
 {
 /* the procedure performs fast operation:
 	dotProduct = x*y ^{T}
-*/				
+*/
 
 	double temp;
 	int i, ix, iy, m;
 
 	temp = 0.0;
-	 
+
 	if((incx==1) && (incy==1))
 	{
 		m = n%5;
@@ -478,14 +478,14 @@ double ddot(unsigned int n, const double *x, const int incx, const double *y, in
 			for(i=0;i<m;i++)
 				temp = temp + x[i]*y[i];
 		}
-			
+
 		if(n<5)
 			return temp;
 
 		for(i=m;i<n;i=i+5)
 			temp = temp + x[i]*y[i] + x[i+1]*y[i+1] +
 						  x[i+2]*y[i+2] + x[i+3]*y[i+3] + x[i+4]*y[i+4];
-						  				  
+
 		return temp;
 	}
 	else
@@ -495,7 +495,7 @@ double ddot(unsigned int n, const double *x, const int incx, const double *y, in
 
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
 
@@ -506,11 +506,11 @@ double ddot(unsigned int n, const double *x, const int incx, const double *y, in
 			ix = ix + incx;
 			iy = iy + incy;
 		}
-			
+
 		return temp;
 	}
 }
-	
+
 int dcopy(unsigned int n, const double *x, int incx, double *y, int incy)
 {
 /* the procedure performs fast operation:
@@ -521,11 +521,11 @@ int dcopy(unsigned int n, const double *x, int incx, double *y, int incy)
 	if((incx==1) && (incy==1))
 	{
 		m = n%7;
-		
+
 		if(m!=0)
 		{
 			for(i=0;i<m;i++)
-				y[i] = x[i];		
+				y[i] = x[i];
 		}
 
 		if(n<7)
@@ -547,28 +547,28 @@ int dcopy(unsigned int n, const double *x, int incx, double *y, int incy)
 	{
 		ix = 0;
 		iy = 0;
-      
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-		
+
 		if(incy<0)
 			iy = (-n+1)*incy;
-      
+
 		for(i=0;i<n;i++)
 		{
 			y[iy] = x[ix];
 			ix = ix + incx;
 			iy = iy + incy;
 		}
-			
+
 		return 0;
-	}		
-	
+	}
+
 	return 0;
 }
 
 double dasum(unsigned int n, const double *x, int incx)
-{ 
+{
 /* the procedure performs fast operation:
 	a = sum(x)
 */
@@ -578,10 +578,10 @@ double dasum(unsigned int n, const double *x, int incx)
 	if(incx!=1)
 	{
 		ix = 0;
-		
+
 		if(incx<0)
 			ix = (-n+1)*incx;
-							
+
 		for(i=0;i<n;i++)
 		{
 			temp = temp + x[ix];
@@ -592,7 +592,7 @@ double dasum(unsigned int n, const double *x, int incx)
 	else
 	{
 		m = n%6;
-		
+
 		if(m!=0)
 		{
 			for(i=0;i<m;i++)
@@ -601,7 +601,7 @@ double dasum(unsigned int n, const double *x, int incx)
 
 		if(n<6)
 			return temp;
-			
+
 		for(i=m;i<n;i=i+6)
 		{
 			temp = temp + x[i] +  x[i + 1] + x[i+2]+ + x[i+3] + x[i+4] + x[i+5];

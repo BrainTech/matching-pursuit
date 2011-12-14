@@ -1,24 +1,24 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
- *   Department of Biomedical Physics at Warsaw University			     		*
- *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
- *												     		*
- *   This program is free software; you can redistribute it and/or modify	     		*
- *   it under the terms of the GNU General Public License as published by	     		*
- *   the Free Software Foundation; either version 2 of the License, or 		     	*
- *   (at your option) any later version.							     		*
- *												     		*
- *   This program is distributed in the hope that it will be useful,		     		*
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
- *   GNU General Public License for more details.					     		*
- *												     		*
- *   You should have received a copy of the GNU General Public License		     	*
- *   along with this program; if not, write to the					     		*
- *   Free Software Foundation, Inc.,							     		*
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
- ***************************************************************************/
+/*************************************************************************************
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	     *
+ *   Department of Biomedical Physics at Warsaw University			     		     *
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		         *
+ *												    								 *
+ *   This program is free software; you can redistribute it and/or modify			 *
+ *   it under the terms of the GNU General Public License as published by			 *
+ *   the Free Software Foundation; either version 2 of the License, or				 *
+ *   (at your option) any later version.											 *
+ *												     								 *
+ *   This program is distributed in the hope that it will be useful,	     		 *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     			 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 					 *
+ *   GNU General Public License for more details.					   		   		 *
+ *												     								 *
+ *   You should have received a copy of the GNU General Public License		     	 *
+ *   along with this program; if not, write to the					     			 *
+ *   Free Software Foundation, Inc.,							    				 *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
+ *************************************************************************************/
 
 
 #include<stdio.h>
@@ -85,7 +85,7 @@ STATUS solveSystemOfEquestions(const double *A11, const double *A12, const doubl
 
 		| A11    A12 || X1 |    | B1 |
 		|            ||    | =  |    |
-		| A21    A22 || X2 |    | B2 | 
+		| A21    A22 || X2 |    | B2 |
 	*/
 
 	const double detA = (*A11)*(*A22) - (*A12)*(*A21);
@@ -107,22 +107,22 @@ void toolbar(unsigned long int step)
 //    printf(" step: %lu \n",step);
 	char bar[NUMBER_OF_STEPS_IN_TOOLBAR+2];
     int i;
-	
+
     for(i=0;i<NUMBER_OF_STEPS_IN_TOOLBAR+1;i++)
 	bar[i]=' ';
-		    
+
     bar[NUMBER_OF_STEPS_IN_TOOLBAR+1]='\0';
-			
+
     for(i=0;i<=step;i++)
     {
 		bar[i]='=';
 		fprintf(stdout,"\r|%s| %d%%",bar,NUMBER_OF_STEPS_IN_TOOLBAR*i);
 		fflush(stdout);
     }
-							    
+
     if(step==NUMBER_OF_STEPS_IN_TOOLBAR)
 		fprintf(stdout, "\n");
-									
+
 }
 
 double findMax(double firstNumber, double secondNumber)

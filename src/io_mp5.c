@@ -1,24 +1,24 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
- *   Department of Biomedical Physics at Warsaw University			     		*
- *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
- *												     		*
- *   This program is free software; you can redistribute it and/or modify	     		*
- *   it under the terms of the GNU General Public License as published by	     		*
- *   the Free Software Foundation; either version 2 of the License, or 		     	*
- *   (at your option) any later version.							     		*
- *												     		*
- *   This program is distributed in the hope that it will be useful,		     		*
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
- *   GNU General Public License for more details.					     		*
- *												     		*
- *   You should have received a copy of the GNU General Public License		     	*
- *   along with this program; if not, write to the					     		*
- *   Free Software Foundation, Inc.,							     		*
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
- ***************************************************************************/
+/*************************************************************************************
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	     *
+ *   Department of Biomedical Physics at Warsaw University			     		     *
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		         *
+ *												    								 *
+ *   This program is free software; you can redistribute it and/or modify			 *
+ *   it under the terms of the GNU General Public License as published by			 *
+ *   the Free Software Foundation; either version 2 of the License, or				 *
+ *   (at your option) any later version.											 *
+ *												     								 *
+ *   This program is distributed in the hope that it will be useful,	     		 *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     			 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 					 *
+ *   GNU General Public License for more details.					   		   		 *
+ *												     								 *
+ *   You should have received a copy of the GNU General Public License		     	 *
+ *   along with this program; if not, write to the					     			 *
+ *   Free Software Foundation, Inc.,							    				 *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
+ *************************************************************************************/
 
 #define _GNU_SOURCE
 
@@ -39,12 +39,6 @@
 #include"vector.h"
 
 extern unsigned char applicationMode;
-
-#ifdef __MINGW32__
-    #define bzero(ptr,size) memset (ptr, 0, size);
-    #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
-    #define sleep(X) _sleep( X )
-#endif
 
 static char aTmp[50], bTmp[50], cTmp[50];
 
@@ -70,13 +64,13 @@ struct ErrorCodeAndText
 {ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE,            "error.mp5executable.argumentShouldBeIntegerGraterToOne",        "The argument {0} in line #{1} of config file should be float>1.0"},
 {CAN_NOT_OPEN_DIRECTORY,                             "error.mp5executable.badConfigFile",                             "Failed to open config file {0}"},
 {OVERWRITE_RESULTS_ALARM,                            "error.mp5executable.overwriteResultsAlarm",                     "You are trying to overwrite file {0} with results"},
-{BAD_NUMBER_OF_CHOSEN_CHANNELS,                      "error.mp5executable.badNumberOfChosenChannels",                 "The number of declared chosen channel - {0} is greater then number of channels - {1} in file {2}"},
-{BAD_NUMBER_OF_CHOSEN_OFFSETS,                       "error.mp5executable.badNumberChosenOffsets",                    "The number of declared chosen offset - {0} is greater then number of offsets - {1} in file {2}"},
+{BAD_NUMBER_OF_SELECTED_CHANNELS,                    "error.mp5executable.badNumberOfSelectedChannels",               "The number of declared selected channel - {0} is greater then number of channels - {1} in file {2}"},
+{BAD_NUMBER_OF_SELECTED_EPOCHS,                      "error.mp5executable.badNumberSelectedEpochs",                   "The number of declared selected epochs - {0} is greater then number of epochs - {1} in file {2}"},
 {BAD_PERIOD_DENSITY_EQUAL,                           "error.mp5executable.badPeriodDensityEqual",                     "If the type of dictionary is set to OCTAVE_STOCH the argument of periodDenstiy must be > 1"},
 {BAD_PERIOD_DENSITY_GREATER,                         "error.mp5executable.badPeriodDensityGreater",                   "If the type of dictionary is set to OCTAVE_FIXED there is no need to set periodDensity > 1"},
 {BAD_PERIOD_DENSITY_GREATER_FFT,                     "error.mp5executable.badPeriodDensityGreater",                   "If the type of dictionary is set to OCTAVE_STOCH, but FFT is set on there is no need to set periodDensity > 1"},
 {BAD_ENERGY_PERCENT,                                 "error.mp5executable.badEnergyPercent",                          "The value of argument energyPercent can not be greater or equal to 100 percent"},
-{BAD_REINIT_ALL,                                     "error.mp5executable.badReinitALL",                              "There is no sense to reinit dictionary with the same seed for eac offset/channel"},
+{BAD_REINIT_ALL,                                     "error.mp5executable.badReinitALL",                              "There is no sense to reinit dictionary with the same seed for eac epoch/channel"},
 {BAD_REINIT_MMP,                                     "error.mp5executable.badReinitMMP",                              "There is no sense to use Multichannel MP Algorithms and reinit dictionary in channel domain"},
 {BAD_MP_ALGORITHM,                                   "error.mp5executable.badMPAlgorithm",                            "There is no sense to process Multichannel MP Algorithm for one channel only"},
 {CAN_NOT_OPEN_DATA_FILE,                             "error.mp5executable.canNotOpenDataFile",                        "Failed to open file {0} with data"},
@@ -86,15 +80,16 @@ struct ErrorCodeAndText
 {CAN_NOT_READ_SAMPLE,                                "error.mp5executable.canNotReadSample",                          "The sample in ascii {0} file in line {1}, channel {2} can not be read"},
 {CAN_NOT_WRITE_HEADER,                               "error.mp5executable.canNotWriteHeader",                         "Failed to write file header to results file {0}"},
 {CAN_NOT_WRITE_RESULTS,                              "error.mp5executable.canNotWriteResults",                        "Failed to write results to file {0}"},
-{CAN_NOT_READ_OFFSET_IN_BINARY_FILE,                 "error.mp5executable.canNotReadOffsetInBinaryFile",              "Failed to read sample {0} in offset {1} of data file {2}"},
-{CAN_NOT_READ_OFFSET_IN_ASCII_FILE,                  "error.mp5executable.canNotReadOffsetInAsciiFile",               "Failed to read offset {0}, line {1}, channel {2}, in ascii data file {3}"},
+{CAN_NOT_READ_EPOCH_IN_BINARY_FILE,                  "error.mp5executable.canNotReadEpochInBinaryFile",               "Failed to read sample {0} in epoch {1} of data file {2}"},
+{CAN_NOT_READ_EPOCH_IN_ASCII_FILE,                   "error.mp5executable.canNotReadEpochInAsciiFile",                "Failed to read epoch {0}, line {1}, channel {2}, in ascii data file {3}"},
+{BAD_NAME_OF_OUTPUT_DIRECTORY,                       "error.mp5executable.badNameOfOutputDirectory",                  "The argument of command {0}, line {1}, should finish with {2}"},
 };
 
 STATUS generateErrotTextAndCodeGeneratorFile()
 {
 	unsigned int counter;
 	FILE *errorFile = fopen("errorTranslation.xml","wt");
-	
+
 	if(!errorFile)
 	{
 		fprintf(stderr,"Can't open the file: \"errorTranslation.xml\" to write translations of errors\n");
@@ -126,7 +121,7 @@ static void makeErrorText(char *infoMessage, unsigned short int errorNumber, con
 	for(counter=0;counter<NUMBER_OF_ERRORS;counter++)
 	{
 		if(errorCodeAndText[counter].errorNumber == errorNumber)
-		{	
+		{
 			strcpy(tmpInfoMessage,errorCodeAndText[counter].errorText);
 			break;
 		}
@@ -161,8 +156,8 @@ void printError(char *infoMessage, unsigned short int errorNumber, const char *a
 	unsigned short int counter;
 	strcat(infoMessage,"ERROR ");
 
-	if(applicationMode & PROCESS_USER_MODE)
-		makeErrorText(infoMessage,errorNumber,acceptableValues,sizeOfAcceptableValues);		
+	if((applicationMode & PROCESS_USER_MODE) || (applicationMode & TEST_PARAMETERS_MODE))
+		makeErrorText(infoMessage,errorNumber,acceptableValues,sizeOfAcceptableValues);
 	else if(applicationMode & PROCESS_SERVER_MODE)
 	{
 		for(counter=0;counter<NUMBER_OF_ERRORS;counter++)
@@ -179,11 +174,11 @@ void printError(char *infoMessage, unsigned short int errorNumber, const char *a
 			for(counter=0;counter<sizeOfAcceptableValues;counter++)
 			{
 				strcat(infoMessage," ");
-				strcat(infoMessage,acceptableValues[counter]);		
+				strcat(infoMessage,acceptableValues[counter]);
 			}
 		}
 	}
-		
+
 }
 
 #define MAGIC_TEXT         "MPv5.0"
@@ -192,7 +187,7 @@ void printError(char *infoMessage, unsigned short int errorNumber, const char *a
 #define NUMBER_OF_FIELDS_IN_FILE_HEADER_SEGMENT 256   /* number of fields in file header segment, which are other then
 													          text fields (for example DateFiled) ot fileds, which require
 													          dynamical allocation (are coinsisted of pointers)  */
-#define NUMBER_OF_CHARS_IN_SIGNATURE 			10															 
+#define NUMBER_OF_CHARS_IN_SIGNATURE 			10
 
 #define COMMENT_SEGMENT_IDENTITY     ((unsigned char)1)
 
@@ -202,7 +197,7 @@ void printError(char *infoMessage, unsigned short int errorNumber, const char *a
 #define SIGNAL_FIELD_IDENTITY        ((unsigned char)5)
 #define DECOMPOSING_FIELD_IDENTITY   ((unsigned char)6)
 
-#define OFFSET_SEGMENT_IDENTITY   	 ((unsigned char)7)
+#define EPOCH_SEGMENT_IDENTITY   	 ((unsigned char)7)
 #define SIGNAL_SEGMENT_IDENTITY   	 ((unsigned char)8)
 #define ATOMS_SEGMENT_IDENTITY   	 ((unsigned char)9)
 
@@ -221,7 +216,7 @@ typedef struct
 } __attribute__((packed)) FieldDescriptor;
 
 #define SEGMENT_DESCRIPTOR_SIGNATURE "ci"
-	
+
 typedef struct
 {
 	unsigned char codeOfSegment;
@@ -242,7 +237,7 @@ typedef struct
 
 #define SIGNAL_FIELD_SIGNATURE "ffh"
 
-typedef struct 
+typedef struct
 {
 	FieldDescriptor    fieldDescriptor;
 	float 		  	   samplingFrequency;
@@ -260,7 +255,7 @@ typedef struct
 	unsigned int   	   sizeOfDictionary;
 	char           	   typeOfDictionary;
 } __attribute__((packed)) DecomposingField;
-	
+
 typedef struct
 {
 	SegmentDescriptor segmentDescriptor;
@@ -269,14 +264,14 @@ typedef struct
 	char fieldsSignatures[NUMBER_OF_FIELDS_IN_FILE_HEADER_SEGMENT][NUMBER_OF_CHARS_IN_SIGNATURE];
 } __attribute__((packed)) FileHeaderSegmentHeader;
 
-#define OFFSET_SEGMENT_HEADER_SIGNATURE "hi"
+#define EPOCH_SEGMENT_HEADER_SIGNATURE "hi"
 
-typedef struct 
+typedef struct
 {
 	SegmentDescriptor 	segmentDescriptor;
-	unsigned short int	offsetNumber;
-	unsigned       int	offsetDimension;
-} __attribute__((packed)) OffsetSegmentHeader;
+	unsigned short int	epochNumber;
+	unsigned       int	epochSize;
+} __attribute__((packed)) EpochSegmentHeader;
 
 #define SIGNAL_SEGMENT_HEADER_SIGNATURE "h"
 
@@ -305,14 +300,14 @@ static unsigned int  getSizeOfAtomField(const unsigned char type);
 static unsigned int  getSizeOfAtomsFields(MP5Parameters *mp5Parameters);
 static unsigned int  getSizeOfAtomsSegment(MP5Parameters *mp5Parameters);
 static unsigned int  getSizeOfSignalSegment(MP5Parameters *mp5Parameters);
-static unsigned int  getSizeOfOffsetSegment(MP5Parameters *mp5Parameters);
+static unsigned int  getSizeOfEpochSegment(MP5Parameters *mp5Parameters);
 
 #ifdef INTELSWP
 	#if  !defined(__BORLANDC__) && !defined(WIN32)
 		#ifndef __USE_XOPEN
 			#define __USE_XOPEN
 			#include <unistd.h>
-			#undef __USE_XOPEN 
+			#undef __USE_XOPEN
 		#else
 			#include <unistd.h>
 		#endif
@@ -320,9 +315,9 @@ static unsigned int  getSizeOfOffsetSegment(MP5Parameters *mp5Parameters);
 
 	static void intelShortToJavaShort(unsigned short int *number)
 	{
-		swab((void *)number,(void *)number,sizeof(unsigned short int));	
+		swab((void *)number,(void *)number,sizeof(unsigned short int));
 	}
-		
+
 	static void intelIntToJavaInt(int intelInt, char *javaInt)
 	{
 		short isav;
@@ -360,37 +355,37 @@ static unsigned int  getSizeOfOffsetSegment(MP5Parameters *mp5Parameters);
 	static void intelStructToJavaStruct(const void *intelStruct, void *javaStruct, const char *descriptorSignature, const char *dataSignature)
 	{
 
-		unsigned int counter;
-		short int    tmpShort;
-		int          tmpIntelInt,   tmpJavaInt;
-		float        tmpIntelFloat, tmpJavaFloat;
-		unsigned int position = 0;
-		
+		unsigned int       counter;
+		unsigned short int tmpShort;
+		int                tmpIntelInt,   tmpJavaInt;
+		float              tmpIntelFloat, tmpJavaFloat;
+		unsigned int       position = 0;
+
 		for(counter=0 ; descriptorSignature[counter]!='\0' ; counter++)
 		{
 			switch(descriptorSignature[counter])
 			{
-				case 'c': 
+				case 'c':
 					memmove((javaStruct + position),(intelStruct + position),sizeof(char));
 					position++;
 					break;
-				case 'h': 
+				case 'h':
 					memcpy((void *)&tmpShort,(intelStruct + position),sizeof(short));
 					intelShortToJavaShort(&tmpShort);
 					memcpy((javaStruct + position),(void *)&tmpShort,sizeof(short));
-					position+=sizeof(short);				
+					position+=sizeof(short);
 					break;
-				case 'i': 
+				case 'i':
 					memcpy((void *)&tmpIntelInt,(intelStruct + position),sizeof(int));
 					intelIntToJavaInt(tmpIntelInt,(char *)&tmpJavaInt);
 					memcpy((javaStruct + position),(void *)&tmpJavaInt,sizeof(int));
-					position+=sizeof(int);				
+					position+=sizeof(int);
 					break;
 				case 'f':
 					memcpy((void *)&tmpIntelFloat,(intelStruct + position),sizeof(float));
 					intelFloatToJavaFloat(tmpIntelFloat,(char *)&tmpJavaFloat);
 					memcpy((javaStruct + position),(void *)&tmpJavaFloat,sizeof(float));
-					position+=sizeof(float);				
+					position+=sizeof(float);
 					break;
 				default: break;
 			}
@@ -400,27 +395,27 @@ static unsigned int  getSizeOfOffsetSegment(MP5Parameters *mp5Parameters);
 		{
 			switch(dataSignature[counter])
 			{
-				case 'c': 
+				case 'c':
 					memcpy((javaStruct + position),(intelStruct + position),sizeof(char));
 					position++;
 					break;
-				case 'h': 
+				case 'h':
 					memcpy((void *)&tmpShort,(intelStruct + position),sizeof(short));
 					intelShortToJavaShort(&tmpShort);
 					memcpy((javaStruct + position),(void *)&tmpShort,sizeof(short));
-					position+=sizeof(short);				
+					position+=sizeof(short);
 					break;
-				case 'i': 
+				case 'i':
 					memcpy((void *)&tmpIntelInt,(intelStruct + position),sizeof(int));
 					intelIntToJavaInt(tmpIntelInt,(char *)&tmpJavaInt);
 					memcpy((javaStruct + position),(void *)&tmpJavaInt,sizeof(int));
-					position+=sizeof(int);				
+					position+=sizeof(int);
 					break;
 				case 'f':
 					memcpy((void *)&tmpIntelFloat,(intelStruct + position),sizeof(float));
 					intelFloatToJavaFloat(tmpIntelFloat,(char *)&tmpJavaFloat);
 					memcpy((javaStruct + position),(void *)&tmpJavaFloat,sizeof(float));
-					position+=sizeof(float);				
+					position+=sizeof(float);
 					break;
 				default: break;
 			}
@@ -459,7 +454,7 @@ static unsigned char getSizeOf(const char *signature)
 		{
 			case 'c': size++;              break;
 			case 'h': size+=sizeof(short); break;
-			case 'i': size+=sizeof(int);   break;	
+			case 'i': size+=sizeof(int);   break;
 			case 'f': size+=sizeof(float); break;
 			default: break;
 		}
@@ -476,13 +471,13 @@ static STATUS writeField(void *field, const char* fieldDataSignature, FILE* resu
 								FIELD_DESCRIPTOR_SIGNATURE,
 								fieldDataSignature);
 	#endif
-	
+
 	if(fwrite(field,getSizeOf(FIELD_DESCRIPTOR_SIGNATURE) + getSizeOf(fieldDataSignature),1,resultsFile)!=1)
 		return ERROR;
 
 	return SUCCESS;
 }
-	
+
 static STATUS initWebSiteLinkFieldAndDateField(WebSiteLinkField *webSiteLinkField, DateField *dateField)
 {
 	time_t 		  tmpTime;
@@ -492,7 +487,7 @@ static STATUS initWebSiteLinkFieldAndDateField(WebSiteLinkField *webSiteLinkFiel
 	time(&tmpTime);
 	strcpy(tmpBuffer,(char *)ctime(&tmpTime));
 	tmpBuffer[strlen(tmpBuffer)-1]='\0';
-	
+
 	lengthOfData = strlen(tmpBuffer);
 
 	dateField->date = (char *)malloc(lengthOfData*sizeof(char));
@@ -500,19 +495,19 @@ static STATUS initWebSiteLinkFieldAndDateField(WebSiteLinkField *webSiteLinkFiel
 
 	(dateField->fieldDescriptor).codeOfField = DATE_FIELD_IDENTITY;
 	(dateField->fieldDescriptor).sizeOfFieldData = (unsigned char)(lengthOfData*sizeof(char));
-	
+
 	lengthOfData = strlen(WEB_SITE_LINK_TEXT);
 
 	if(lengthOfData>256)
 		return ERROR;
-		
+
 	webSiteLinkField->webSiteLink = (char *)malloc(lengthOfData*sizeof(char));
 	strncpy((char *)(webSiteLinkField->webSiteLink),WEB_SITE_LINK_TEXT,lengthOfData);
 
 	(webSiteLinkField->fieldDescriptor).codeOfField = WEB_SITE_LINK_FIELD_IDENTITY;
 	(webSiteLinkField->fieldDescriptor).sizeOfFieldData = (unsigned char)(lengthOfData*sizeof(char));
-	
-	return SUCCESS;	
+
+	return SUCCESS;
 }
 
 static void initFileHeaderSegmentHeader(FileHeaderSegmentHeader *fileHeaderSegmentHeader)
@@ -533,7 +528,7 @@ static STATUS writeWebSiteLinkFieldAndDateField(WebSiteLinkField *webSiteLinkFie
 		return ERROR;
 	if(fwrite((void *)(dateField->date),(dateField->fieldDescriptor).sizeOfFieldData,1,fileResults)!=1)
 		return ERROR;
-	
+
 	return SUCCESS;
 }
 
@@ -549,23 +544,23 @@ static void freeWebSiteLinkFieldAndDateField(WebSiteLinkField *webSiteLinkField,
 static void addFieldToFileHeaderSegment(FileHeaderSegmentHeader *fileHeaderSegmentHeader, void* field, const char *fieldSignature, const unsigned char codeOfField)
 {
 	FieldDescriptor fieldDescriptor;
-	
+
 	fieldDescriptor.codeOfField      = codeOfField;
 	fieldDescriptor.sizeOfFieldData  = getSizeOf(fieldSignature);
-	
+
 	memcpy(field,(void *)&fieldDescriptor,getSizeOf(FIELD_DESCRIPTOR_SIGNATURE));
-	
+
 	fileHeaderSegmentHeader->field[fileHeaderSegmentHeader->numberOfFields] = field;
 	strcpy(fileHeaderSegmentHeader->fieldsSignatures[fileHeaderSegmentHeader->numberOfFields],fieldSignature);
 	fileHeaderSegmentHeader->numberOfFields = fileHeaderSegmentHeader->numberOfFields + 1;
 }
 
-void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary *dictionary, Atom *atom, float *amplitude, float *modulus, unsigned short int channelNumber)
+void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary *dictionary, Atom *atom, float *amplitude, float *modulus, unsigned int channelNumber)
 {
 	unsigned int sample;
-	unsigned int offsetExpandedDimension = mp5Parameters->offsetExpandedDimension;
+	unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
 
-	const double phase = *(atom->phase);
+	const double phase = *(atom->phase + channelNumber);
 	const double KS = atom->KS;
 	const double KC = atom->KC;
 	const double KM = atom->KM;
@@ -577,21 +572,23 @@ void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary
 	const double sinPart    = KS*(sinPhase*sinPhase);
 	const double cosPart    = KC*(cosPhase*cosPhase);
 	const double sinCosPart = 2.0*KM*sinPhase*cosPhase;
-	
-	double *signalInParticularChannel = *(mp5Parameters->multiChannelSignalTable + mp5Parameters->chosenChannels[channelNumber] - 1);
-	double *prevAtomTable             = *(mp5Parameters->prevAtomTable);
+
+	double *signalInParticularChannel = *(mp5Parameters->multiChannelSignalTable + channelNumber);
+	double *prevAtomTable             = *(mp5Parameters->prevAtomTable + channelNumber);
 
 	makeSinCosExpAtomTable(dictionary,mp5Parameters,atom);
-	makeAtomTable(mp5Parameters,atom,0);	
+	makeAtomTable(mp5Parameters,atom,channelNumber);
 
 	*modulus = 0.0;
-	
-	for(sample=0;sample<offsetExpandedDimension;sample++)
+
+	for(sample=0;sample<epochExpandedSize;sample++)
 		(*modulus)+= (*(signalInParticularChannel + sample))*(*(prevAtomTable + sample));
 
-	findResidue(signalInParticularChannel,prevAtomTable,*modulus,offsetExpandedDimension);	
+	findResidue(signalInParticularChannel,prevAtomTable,*modulus,epochExpandedSize);
 
+	makeAtomTable(mp5Parameters,atom,channelNumber);
 	*amplitude = (*modulus)/(2.0*sqrt((sinPart + cosPart) - sinCosPart));
+	
 }
 
 static void returnAmplitudeAndModulusDI(Atom *atom, float *amplitude, float *modulus, unsigned short int channelNumber)
@@ -614,7 +611,7 @@ static void returnAmplitudeAndModulusDI(Atom *atom, float *amplitude, float *mod
 
     *modulus   = (RC*cosPhase - RS*sinPhase)/((float)sqrt((sinPart + cosPart) - sinCosPart));
     *amplitude = (*modulus)/(2.0*sqrt((sinPart + cosPart ) - sinCosPart));
-    
+
 }
 
 static STATUS writeAtom(MP5Parameters *mp5Parameters, Dictionary *dictionary, Atom *atom, unsigned short int channelNumber)
@@ -623,7 +620,7 @@ static STATUS writeAtom(MP5Parameters *mp5Parameters, Dictionary *dictionary, At
 	/* Generally, a static allocation of an array inside function's body is forbidden in C/C++ language.
 	     The array shold be allocated dynamically, however, then new version of GNU C/C++ let the static allocation
 	     of the arrays inside the functions  */
-	
+
 	char  type;
 
 	float modulus;
@@ -635,96 +632,104 @@ static STATUS writeAtom(MP5Parameters *mp5Parameters, Dictionary *dictionary, At
 
 	unsigned char fieldDataSignature[getSizeOf(FIELD_DESCRIPTOR_SIGNATURE) + getSizeOf(GABORWAVE_SIGNATURE)];
 	unsigned char field[getSizeOf(FIELD_DESCRIPTOR_SIGNATURE) + getSizeOf(GABORWAVE_SIGNATURE)];
-	unsigned char sizeOfFieldDescriptor = getSizeOf(FIELD_DESCRIPTOR_SIGNATURE); 
-	unsigned char sizeOfFloat = sizeof(float);	
+	unsigned char sizeOfFieldDescriptor = getSizeOf(FIELD_DESCRIPTOR_SIGNATURE);
+	unsigned char sizeOfFloat = sizeof(float);
 
-	//unsigned short int offsetDimension = mp5Parameters->offsetDimension;
-	
+	//unsigned short int epochSize = mp5Parameters->epochSize;
+
 	FieldDescriptor fieldDescriptor;
 
 	type = (char)(atom->feature & 0x0F);
-	
+
 	if(mp5Parameters->MPType & SMP)
 	{
 		returnAmplitudeAndModulusDI(atom,&amplitude,&modulus,0);
 		phase      = (float)(*(atom->phase));
 	}
-	else if(mp5Parameters->MPType & MMP2)
+	else if((mp5Parameters->MPType & MMP2)  || (mp5Parameters->MPType & MMP22))
+	{
+		returnAmplitudeAndModulusForMMP2DI(mp5Parameters,dictionary,atom,&amplitude,&modulus,0);
+		phase      = (float)(*(atom->phase));
+	}
+	else if((mp5Parameters->MPType & MMP12) || (mp5Parameters->MPType & MMP21) ||
+ 		    (mp5Parameters->MPType & MMP23) || (mp5Parameters->MPType & MMP32))
 	{
 		returnAmplitudeAndModulusForMMP2DI(mp5Parameters,dictionary,atom,&amplitude,&modulus,channelNumber);
-		phase      = (float)(*(atom->phase+channelNumber));
+		phase      = (float)(*(atom->phase + channelNumber));
 	}
 	else
 	{
 		returnAmplitudeAndModulusDI(atom,&amplitude,&modulus,channelNumber);
-		phase      = (float)(*(atom->phase+channelNumber));	
+		phase      = (float)(*(atom->phase + channelNumber));
 	}
 
 	amplitude  = (float)(2.0*amplitude);
 	position   = (float)(atom->position);
 	scale      = (float)(*(dictionary->tableOfScalesInOptimalDictionary + atom->scaleIndex));
-	//frequency  = (float)(0.5*offsetDimension*(*(dictionary->tableOfFrequenciesInOptimalDictionary + atom->scaleIndex))*atom->rifling/M_PI);
-	frequency  = (float)((*(dictionary->tableOfFrequenciesInOptimalDictionary + atom->scaleIndex))*atom->rifling/M_PI + atom->randomShiftInFrequency);
-	
+	//frequency  = (float)(0.5*epochSize*(*(dictionary->tableOfFrequenciesInOptimalDictionary + atom->scaleIndex))*atom->rifling/M_PI);
+	frequency  = (float)((*(dictionary->tableOfFrequenciesInOptimalDictionary + atom->scaleIndex))*atom->rifling/M_PI);
+
 	if(type & DIRACDELTA)
 	{
 		amplitude = cos(phase)*amplitude; // we give up phase writing, but in case of Dirac delta and gauss Function the pase codes the sign og Dirac delta and GaussFunction
 		fieldDescriptor.codeOfField     = DIRACDELTA_IDENTITY;
 		fieldDescriptor.sizeOfFieldData = getSizeOf(DIRACDELTA_SIGNATURE);
-		
+
 		memcpy((void *)&field,(void *)&fieldDescriptor,sizeOfFieldDescriptor);
 		memcpy(((void *)&field + sizeOfFieldDescriptor),(void *)&modulus,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + sizeOfFloat),(void *)&amplitude,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 1*sizeOfFloat),(void *)&amplitude,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 2*sizeOfFloat),(void *)&position,sizeof(float));
 
-		strcpy(fieldDataSignature,DIRACDELTA_SIGNATURE);
+		strcpy((char *)fieldDataSignature,DIRACDELTA_SIGNATURE);
 	}
 	else if(type & GAUSSFUNCTION)
 	{
-		amplitude = cos(phase)*amplitude; // we give up phase writing, but in case of Dirac delta and gauss Function the pase codes the sign og Dirac delta and GaussFunction
+		amplitude = cos(phase)*amplitude; // we give up phase writing, but in case of Dirac delta and gauss Function the pase codes the sign of Dirac delta and GaussFunction
 		fieldDescriptor.codeOfField     = GAUSSFUNCTION_IDENTITY;
 		fieldDescriptor.sizeOfFieldData = getSizeOf(GAUSSFUNCTION_SIGNATURE);
-		
+
 		memcpy((void *)&field,(void *)&fieldDescriptor,sizeOfFieldDescriptor);
 		memcpy(((void *)&field + sizeOfFieldDescriptor),(void *)&modulus,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + sizeOfFloat),(void *)&amplitude,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 1*sizeOfFloat),(void *)&amplitude,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 2*sizeOfFloat),(void *)&position,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 3*sizeOfFloat),(void *)&scale,sizeof(float));
 
-		strcpy(fieldDataSignature,GAUSSFUNCTION_SIGNATURE);
+		strcpy((char *)fieldDataSignature,GAUSSFUNCTION_SIGNATURE);
 	}
 	else if(type & SINCOSWAVE)
 	{
 		fieldDescriptor.codeOfField     = SINCOSWAVE_IDENTITY;
 		fieldDescriptor.sizeOfFieldData = getSizeOf(SINCOSWAVE_SIGNATURE);
-		
+
 		memcpy((void *)&field,(void *)&fieldDescriptor,sizeOfFieldDescriptor);
 		memcpy(((void *)&field + sizeOfFieldDescriptor),(void *)&modulus,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + sizeOfFloat),(void *)&amplitude,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + 4*sizeOfFloat),(void *)&frequency,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + 5*sizeOfFloat),(void *)&phase,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 1*sizeOfFloat),(void *)&amplitude,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 2*sizeOfFloat),(void *)&frequency,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 3*sizeOfFloat),(void *)&phase,sizeof(float));
 
-		strcpy(fieldDataSignature,SINCOSWAVE_SIGNATURE);
+		strcpy((char *)fieldDataSignature,SINCOSWAVE_SIGNATURE);
 	}
 	else if(type & GABORWAVE)
 	{
 		fieldDescriptor.codeOfField     = GABORWAVE_IDENTITY;
 		fieldDescriptor.sizeOfFieldData = getSizeOf(GABORWAVE_SIGNATURE);
-		
+
 		memcpy((void *)&field,(void *)&fieldDescriptor,sizeOfFieldDescriptor);
 		memcpy(((void *)&field + sizeOfFieldDescriptor),(void *)&modulus,sizeof(float));
-		memcpy(((void *)&field + sizeOfFieldDescriptor + sizeOfFloat),(void *)&amplitude,sizeof(float));
+		memcpy(((void *)&field + sizeOfFieldDescriptor + 1*sizeOfFloat),(void *)&amplitude,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 2*sizeOfFloat),(void *)&position,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 3*sizeOfFloat),(void *)&scale,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 4*sizeOfFloat),(void *)&frequency,sizeof(float));
 		memcpy(((void *)&field + sizeOfFieldDescriptor + 5*sizeOfFloat),(void *)&phase,sizeof(float));
 
-		strcpy(fieldDataSignature,GABORWAVE_SIGNATURE);
+		strcpy((char *)fieldDataSignature,GABORWAVE_SIGNATURE);
 	}
-			
-	if(writeField((void *)&field,fieldDataSignature,mp5Parameters->resultsFile)==ERROR)
+
+	if(writeField((void *)&field,(const char *)fieldDataSignature,mp5Parameters->resultsFile)==ERROR)
 		return ERROR;
-		
+
+	fflush(stdout);
+
 	return SUCCESS;
 }
 
@@ -737,15 +742,37 @@ static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)
 	    fscanf(asciiFile,"%*[^\n]\n");
 }
 
-static void printChosenChannels(MP5Parameters *mp5Parameters)
+static unsigned char getNumberOfDigits(unsigned int number)
+{
+	if (number == 0)
+		return 1;
+
+	unsigned int k = 1, digits = 0;
+
+	while (number > (k - 1))
+	{
+		k *= 10;
+		digits++;
+	}
+
+	return digits + 1;
+}
+
+
+static void printSelectedChannels(MP5Parameters *mp5Parameters)
 {
     int i;
     const int howMany = 10;
     BOOLEAN breakLine = FALSE;
+	unsigned short int numberOfSelectedChannels = mp5Parameters->numberOfSelectedChannels;
+	char format[numberOfSelectedChannels + 6];
 
-    printf("                               ");
+	unsigned short int numberOfDigits = getNumberOfDigits(numberOfSelectedChannels*numberOfSelectedChannels);
+	sprintf(format,"%%-%huu",numberOfDigits);
 
-    for(i=0;i<mp5Parameters->numberOfChosenChannels;i++)
+	printf("                               ");
+
+    for(i=0;i<mp5Parameters->numberOfSelectedChannels;i++)
     {
 		breakLine = FALSE;
 
@@ -756,22 +783,27 @@ static void printChosenChannels(MP5Parameters *mp5Parameters)
 			breakLine = TRUE;
 		}
 
-		printf("%-7d ",mp5Parameters->chosenChannels[i]);
+		printf(format,mp5Parameters->selectedChannels[i]);
     }
 
     if(!breakLine)
 		printf("\n");
 }
 
-static void printChosenOffsets(MP5Parameters *mp5Parameters)
+static void printSelectedEpochs(MP5Parameters *mp5Parameters)
 {
     int i;
     const int howMany = 10;
     BOOLEAN breakLine = FALSE;
+	unsigned short int numberOfSelectedEpochs = mp5Parameters->numberOfSelectedEpochs;
+	char format[numberOfSelectedEpochs + 6];
+
+	unsigned short int numberOfDigits = getNumberOfDigits(numberOfSelectedEpochs*numberOfSelectedEpochs);
+	sprintf(format,"%%-%huu",numberOfDigits);
 
     printf("                               ");
 
-    for(i=0;i<mp5Parameters->numberOfChosenOffsets;i++)
+    for(i=0;i<mp5Parameters->numberOfSelectedEpochs;i++)
     {
 		breakLine = FALSE;
 
@@ -782,7 +814,7 @@ static void printChosenOffsets(MP5Parameters *mp5Parameters)
 			breakLine = TRUE;
 		}
 
-		printf("%-7d ",mp5Parameters->chosenOffsets[i]);
+		printf("%-7d ",mp5Parameters->selectedEpochs[i]);
     }
 
     if(!breakLine)
@@ -794,8 +826,8 @@ STATUS testFilesAndDirectories(MP5Parameters *mp5Parameters, const ConfigFile *c
     char *nameOfResultsFile = mp5Parameters->nameOfResultsFile;
 
     DIR  *directory;
-    FILE *resultsFile;    
-    
+    FILE *resultsFile;
+
     if((directory = opendir(mp5Parameters->nameOfOutputDirectory))==NULL)
     {
 		const char *tmpString[] = {mp5Parameters->nameOfOutputDirectory};
@@ -804,7 +836,7 @@ STATUS testFilesAndDirectories(MP5Parameters *mp5Parameters, const ConfigFile *c
     }
     else
 		closedir(directory);
-    
+
 	if(mp5Parameters->writingMode & CREATE_FILE)
 	{
 		resultsFile = fopen(nameOfResultsFile,"rb");;
@@ -818,58 +850,40 @@ STATUS testFilesAndDirectories(MP5Parameters *mp5Parameters, const ConfigFile *c
 		}
 	}
 
-    return SUCCESS;        
+    return SUCCESS;
 }
 
 STATUS testMP5Parameters(Dictionary *dictionary, MP5Parameters *mp5Parameters, char *infoMessage)
 {
-	
-    if(mp5Parameters->numberOfChosenChannels > mp5Parameters->numberOfChannelsInDataFile)
+
+    if(mp5Parameters->numberOfSelectedChannels > mp5Parameters->numberOfChannelsInDataFile)
     {
-		sprintf(aTmp,"%hu",mp5Parameters->numberOfChosenChannels);
+		sprintf(aTmp,"%hu",mp5Parameters->numberOfSelectedChannels);
 		sprintf(bTmp,"%hu",mp5Parameters->numberOfChannelsInDataFile);
 		const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfDataFile};
-		printError(infoMessage,BAD_NUMBER_OF_CHOSEN_CHANNELS,tmpString,3);
-		return ERROR;
-    }
-	
-    if((dictionary->typeOfDictionary & OCTAVE_STOCH) && (dictionary->periodDensity == 1) && (!mp5Parameters->FFT))
-    {
-		printError(infoMessage,BAD_PERIOD_DENSITY_EQUAL,NULL,0);
+		printError(infoMessage,BAD_NUMBER_OF_SELECTED_CHANNELS,tmpString,3);
 		return ERROR;
     }
 
-    if((dictionary->typeOfDictionary & OCTAVE_FIXED) && (dictionary->periodDensity >1))
-    {
-		printError(infoMessage,BAD_PERIOD_DENSITY_GREATER,NULL,0);
-		return ERROR;    
-    }
-
-    if((dictionary->typeOfDictionary & OCTAVE_STOCH) && (dictionary->periodDensity>1) && mp5Parameters->FFT)
-    {
-		printError(infoMessage,BAD_PERIOD_DENSITY_GREATER_FFT,NULL,0);
-			return ERROR;
-    }
-	
     if(mp5Parameters->energyPercent>=100.0)
     {
 		printError(infoMessage,BAD_ENERGY_PERCENT,NULL,0);
 		return ERROR;
     }
 
-    if((mp5Parameters->reinitDictionary!=NO_REINIT_AT_ALL) && (dictionary->randomSeed!=AUTO_RANDOM_SEED))  
+    if((mp5Parameters->reinitDictionary!=NO_REINIT_AT_ALL) && (dictionary->randomSeed!=AUTO_RANDOM_SEED))
     {
 		printError(infoMessage,BAD_REINIT_ALL,NULL,0);
 		return ERROR;
     }
 
-    if(!(mp5Parameters->MPType & SMP) && (mp5Parameters->reinitDictionary==REINIT_IN_CHANNEL_DOMAIN || mp5Parameters->reinitDictionary==REINIT_AT_ALL))  
+    if(!(mp5Parameters->MPType & SMP) && (mp5Parameters->reinitDictionary==REINIT_IN_CHANNEL_DOMAIN || mp5Parameters->reinitDictionary==REINIT_AT_ALL))
     {
 		printError(infoMessage,BAD_REINIT_MMP,NULL,0);
 		return ERROR;
     }
 
-    if(!(mp5Parameters->MPType & SMP) && (mp5Parameters->numberOfChosenChannels==1))  
+    if(!(mp5Parameters->MPType & SMP) && (mp5Parameters->numberOfSelectedChannels==1))
     {
 		printError(infoMessage,BAD_MP_ALGORITHM,NULL,0);
 		return ERROR;
@@ -883,25 +897,16 @@ void printInfoAboutData(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     printf(" \n");
     printf(" THE FOLLOWING PARAMETERS HAS BEEN READ: \n\n");
     printf(" NAME OF DATA FILE:            %s\n",mp5Parameters->nameOfDataFile);
-    printf(" SIZE OF HEADER:               %-5hu\n",mp5Parameters->sizeOfHeader);
-    printf(" TAIL OF HEADER:               %-5hu\n",mp5Parameters->sizeOfTail);
     printf(" SAMPLE FREQUENCY:             %-4.2f\n",mp5Parameters->samplingFrequency);
-    printf(" FORMAT OF DATA:            ");
-    if(mp5Parameters->dataFormat & FORMAT_ASCII)
-		printf("   ASCII\n");
-    else if(mp5Parameters->dataFormat & FORMAT_SHORT)
-		printf("   SHORT\n");
-    else if(mp5Parameters->dataFormat & FORMAT_FLOAT)
-		printf("   FLOAT\n");
     printf(" NUMBER OF CHANNELS IN FILE:   %-5hu\n",mp5Parameters->numberOfChannelsInDataFile);
-    printf(" NUMBER OF CHOSEN CHANNELS:    %-5hu\n",mp5Parameters->numberOfChosenChannels);
+    printf(" NUMBER OF SELECTED CHANNELS:  %-5hu\n",mp5Parameters->numberOfSelectedChannels);
 
-    printf(" CHOSEN CHANNELS:             \n");
-    printChosenChannels(mp5Parameters);
-    printf(" NUMBER OF POINTS IN OFFSET:   %-5u\n",mp5Parameters->offsetDimension);
-    printf(" NUMBER OF CHOSEN OFFSETS:     %-5hu\n",mp5Parameters->numberOfChosenOffsets);
-    printf(" CHOSEN OFFSETS:              \n");
-    printChosenOffsets(mp5Parameters);
+    printf(" SELECTED CHANNELS:            \n");
+    printSelectedChannels(mp5Parameters);
+    printf(" NUMBER OF SAMPLES IN EPOCH:   %-5u\n",mp5Parameters->epochSize);
+    printf(" NUMBER OF SELECTED EPOCHS:    %-5hu\n",mp5Parameters->numberOfSelectedEpochs);
+    printf(" SELECTED EPOCHS:               \n");
+    printSelectedEpochs(mp5Parameters);
 
     printf(" TYPE OF DICTIONARY:           ");
     if(dictionary->typeOfDictionary & OCTAVE_FIXED)
@@ -909,39 +914,49 @@ void printInfoAboutData(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     else if(dictionary->typeOfDictionary & OCTAVE_STOCH)
 		printf("OCTAVE_STOCH\n");
     printf(" DILATION FACTOR:              %-f\n",dictionary->dilationFactor);
-    printf(" PERIOD DENSITY:               %-hu\n",dictionary->periodDensity);
     printf(" REINIT DICTIONATY:            ");
     if(mp5Parameters->reinitDictionary & NO_REINIT_AT_ALL)
 		printf("NO REINIT AT ALL \n");
     else if(mp5Parameters->reinitDictionary & REINIT_IN_CHANNEL_DOMAIN)
 		printf("REINIT IN CHANNEL DOMAIN \n");
-    else if(mp5Parameters->reinitDictionary & REINIT_IN_OFFSET_DOMAIN)
-		printf("REINIT IN OFFSET DOMAIN \n");
+    else if(mp5Parameters->reinitDictionary & REINIT_IN_EPOCH_DOMAIN)
+		printf("REINIT IN EPOCH DOMAIN \n");
     else if(mp5Parameters->reinitDictionary & REINIT_AT_ALL)
 		printf("REINIT AT ALL\n");
 
-    printf(" SCALE TO PERIOD FACTOR:       %-f\n",dictionary->scaleToPeriodFactor);
-    printf(" MAX. GABORS NUMBER:           %-5hu\n",mp5Parameters->maximalNumberOfIterations);
+    printf(" MAXIMAL NUMBER Of ITERATIONS  %-5hu\n",mp5Parameters->maximalNumberOfIterations);
     printf(" ENERGY PERCENT:               %-4.2f\n",mp5Parameters->energyPercent);
     printf(" TYPE OF ALGORITHM:            ");
+
     if(mp5Parameters->MPType & SMP)
 		printf("SINLGE CHANNEL MATCHING PURSUIT \n");
     else if(mp5Parameters->MPType & MMP1)
 		printf("MULTICHANNEL MATCHING PURSUIT I\n");
-    else if(mp5Parameters->MPType & MMP2)
+    else if(mp5Parameters->MPType & MMP12)
+		printf("MULTICHANNEL MATCHING PURSUIT I-II\n");
+    else if(mp5Parameters->MPType & MMP11)
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT I-I\n");
+    else if(mp5Parameters->MPType & MMP21)
+		printf("MULTICHANNEL MATCHING PURSUIT II-I\n");
+	else if(mp5Parameters->MPType & MMP2)
 		printf("MULTICHANNEL MATCHING PURSUIT II\n");
-    else if(mp5Parameters->MPType & MMP3)
+	else if(mp5Parameters->MPType & MMP22)
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT II\n");
+	else if(mp5Parameters->MPType & MMP3)
 		printf("MULTICHANNEL MATCHING PURSUIT III\n");
+	else if(mp5Parameters->MPType & MMP23)
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT II-III\n");
+	else if(mp5Parameters->MPType & MMP32)
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT III-II\n");
+    else if(mp5Parameters->MPType & MMP33)
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT III-III\n");
     printf(" RESULTS WILL BE WRITTEN TO THE FOLLOWING FILE: \n");
 	printf("                                                %s\n",mp5Parameters->nameOfResultsFile);
 	if(mp5Parameters->FFT & ON)
 		printf(" FAST FOURIER TRANSFORM:       ON\n");
 	else
 		printf(" FAST FOURIER TRANSFORM:       OFF\n");
-	printf(" NUMBER OF THREADS:            %hu\n",mp5Parameters->numberOfThreads);
-	
-	
-		
+
     printf(" \n");
     fflush(stdout);
 }
@@ -991,20 +1006,11 @@ void createNamesOfResultFiles(Dictionary *dictionary, MP5Parameters *mp5Paramete
 	if(dot==NULL)
     {
 		strcpy(nameOfResultsFile,mp5Parameters->nameOfDataFile);
-		if(strcmp(mp5Parameters->extensionOfResultsFile,"NONE")==0)
-		{
-			if(!(mp5Parameters->MPType & SMP))
-				sprintf(nameOfResultsFile,"_mmp.b");
-			else
-				sprintf(nameOfResultsFile,"_smp.b");
-		}
-		else
-		{
-			if(!(mp5Parameters->MPType & SMP))
-				sprintf(nameOfResultsFile,"_%s_mmp.b",mp5Parameters->extensionOfResultsFile);
-			else
-				sprintf(nameOfResultsFile,"_%s_smp.b",mp5Parameters->extensionOfResultsFile);        
-		}
+
+        if(!(mp5Parameters->MPType & SMP))
+            sprintf(nameOfResultsFile,"_mmp.b");
+        else
+            sprintf(nameOfResultsFile,"_smp.b");
     }
     else
     {
@@ -1012,20 +1018,10 @@ void createNamesOfResultFiles(Dictionary *dictionary, MP5Parameters *mp5Paramete
     	strncat(nameOfResultsFile,mp5Parameters->nameOfDataFile,strlen(mp5Parameters->nameOfDataFile)-len);
     	lengthOfDataFileWithOutExpand = (unsigned short int)strlen(nameOfResultsFile);
 
-    	if(strcmp(mp5Parameters->extensionOfResultsFile,"NONE")==0)
-    	{
-			if(!(mp5Parameters->MPType & SMP))
-				sprintf((nameOfResultsFile + lengthOfDataFileWithOutExpand),"_mmp.b");
-			else
-	    		sprintf((nameOfResultsFile+ lengthOfDataFileWithOutExpand),"_smp.b");
-		}	       
-    	else
-    	{
-			if(!(mp5Parameters->MPType & SMP))
-				sprintf((nameOfResultsFile + lengthOfDataFileWithOutExpand),"_%s_mmp.b",mp5Parameters->extensionOfResultsFile);
-			else
-	    		sprintf((nameOfResultsFile + lengthOfDataFileWithOutExpand),"_%s_smp.b",mp5Parameters->extensionOfResultsFile);	    	      
-		}
+        if(!(mp5Parameters->MPType & SMP))
+            sprintf((nameOfResultsFile + lengthOfDataFileWithOutExpand),"_mmp.b");
+        else
+            sprintf((nameOfResultsFile+ lengthOfDataFileWithOutExpand),"_smp.b");
 	}
 }
 
@@ -1074,171 +1070,65 @@ STATUS analyseBinaryDataFile(MP5Parameters *mp5Parameters, char *infoMessage)
 
     sizeOfData = sizeOfFile - mp5Parameters->sizeOfHeader - mp5Parameters->sizeOfTail;
 
-    if(mp5Parameters->dataFormat & FORMAT_SHORT)
+    if((sizeOfData/sizeof(float))%mp5Parameters->numberOfChannelsInDataFile!=0)
     {
-		if((sizeOfData/sizeof(short))%mp5Parameters->numberOfChannelsInDataFile!=0)
-		{
-			if(applicationMode & PROCESS_USER_MODE)
-			{
-				printf("\n DATA WARNING: \n CHANNELS DO NOT CONTAIN THE SAME NUMBER OF SAMPLES IN FILE: %s\n THE ERROR WILL OCCUR ERROR WHILE READING THE LAST OFFSET\n",mp5Parameters->nameOfDataFile);
-				fflush(stdout);
-				sleep(1);
-			}
-			else if(applicationMode & PROCESS_SERVER_MODE)
-			{
-				const char *tmpString[] = {mp5Parameters->nameOfDataFile};
-				printError(infoMessage,BAD_NUMBER_OF_SAMPLES_PER_CHANNEL,tmpString,1);
-				return ERROR;
-			}
-		}
-
-		if(sizeOfData%sizeof(short)!=0)
-		{
-			const char *tmpString[] = {mp5Parameters->nameOfDataFile};
-			printError(infoMessage,BAD_NUMBER_OF_SAMPLES,tmpString,1);
-			return ERROR;
-		}
-		else
-		{
-			mp5Parameters->numberOfPoints  = sizeOfData/sizeof(short)/mp5Parameters->numberOfChannelsInDataFile;
-			mp5Parameters->numberOfOffsets = (unsigned short int)(mp5Parameters->numberOfPoints/mp5Parameters->offsetDimension);
-
-			if(mp5Parameters->numberOfOffsets < mp5Parameters->numberOfChosenOffsets)
-			{
-				sprintf(aTmp,"%hu",mp5Parameters->numberOfChosenOffsets);
-				sprintf(bTmp,"%hu",mp5Parameters->numberOfOffsets);			
-				const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfDataFile};
-				printError(infoMessage,BAD_NUMBER_OF_CHOSEN_OFFSETS,tmpString,3);
-				return ERROR;
-			}
-
-			mp5Parameters->samplesBesideOffsets = mp5Parameters->numberOfPoints - mp5Parameters->numberOfOffsets*mp5Parameters->numberOfPoints;
-		}
-    }
-    else if(mp5Parameters->dataFormat & FORMAT_FLOAT)
-    {
-		if((sizeOfData/sizeof(float))%mp5Parameters->numberOfChannelsInDataFile!=0)
-		{
-			if(applicationMode & PROCESS_USER_MODE)
-			{
-				printf("\n DATA WARNING: \n CHANNELS DO NOT CONTAIN THE SAME NUMBER OF SAMPLES IN FILE: %s\n THE ERROR WILL OCCUR ERROR WHILE READING THE LAST OFFSET\n",mp5Parameters->nameOfDataFile);
-				fflush(stdout);
-				sleep(1);
-			}
-			else if(applicationMode & PROCESS_SERVER_MODE)
-			{
-				const char *tmpString[] = {mp5Parameters->nameOfDataFile};
-				printError(infoMessage,BAD_NUMBER_OF_SAMPLES_PER_CHANNEL,tmpString,1);
-				return ERROR;
-			}
-		}
-
-		if(sizeOfData%sizeof(float)!=0)
-		{
-			const char *tmpString[] = {mp5Parameters->nameOfDataFile};
-			printError(infoMessage,BAD_NUMBER_OF_SAMPLES,tmpString,1);
-			return ERROR;
-		}
-		else
+        if(applicationMode & PROCESS_USER_MODE)
         {
-			mp5Parameters->numberOfPoints  = sizeOfData/sizeof(float)/mp5Parameters->numberOfChannelsInDataFile;
-			mp5Parameters->numberOfOffsets = (unsigned short int)(mp5Parameters->numberOfPoints/mp5Parameters->offsetDimension);
-			
-			if(mp5Parameters->numberOfOffsets < mp5Parameters->numberOfChosenOffsets)
-			{
-				sprintf(aTmp,"%hu",mp5Parameters->numberOfChosenOffsets);
-				sprintf(bTmp,"%hu",mp5Parameters->numberOfOffsets);	
-				const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfDataFile};			
-				printError(infoMessage,BAD_NUMBER_OF_CHOSEN_OFFSETS,tmpString,3);
-				return ERROR;
-			}
-
-			mp5Parameters->samplesBesideOffsets = mp5Parameters->numberOfPoints - mp5Parameters->numberOfOffsets*mp5Parameters->numberOfPoints;
-		}
-    }
-    
-    return SUCCESS;
-}
-
-STATUS analyseAsciiDataFile(MP5Parameters *mp5Parameters, char *infoMessage)
-{
-    double value;
-    unsigned short int channelNumber;
-    unsigned long  int lineNumber;
-    unsigned long  int numberOfLinesInFile;
-    unsigned long  int numberOfDataLines;
-    unsigned short int numberOfChannelsInDataFile = mp5Parameters->numberOfChannelsInDataFile;
-
-    fseek(mp5Parameters->dataFile,0L,SEEK_SET);
-
-    numberOfLinesInFile = 0UL;
-    while(!feof(mp5Parameters->dataFile))
-    {
-		fscanf(mp5Parameters->dataFile,"%*[^\n]\n");
-		numberOfLinesInFile++;
-    }
-
-    numberOfDataLines = numberOfLinesInFile - mp5Parameters->sizeOfHeader - mp5Parameters->sizeOfTail;
-
-    asciiFileSeek(mp5Parameters->dataFile,mp5Parameters->sizeOfHeader);
-
-    for(lineNumber=0;lineNumber<numberOfDataLines;lineNumber++)
-    {
-		for(channelNumber=0;channelNumber<numberOfChannelsInDataFile-1;channelNumber++)
+            printf("\n DATA WARNING: \n CHANNELS DO NOT CONTAIN THE SAME NUMBER OF SAMPLES IN FILE: %s\n THE ERROR WILL OCCUR ERROR WHILE READING THE LAST EPOCH\n",mp5Parameters->nameOfDataFile);
+            fflush(stdout);
+            sleep(1);
+        }
+        else if(applicationMode & PROCESS_SERVER_MODE)
 		{
-			if(fscanf(mp5Parameters->dataFile,"%lf ",&value)!=1)
-			{
-				sprintf(aTmp,"%lu",mp5Parameters->sizeOfHeader+lineNumber);
-				sprintf(bTmp,"%hu",channelNumber);
-				const char *tmpString[] = {mp5Parameters->nameOfDataFile,aTmp,bTmp};
-				printError(infoMessage,CAN_NOT_READ_SAMPLE,tmpString,3);
-				return ERROR;
-			}
-		}
-
-		if(fscanf(mp5Parameters->dataFile,"%lf\n",&value)!=1)
-		{	
-			sprintf(aTmp,"%lu",mp5Parameters->sizeOfHeader+lineNumber);
-			sprintf(bTmp,"%hu",channelNumber);
-			const char *tmpString[] = {mp5Parameters->nameOfDataFile,aTmp,bTmp};
-			printError(infoMessage,CAN_NOT_READ_SAMPLE,tmpString,3);
-			return ERROR;
-		}
+		  const char *tmpString[] = {mp5Parameters->nameOfDataFile};
+		  printError(infoMessage,BAD_NUMBER_OF_SAMPLES_PER_CHANNEL,tmpString,1);
+          return ERROR;
+        }
     }
 
-    mp5Parameters->numberOfPoints  = numberOfDataLines;
-    mp5Parameters->numberOfOffsets = (unsigned short int)((mp5Parameters->numberOfPoints)/mp5Parameters->offsetDimension);
-
-    if(mp5Parameters->numberOfOffsets < mp5Parameters->numberOfChosenOffsets)
+    if(sizeOfData%sizeof(float)!=0)
     {
-		sprintf(aTmp,"%hu",mp5Parameters->numberOfChosenOffsets);
-		sprintf(bTmp,"%hu",mp5Parameters->numberOfOffsets);			
-		const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfDataFile};
-		printError(infoMessage,BAD_NUMBER_OF_CHOSEN_OFFSETS,tmpString,3);
-		return ERROR;
+        const char *tmpString[] = {mp5Parameters->nameOfDataFile};
+        printError(infoMessage,BAD_NUMBER_OF_SAMPLES,tmpString,1);
+        return ERROR;
     }
+	else
+    {
+        mp5Parameters->numberOfPoints  = sizeOfData/sizeof(float)/mp5Parameters->numberOfChannelsInDataFile;
+        mp5Parameters->numberOfEpochs = (unsigned short int)(mp5Parameters->numberOfPoints/mp5Parameters->epochSize);
 
-    mp5Parameters->samplesBesideOffsets = mp5Parameters->numberOfPoints - mp5Parameters->numberOfOffsets*mp5Parameters->numberOfPoints;
+        if(mp5Parameters->numberOfEpochs < mp5Parameters->numberOfSelectedEpochs)
+        {
+            sprintf(aTmp,"%hu",mp5Parameters->numberOfSelectedEpochs);
+            sprintf(bTmp,"%hu",mp5Parameters->numberOfEpochs);
+            const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfDataFile};
+            printError(infoMessage,BAD_NUMBER_OF_SELECTED_EPOCHS,tmpString,3);
+            return ERROR;
+        }
+
+        mp5Parameters->samplesBesideEpochs = mp5Parameters->numberOfPoints - mp5Parameters->numberOfEpochs*mp5Parameters->numberOfPoints;
+    }
 
     return SUCCESS;
 }
 
 static void processRawData(MP5Parameters *mp5Parameters)
 {
-    const unsigned short int numberOfChannelsInDataFile  = mp5Parameters->numberOfChannelsInDataFile;
-    const unsigned       int offsetDimension         = mp5Parameters->offsetDimension;
-    const unsigned       int marginalDimension       = mp5Parameters->marginalDimension;
-    const unsigned       int offsetExpandedDimension = mp5Parameters->offsetExpandedDimension;
+    const unsigned       int numberOfReadChannelsAndEpochs = mp5Parameters->numberOfReadChannelsAndEpochs;
+    const unsigned       int epochSize              = mp5Parameters->epochSize;
+    const unsigned       int marginalSize           = mp5Parameters->marginalSize;
+    const unsigned       int epochExpandedSize = mp5Parameters->epochExpandedSize;
     double               **rawDataMatrix       = mp5Parameters->rawDataMatrix;
     double               **processedDataMatrix = mp5Parameters->processedDataMatrix;
-    unsigned short int channel;
+    unsigned       int channel;
     unsigned       int sample;
 
-    dSetMatrixZero(processedDataMatrix,numberOfChannelsInDataFile,offsetExpandedDimension);
+    dSetMatrixZero(processedDataMatrix,numberOfReadChannelsAndEpochs,epochExpandedSize);
 
-    for(channel=0;channel<numberOfChannelsInDataFile;channel++)
-		for(sample=0;sample<offsetDimension;sample++)
-			*(*(processedDataMatrix + channel) + marginalDimension + sample) = *(*(rawDataMatrix + channel) + sample);
+    for(channel=0;channel<numberOfReadChannelsAndEpochs;channel++)
+		for(sample=0;sample<epochSize;sample++)
+			*(*(processedDataMatrix + channel) + marginalSize + sample) = *(*(rawDataMatrix + channel) + sample);
+					
 }
 
 static STATUS writeSegmentHeader(void *segmentHeader, const char* segmentDataSignature, FILE* resultsFile)
@@ -1249,7 +1139,7 @@ static STATUS writeSegmentHeader(void *segmentHeader, const char* segmentDataSig
 								SEGMENT_DESCRIPTOR_SIGNATURE,
 								segmentDataSignature);
 	#endif
-	
+
 	if(fwrite(segmentHeader,getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE) + getSizeOf(segmentDataSignature),1,resultsFile)!=1)
 		return ERROR;
 
@@ -1266,7 +1156,7 @@ static unsigned int getSizeOfAtomsFields(MP5Parameters *mp5Parameters)
 	Atom *atom;
 	unsigned int atomNumber;
 	unsigned int sizeOfAtomsFields = 0;
-	
+
 	for(atomNumber=0;atomNumber<mp5Parameters->fitted->size;atomNumber++)
 	{
 		atom = (Atom *)readNNode(mp5Parameters->fitted,atomNumber);
@@ -1279,10 +1169,18 @@ static unsigned int getSizeOfAtomsFields(MP5Parameters *mp5Parameters)
 
 static unsigned int getSizeOfAtomsSegment(MP5Parameters *mp5Parameters)
 {
-	return mp5Parameters->numberOfAnalysedChannels*(getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE) +
-													getSizeOf(ATOMS_SEGMENT_HEADER_SIGNATURE) +
-													getSizeOfAtomsFields(mp5Parameters));
-						 
+	unsigned short int numberOfProceesedChannels;
+
+	if(mp5Parameters->MPType == SMP)
+		numberOfProceesedChannels = 1;
+	else
+		numberOfProceesedChannels = mp5Parameters->numberOfSelectedChannels;
+
+
+	return numberOfProceesedChannels*(getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE) +
+									  getSizeOf(ATOMS_SEGMENT_HEADER_SIGNATURE) +
+									  getSizeOfAtomsFields(mp5Parameters));
+
 }
 
 static unsigned int getSizeOfSignalSegment(MP5Parameters *mp5Parameters)
@@ -1291,28 +1189,36 @@ static unsigned int getSizeOfSignalSegment(MP5Parameters *mp5Parameters)
 
 	if(mp5Parameters->bookWithSignal & YES)
 	{
-		sizeOfSignalSegment = mp5Parameters->numberOfAnalysedChannels*(getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE) + 
-																	   getSizeOf(SIGNAL_SEGMENT_HEADER_SIGNATURE) +
-																	   mp5Parameters->offsetDimension*sizeof(float));
+		unsigned short int numberOfProceesedChannels;
+
+		if(mp5Parameters->MPType == SMP)
+			numberOfProceesedChannels = 1;
+		else
+			numberOfProceesedChannels = mp5Parameters->numberOfSelectedChannels;
+
+
+		sizeOfSignalSegment = numberOfProceesedChannels*(getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE) +
+													     getSizeOf(SIGNAL_SEGMENT_HEADER_SIGNATURE) +
+														 mp5Parameters->epochSize*sizeof(float));
 	}
 
 	return sizeOfSignalSegment;
 
 }
 
-static unsigned int getSizeOfOffsetSegment(MP5Parameters *mp5Parameters)
+static unsigned int getSizeOfEpochSegment(MP5Parameters *mp5Parameters)
 {
-	return getSizeOf(OFFSET_SEGMENT_HEADER_SIGNATURE) + 
-		   getSizeOfSignalSegment(mp5Parameters) + 
+	return getSizeOf(EPOCH_SEGMENT_HEADER_SIGNATURE) +
+		   getSizeOfSignalSegment(mp5Parameters) +
 		   getSizeOfAtomsSegment(mp5Parameters);
 }
 
-
-static STATUS writeOffsetSegment(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int offsetNumber, unsigned short int channelNumber, char *infoMessage)
+static STATUS writeEpochSegment(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int epochNumber, unsigned short int channelNumber, char *infoMessage)
 {
 	Atom *atom;
-    unsigned int atomNumber    = 0;
-    const unsigned int offsetDimension = mp5Parameters->offsetDimension;
+    unsigned int atomNumber      = 0;
+    const unsigned int epochSize = mp5Parameters->epochSize;
+	unsigned int selectedEpochChannel;
 
 	SignalSegmentHeader  signalSegmentHeader;
 	AtomsSegmentHeader   atomsSegmentHeader;
@@ -1320,50 +1226,53 @@ static STATUS writeOffsetSegment(Dictionary *dictionary, MP5Parameters *mp5Param
 	if(mp5Parameters->bookWithSignal & YES)
 	{
 		(signalSegmentHeader.segmentDescriptor).codeOfSegment     = SIGNAL_SEGMENT_IDENTITY;
-		(signalSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOf(SIGNAL_SEGMENT_HEADER_SIGNATURE) + offsetDimension*sizeof(float);
-		signalSegmentHeader.channelNumber                   	  = *(mp5Parameters->chosenChannels + channelNumber);
+		(signalSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOf(SIGNAL_SEGMENT_HEADER_SIGNATURE) + epochSize*sizeof(float);
+		signalSegmentHeader.channelNumber                   	  = *(mp5Parameters->selectedChannels + channelNumber);
 	}
 
 	(atomsSegmentHeader.segmentDescriptor).codeOfSegment     = ATOMS_SEGMENT_IDENTITY;
-	(atomsSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOf(ATOMS_SEGMENT_HEADER_SIGNATURE) + 
-															   getSizeOfAtomsFields(mp5Parameters);
-	atomsSegmentHeader.channelNumber                    	 = *(mp5Parameters->chosenChannels + channelNumber);
+	(atomsSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOf(ATOMS_SEGMENT_HEADER_SIGNATURE) + getSizeOfAtomsFields(mp5Parameters);
+	atomsSegmentHeader.channelNumber                    	 = *(mp5Parameters->selectedChannels + channelNumber);
 
-	if(mp5Parameters->bookWithSignal & YES)	
-	{		
+	if(mp5Parameters->bookWithSignal & YES)
+	{
 		unsigned int 	 counter;
 		double  *rawDataMatrix;
 		float   intelFloat, javaFloat;
-		
+
 		if(writeSegmentHeader((void *)&signalSegmentHeader,SIGNAL_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
 			return ERROR;
-		
-		if(readDataFile(mp5Parameters,mp5Parameters->chosenOffsets[offsetNumber],infoMessage)==ERROR)
+
+		if(readDataFileOneTrial(mp5Parameters,mp5Parameters->selectedEpochs[epochNumber],infoMessage)==ERROR)
 			return ERROR;
-		
-		rawDataMatrix = *(mp5Parameters->rawDataMatrix + mp5Parameters->chosenChannels[channelNumber]-1);
-				
-		for(counter = 0;counter<offsetDimension;counter++)
+
+		rawDataMatrix = *(mp5Parameters->rawDataMatrix + channelNumber);
+
+		for(counter = 0;counter<epochSize;counter++)
 		{
 			intelFloat = (float)(*(rawDataMatrix + counter));
-			
+
 			intelFloatToJavaFloat(intelFloat,(char *)&javaFloat);
-			if(fwrite((void *)&javaFloat,sizeof(float),1,mp5Parameters->resultsFile)==0U) 
+			if(fwrite((void *)&javaFloat,sizeof(float),1,mp5Parameters->resultsFile)==0U)
 				return ERROR;
 		}
-			
 	}
 
 	if(writeSegmentHeader((void *)&atomsSegmentHeader,ATOMS_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
 		return ERROR;
-   
+
 	fflush(mp5Parameters->resultsFile);
+
+	if((mp5Parameters->MPType & MMP11) || (mp5Parameters->MPType & MMP22) || (mp5Parameters->MPType & MMP33))
+		selectedEpochChannel = epochNumber*mp5Parameters->numberOfSelectedChannels + channelNumber;
+	else
+		selectedEpochChannel = channelNumber;
 
 	for(atomNumber=0;atomNumber<mp5Parameters->fitted->size;atomNumber++)
 	{
 		atom = (Atom *)readNNode(mp5Parameters->fitted,atomNumber);
 
-		if(writeAtom(mp5Parameters,dictionary,atom,channelNumber)==ERROR)			
+		if(writeAtom(mp5Parameters,dictionary,atom,selectedEpochChannel)==ERROR)
 			return ERROR;
 
 		fflush(mp5Parameters->resultsFile);
@@ -1377,14 +1286,14 @@ STATUS writeMagic(MP5Parameters *mp5Parameters, char *infoMessage)
 	char tmpBuffer[6];
 
 	strncpy(tmpBuffer,MAGIC_TEXT,6);
-	
+
 	if(fwrite((void *)tmpBuffer,6*sizeof(char),1,mp5Parameters->resultsFile)!=1)
 	{
 		const char *tmpString[] = {mp5Parameters->nameOfResultsFile};
 		printError(infoMessage,CAN_NOT_WRITE_HEADER,tmpString,1);
 		return ERROR;
 	}
-	
+
 	return SUCCESS;
 }
 
@@ -1394,17 +1303,17 @@ STATUS writeCommentsSegment(ConfigFile *configFile, MP5Parameters *mp5Parameters
 
 	SegmentDescriptor segmentDescriptor;
 	unsigned short int numberOfChars = 0;
-	
+
     char text[LENGTH_OF_LINE];
 
 	if(fseek(configFile->file,0,0)!=0)
 		goto ERROR_PROCEDURE;
-	
+
     do
     {
 		if(fgets(text,LENGTH_OF_LINE,configFile->file)==NULL)
 			break;
-	
+
 		if(strstr(text,"##")!=NULL)
 		{
 			numberOfChars+=strlen(text);
@@ -1428,12 +1337,12 @@ STATUS writeCommentsSegment(ConfigFile *configFile, MP5Parameters *mp5Parameters
 
 	if(fwrite((void *)&segmentDescriptor,getSizeOf(SEGMENT_DESCRIPTOR_SIGNATURE),1,mp5Parameters->resultsFile)!=1)
 		goto ERROR_PROCEDURE;
-		
+
 	do
     {
 		if(fgets(text,LENGTH_OF_LINE,configFile->file)==NULL)
 			break;
-	
+
 		if(strstr(text,"##")!=NULL)
 		{
 			if(fwrite((void *)&text,strlen(text)*sizeof(char),1,mp5Parameters->resultsFile)!=1)
@@ -1444,7 +1353,7 @@ STATUS writeCommentsSegment(ConfigFile *configFile, MP5Parameters *mp5Parameters
 	}while(TRUE);
 
 	return SUCCESS;
-	
+
 	ERROR_PROCEDURE:
 		printError(infoMessage,CAN_NOT_WRITE_RESULTS,tmpString,1);
 		return ERROR;
@@ -1463,26 +1372,26 @@ STATUS writeFileHeader(Dictionary *dictionary, MP5Parameters *mp5Parameters, cha
 	DateField         dateField;
 	SignalField       signalField;
 	DecomposingField  decomposingField;
-	
+
 	FileHeaderSegmentHeader fileHeaderSegmentHeader;
 	initFileHeaderSegmentHeader(&fileHeaderSegmentHeader);
-	
+
 	signalField.samplingFrequency          = (float)mp5Parameters->samplingFrequency;
 	signalField.pointsPerMicrovolt         = (float)mp5Parameters->pointsPerMicrovolt;
 	signalField.numberOfChannelsInDataFile = mp5Parameters->numberOfChannelsInDataFile;
 	addFieldToFileHeaderSegment(&fileHeaderSegmentHeader, (void *)&signalField,SIGNAL_FIELD_SIGNATURE,SIGNAL_FIELD_IDENTITY);
-	
+
     decomposingField.energyPercent             =  (float)mp5Parameters->energyPercent;
     decomposingField.maximalNumberOfIterations =  mp5Parameters->maximalNumberOfIterations;
-    decomposingField.sizeOfDictionary          =  dictionary->sizeOfDictionary;
+    decomposingField.sizeOfDictionary          =  dictionary->finalNumberOfAtoms;
     decomposingField.typeOfDictionary          =  (char)((dictionary->typeOfDictionary & OCTAVE_FIXED) ? 'F' : 'S');
 	addFieldToFileHeaderSegment(&fileHeaderSegmentHeader, (void *)&decomposingField,DECOMPOSING_FIELD_SIGNATURE,DECOMPOSING_FIELD_IDENTITY);
-			
+
 	if(!initWebSiteLinkFieldAndDateField(&webSiteLinkField,&dateField))
 		goto ERROR_PROCEDURE;
-	
-	(fileHeaderSegmentHeader.segmentDescriptor).sizeOfSegmentData = 2*getSizeOf(FIELD_DESCRIPTOR_SIGNATURE) + 
-																	(webSiteLinkField.fieldDescriptor).sizeOfFieldData + 
+
+	(fileHeaderSegmentHeader.segmentDescriptor).sizeOfSegmentData = 2*getSizeOf(FIELD_DESCRIPTOR_SIGNATURE) +
+																	(webSiteLinkField.fieldDescriptor).sizeOfFieldData +
 																	(dateField.fieldDescriptor).sizeOfFieldData;
 
 	for(numberOfField = 0; numberOfField<fileHeaderSegmentHeader.numberOfFields; numberOfField++)
@@ -1503,204 +1412,205 @@ STATUS writeFileHeader(Dictionary *dictionary, MP5Parameters *mp5Parameters, cha
 
 	if(writeWebSiteLinkFieldAndDateField(&webSiteLinkField,&dateField,mp5Parameters->resultsFile)!=1)
 		goto ERROR_PROCEDURE;
-	
+
 	for(numberOfField = 0; numberOfField<fileHeaderSegmentHeader.numberOfFields; numberOfField++)
 	{
 		if(writeField(fileHeaderSegmentHeader.field[numberOfField],fileHeaderSegmentHeader.fieldsSignatures[numberOfField],mp5Parameters->resultsFile)==ERROR)
 			goto ERROR_PROCEDURE;
 	}
-	
+
 	freeWebSiteLinkFieldAndDateField(&webSiteLinkField,&dateField);
 	fflush(mp5Parameters->resultsFile);
 
 	return SUCCESS;
-	
+
 	ERROR_PROCEDURE:
 		printError(infoMessage,CAN_NOT_WRITE_HEADER,tmpString,1);
 		return ERROR;
 }
 
-STATUS writeSMPResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int offsetNumber, unsigned short int channelNumber, char *infoMessage)
+STATUS writeSMPResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int epochNumber, unsigned short int channelNumber, char *infoMessage)
 {
 	const char *tmpString[] = {mp5Parameters->nameOfResultsFile};
-    const unsigned int offsetDimension = mp5Parameters->offsetDimension;
+    const unsigned int epochSize = mp5Parameters->epochSize;
 
-	OffsetSegmentHeader  offsetSegmentHeader;
-	
-	(offsetSegmentHeader.segmentDescriptor).codeOfSegment     = OFFSET_SEGMENT_IDENTITY;
-	(offsetSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOfOffsetSegment(mp5Parameters);
-	offsetSegmentHeader.offsetNumber                     	  = *(mp5Parameters->chosenOffsets + offsetNumber);
-	offsetSegmentHeader.offsetDimension                   	  = offsetDimension;
-	
-	if(writeSegmentHeader((void *)&offsetSegmentHeader,OFFSET_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
+	EpochSegmentHeader  epochSegmentHeader;
+
+	(epochSegmentHeader.segmentDescriptor).codeOfSegment      = EPOCH_SEGMENT_IDENTITY;
+	(epochSegmentHeader.segmentDescriptor).sizeOfSegmentData  = getSizeOfEpochSegment(mp5Parameters);
+	epochSegmentHeader.epochNumber                     	      = *(mp5Parameters->selectedEpochs + epochNumber);
+	epochSegmentHeader.epochSize                          	  = epochSize;
+
+	if(writeSegmentHeader((void *)&epochSegmentHeader,EPOCH_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
 		goto ERROR_PROCEDURE;
 
-	if(writeOffsetSegment(dictionary,mp5Parameters,offsetNumber,channelNumber,infoMessage)==ERROR)
+	if(writeEpochSegment(dictionary,mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
 		goto ERROR_PROCEDURE;
-		
 
     clearQueue(mp5Parameters->fitted,(void (*)(void *))freeAtom);
 
     return SUCCESS;
-	
+
 	ERROR_PROCEDURE:
 		printError(infoMessage,CAN_NOT_WRITE_RESULTS,tmpString,1);
 		return ERROR;
 }
 
-STATUS writeMMPResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int offsetNumber, char *infoMessage)
+STATUS writeMMPResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, unsigned short int epochNumber, char *infoMessage)
 {
 	const char *tmpString[] = {mp5Parameters->nameOfResultsFile};
 	unsigned short int channelNumber;
-    const unsigned int offsetDimension = mp5Parameters->offsetDimension;
+    const unsigned int epochSize = mp5Parameters->epochSize;
 
-	OffsetSegmentHeader  offsetSegmentHeader;
+	EpochSegmentHeader  epochSegmentHeader;
 
-	(offsetSegmentHeader.segmentDescriptor).codeOfSegment     = OFFSET_SEGMENT_IDENTITY;
-	(offsetSegmentHeader.segmentDescriptor).sizeOfSegmentData = getSizeOfOffsetSegment(mp5Parameters);
-	offsetSegmentHeader.offsetNumber                     	  = *(mp5Parameters->chosenOffsets + offsetNumber);
-	offsetSegmentHeader.offsetDimension                   	  = offsetDimension;
+	(epochSegmentHeader.segmentDescriptor).codeOfSegment      = EPOCH_SEGMENT_IDENTITY;
+	(epochSegmentHeader.segmentDescriptor).sizeOfSegmentData  = getSizeOfEpochSegment(mp5Parameters);
+	epochSegmentHeader.epochNumber                     	      = *(mp5Parameters->selectedEpochs + epochNumber);
+	epochSegmentHeader.epochSize                     	      = epochSize;
 
-	if(writeSegmentHeader((void *)&offsetSegmentHeader,OFFSET_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
+	if(writeSegmentHeader((void *)&epochSegmentHeader,EPOCH_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
 		goto ERROR_PROCEDURE;
 
-    for(channelNumber=0;channelNumber<mp5Parameters->numberOfAnalysedChannels;channelNumber++)
+    for(channelNumber=0;channelNumber<mp5Parameters->numberOfSelectedChannels;channelNumber++)
     {
-		if(writeOffsetSegment(dictionary,mp5Parameters,offsetNumber,channelNumber,infoMessage)==ERROR)
+		if(writeEpochSegment(dictionary,mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
 			goto ERROR_PROCEDURE;
 	}
 
 	clearQueue(mp5Parameters->fitted,(void (*)(void *))freeAtom);
 
 	return SUCCESS;
-	
+
 	ERROR_PROCEDURE:
 		printError(infoMessage,CAN_NOT_WRITE_RESULTS,tmpString,1);
 		return ERROR;
 }
 
-STATUS readBinaryData(MP5Parameters *mp5Parameters, unsigned short int offsetNumber, char *infoMessage)
+STATUS writeMMPMultiTrialResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, char *infoMessage)
 {
-    double             		 **rawDataMatrix = mp5Parameters->rawDataMatrix;
-    const unsigned short int numberOfChannelsInDataFile = mp5Parameters->numberOfChannelsInDataFile;
-    const unsigned       int offsetDimension = mp5Parameters->offsetDimension;
-    unsigned short int channel;
+	const char *tmpString[] = {mp5Parameters->nameOfResultsFile};
+	unsigned short int channelNumber;
+    unsigned short int epochNumber;
+	const unsigned int epochSize = mp5Parameters->epochSize;
+	EpochSegmentHeader epochSegmentHeader;
+
+	for(epochNumber=0;epochNumber<mp5Parameters->numberOfSelectedEpochs;epochNumber++)
+	{
+		(epochSegmentHeader.segmentDescriptor).codeOfSegment      = EPOCH_SEGMENT_IDENTITY;
+		(epochSegmentHeader.segmentDescriptor).sizeOfSegmentData  = getSizeOfEpochSegment(mp5Parameters);
+		epochSegmentHeader.epochNumber                     	      = *(mp5Parameters->selectedEpochs + epochNumber);
+		epochSegmentHeader.epochSize                     	      = epochSize;
+
+		if(writeSegmentHeader((void *)&epochSegmentHeader,EPOCH_SEGMENT_HEADER_SIGNATURE,mp5Parameters->resultsFile)==ERROR)
+			goto ERROR_PROCEDURE;
+
+		for(channelNumber=0;channelNumber<mp5Parameters->numberOfSelectedChannels;channelNumber++)
+		{
+			if(writeEpochSegment(dictionary,mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
+				goto ERROR_PROCEDURE;
+		}
+	}
+
+	clearQueue(mp5Parameters->fitted,(void (*)(void *))freeAtom);
+	return SUCCESS;
+
+	ERROR_PROCEDURE:
+		printError(infoMessage,CAN_NOT_WRITE_RESULTS,tmpString,1);
+	return ERROR;
+}
+
+static STATUS readBinaryData(MP5Parameters *mp5Parameters, unsigned short int epochNumber, unsigned int epochOnset, char *infoMessage)
+{
+    double             		 **rawDataMatrix = mp5Parameters->rawDataMatrix + epochOnset;
+    const unsigned       int numberOfChannelsInDataFile = mp5Parameters->numberOfChannelsInDataFile;
+    const unsigned       int numberOfSelectedChannels   = mp5Parameters->numberOfSelectedChannels;
+    const unsigned       int epochSize = mp5Parameters->epochSize;
+    unsigned       int channel;
     unsigned       int sample;
     unsigned short int formatSize = 0;
     unsigned long  int filePosition;
 
-    if(mp5Parameters->dataFormat & FORMAT_SHORT)
-    {
-		short int tmpData[numberOfChannelsInDataFile];
+    float tmpData[numberOfChannelsInDataFile];
 
-		formatSize = sizeof(short int);
+    formatSize = sizeof(float);
 
-		filePosition = mp5Parameters->sizeOfHeader + (offsetNumber-1)*offsetDimension*numberOfChannelsInDataFile*formatSize;
+    filePosition = mp5Parameters->sizeOfHeader + (epochNumber-1)*epochSize*numberOfChannelsInDataFile*formatSize;
+    fseek(mp5Parameters->dataFile,filePosition,SEEK_SET);
 
-		fseek(mp5Parameters->dataFile,filePosition,SEEK_SET);
+	for(sample=0;sample<epochSize;sample++)
+	{
+        if(fread((void *)tmpData,formatSize,numberOfChannelsInDataFile,mp5Parameters->dataFile)<numberOfChannelsInDataFile)
+        {
+            sprintf(aTmp,"%u",sample+1);
+            sprintf(bTmp,"%hu",epochNumber);
+            const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfResultsFile};
+            printError(infoMessage,CAN_NOT_READ_EPOCH_IN_BINARY_FILE,tmpString,3);
+            return ERROR;
+        }
 
-		for(sample=0;sample<offsetDimension;sample++)
-		{
-			if(fread((void *)tmpData,formatSize,numberOfChannelsInDataFile,mp5Parameters->dataFile)<numberOfChannelsInDataFile)
-			{
-				sprintf(aTmp,"%u",sample+1);
-				sprintf(bTmp,"%hu",offsetNumber);
-				const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfResultsFile};
-				printError(infoMessage,CAN_NOT_READ_OFFSET_IN_BINARY_FILE,tmpString,3);
-				return ERROR;
-			}
-
-			for(channel=0;channel<numberOfChannelsInDataFile;channel++)
-				*(*(rawDataMatrix + channel) + sample) = (double)(*(tmpData + channel));
-		}
-    }
-    else if(mp5Parameters->dataFormat & FORMAT_FLOAT)
-    {
-		float tmpData[numberOfChannelsInDataFile];
-
-		formatSize = sizeof(float);
-
-		filePosition = mp5Parameters->sizeOfHeader + (offsetNumber-1)*offsetDimension*numberOfChannelsInDataFile*formatSize;
-
-		fseek(mp5Parameters->dataFile,filePosition,SEEK_SET);
-
-		for(sample=0;sample<offsetDimension;sample++)
-		{
-			if(fread((void *)tmpData,formatSize,numberOfChannelsInDataFile,mp5Parameters->dataFile)<numberOfChannelsInDataFile)
-			{
-				sprintf(aTmp,"%u",sample+1);
-				sprintf(bTmp,"%hu",offsetNumber);
-				const char *tmpString[] = {aTmp,bTmp,mp5Parameters->nameOfResultsFile};
-				printError(infoMessage,CAN_NOT_READ_OFFSET_IN_BINARY_FILE,tmpString,3);
-				return ERROR;
-			}
-
-			for(channel=0;channel<numberOfChannelsInDataFile;channel++)
-				*(*(rawDataMatrix + channel) + sample) = (double)(*(tmpData + channel));
-		}
+        for(channel=0;channel<numberOfSelectedChannels;channel++)
+            *(*(rawDataMatrix + channel) + sample) = (double)(*(tmpData + mp5Parameters->selectedChannels[channel] - 1));
+                                    
     }
 
     return SUCCESS;
 }
 
-STATUS readAsciiData(MP5Parameters *mp5Parameters, unsigned short int offsetNumber, char *infoMessage)
+
+STATUS readDataFileOneTrial(MP5Parameters *mp5Parameters, unsigned short int epochNumber, char *infoMessage)
 {
-    double                   **rawDataMatrix = mp5Parameters->rawDataMatrix;
-    const unsigned short int numberOfChannelsInDataFile = mp5Parameters->numberOfChannelsInDataFile;
-    const unsigned       int offsetDimension = mp5Parameters->offsetDimension;
-    unsigned short int channelNumber;
-    unsigned short int lineNumber;
+    if(readBinaryData(mp5Parameters,epochNumber,0,infoMessage)==ERROR)
+        return ERROR;
 
-    asciiFileSeek(mp5Parameters->dataFile,mp5Parameters->sizeOfHeader + (offsetNumber-1)*offsetDimension);
-
-    for(lineNumber=0;lineNumber<offsetDimension;lineNumber++)
-    {
-		for(channelNumber=0;channelNumber<numberOfChannelsInDataFile-1;channelNumber++)
-		{
-			if(fscanf(mp5Parameters->dataFile,"%lf ",(*(rawDataMatrix + channelNumber) + lineNumber))!=1)
-			{
-				sprintf(aTmp,"%hu",offsetNumber);
-				sprintf(bTmp,"%hu",lineNumber+1);
-				sprintf(cTmp,"%hu",channelNumber+1);
-				const char *tmpString[] = {aTmp,bTmp,cTmp,mp5Parameters->nameOfResultsFile};
-				printError(infoMessage,CAN_NOT_READ_OFFSET_IN_ASCII_FILE,tmpString,4);
-				return ERROR;
-			}
-		}
-
-		if(fscanf(mp5Parameters->dataFile,"%lf\n",(*(rawDataMatrix + channelNumber) + lineNumber))!=1)
-		{
-			char numberOne[50];
-			char numberTwo[50];
-			char numberThree[50];
-			sprintf(numberOne,"%hu",offsetNumber);
-			sprintf(numberTwo,"%hu",lineNumber+1);
-			sprintf(numberThree,"%hu",channelNumber+1);
-			const char *tmpString[] = {numberOne,numberTwo,numberThree,mp5Parameters->nameOfResultsFile};
-			printError(infoMessage,CAN_NOT_READ_OFFSET_IN_ASCII_FILE,tmpString,4);
-			return ERROR;
-		}
-    }
-    return SUCCESS;
-}
-
-STATUS readDataFile(MP5Parameters *mp5Parameters, unsigned short int offsetNumber, char *infoMessage)
-{
-    if(mp5Parameters->dataFormat & FORMAT_ASCII)
-    {
-		if(readAsciiData(mp5Parameters,offsetNumber,infoMessage)==ERROR)
-	    return ERROR;
-    }
-    else if((mp5Parameters->dataFormat & FORMAT_FLOAT) || (mp5Parameters->dataFormat & FORMAT_SHORT))
-    {
-		if(readBinaryData(mp5Parameters,offsetNumber,infoMessage)==ERROR)
-			return ERROR;
-    }
-
-    /* copy data matrix (rawDataMatrix) of size numberOfChannelsInDataFile x offsetDimension to
-	     processDataMatrix of size numberOfChannelsInDataFile x offsetExpandedDimension */
+    /* copy data matrix (rawDataMatrix) of size numberOfChannelsInDataFile x epochSize to
+	     processDataMatrix of size numberOfChannelsInDataFile x epochExpandedSize */
 
     processRawData(mp5Parameters);
 
     return SUCCESS;
+}
+
+STATUS readDataFileMultiTrial(MP5Parameters *mp5Parameters, char *infoMessage)
+{
+	unsigned short int epochNumber;
+	unsigned short int selectedEpoch;
+	unsigned int epochOnset = 0;
+	unsigned short int numberOfSelectedEpochs = mp5Parameters->numberOfSelectedEpochs;
+	unsigned short int numberOfSelectedChannels = mp5Parameters->numberOfSelectedChannels;
+
+	for(epochNumber=0;epochNumber<numberOfSelectedEpochs;epochNumber++)
+	{
+		selectedEpoch = mp5Parameters->selectedEpochs[epochNumber];
+		epochOnset    = epochNumber*numberOfSelectedChannels;
+
+        if(readBinaryData(mp5Parameters,selectedEpoch,epochOnset,infoMessage)==ERROR)
+            return ERROR;
+			
+	}
+
+    processRawData(mp5Parameters);
+
+    return SUCCESS;
+}
+
+void printInformationAboutProgress(MP5Parameters *mp5Parameters, Progress *progress, unsigned int atomsCounter)
+{
+	if(((atomsCounter+1)%(progress->stepInToolbar))==0)
+	{
+		if(progress->applicationMode & PROCESS_USER_MODE)
+		{
+			if(mp5Parameters->progressBar)
+			{
+				toolbar(progress->step);
+				progress->step = progress->step + 1;
+			}
+		}
+		else
+		{
+			printf("TESTED %u\n",atomsCounter);
+			fflush(stdout);
+		}
+	}
+		
 }

@@ -1,86 +1,69 @@
-CC       = gcc
-CCFLAGS  = -O3 -Wall -DINTELSWP -DINLINE
-#CCFLAGS  = -O3 -Wall -DINTELSWP -DINLINE -DDICTIONARY_DUMPING
+# Project: mp5
+# Makefile created by Dev-C++ 4.9.9.2
 
-OBJDIR   = obj
-BINDIR   = bin
-TARGET   = mp5
-LIBDIR   = lib
-LIBS     = $(LIBDIR)/fftw-3.1.3/.libs/libfftw3.a $(LIBDIR)/fftw-3.1.3/threads/.libs/libfftw3_threads.a $(LIBDIR)/pthreads-w32-2-8-0-release/libpthreadGC2.a
-INCPATH  = -Isrc/include -I$(LIBDIR)/fftw-3.1.3/api
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = obj/atom.o obj/cmd.o obj/dic.o obj/io_mp5.o obj/main.o obj/matrix.o obj/mmp.o obj/mp5.o obj/queue.o obj/r250.o obj/smp.o obj/stringTools.o obj/tools.o obj/vector.o $(RES)
+LINKOBJ  = obj/atom.o obj/cmd.o obj/dic.o obj/io_mp5.o obj/main.o obj/matrix.o obj/mmp.o obj/mp5.o obj/queue.o obj/r250.o obj/smp.o obj/stringTools.o obj/tools.o obj/vector.o $(RES)
+LIBS =  lib/fftw-3.2.2/.libs/libfftw3.a  
+INCS =  -I"C:/Users/rkus/Documents/SOFT/MP5_final/src/include"  -I"C:/Users/rkus/Documents/SOFT/MP5_final/lib/fftw-3.2.2/api" 
+CXXINCS =  -I"C:/Users/rkus/Documents/SOFT/MP5_final/src/include"  -I"C:/Users/rkus/Documents/SOFT/MP5_final/lib/fftw-3.2.2/api" 
+BIN  = bin/mp5.exe
+CXXFLAGS = $(CXXINCS)   -O3
+CFLAGS = $(INCS) -O3  -DINTELSWP -DINLINE   -O3
+RM = rm -f
 
-OBJECTS = $(OBJDIR)/atom.o        \
-		  $(OBJDIR)/cmd.o         \
-		  $(OBJDIR)/dic.o         \
-		  $(OBJDIR)/dic.o         \
-		  $(OBJDIR)/io_mp5.o      \
-          $(OBJDIR)/main.o        \
-          $(OBJDIR)/mp5.o         \
-          $(OBJDIR)/matrix.o      \
-          $(OBJDIR)/mmp.o         \
-          $(OBJDIR)/queue.o       \
-          $(OBJDIR)/r250.o        \
-          $(OBJDIR)/smp.o         \
-          $(OBJDIR)/stringTools.o \
-          $(OBJDIR)/tools.o       \
-          $(OBJDIR)/vector.o
+.PHONY: all all-before all-after clean clean-custom
 
-.PHONY: all
-.PHONY: clean
-.PHONY: dep
+all: all-before bin/mp5.exe all-after
 
-all: mp5
 
-$(TARGET): $(OBJECTS)
-	$(CC) $^ $(LIBS) -lm -o $(BINDIR)/$@
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
 
-dep:
-	$(CC) -M $(INCPATH) -c src/*.c > src/.depands 
-	
-clean:
-	rm -f obj/*.o
-	>src/.depands
+$(BIN): $(OBJ)
+	$(CC) $(LINKOBJ) -o "bin\mp5.exe" $(LIBS)
 
-$(OBJDIR)/atom.o: src/atom.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/atom.o: src/atom.c
+	$(CC) -c src/atom.c -o obj/atom.o $(CFLAGS)
 
-$(OBJDIR)/cmd.o: src/cmd.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
-	
-$(OBJDIR)/dic.o: src/dic.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/cmd.o: src/cmd.c
+	$(CC) -c src/cmd.c -o obj/cmd.o $(CFLAGS)
 
-$(OBJDIR)/io_mp5.o: src/io_mp5.c					
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
-	
-$(OBJDIR)/mp5.o: src/mp5.c      
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
-  
-$(OBJDIR)/main.o: src/main.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/dic.o: src/dic.c
+	$(CC) -c src/dic.c -o obj/dic.o $(CFLAGS)
 
-$(OBJDIR)/matrix.o: src/matrix.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
-	
-$(OBJDIR)/mmp.o: src/mmp.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/io_mp5.o: src/io_mp5.c
+	$(CC) -c src/io_mp5.c -o obj/io_mp5.o $(CFLAGS)
 
-$(OBJDIR)/queue.o: src/queue.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/main.o: src/main.c
+	$(CC) -c src/main.c -o obj/main.o $(CFLAGS)
 
-$(OBJDIR)/r250.o: src/r250.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/matrix.o: src/matrix.c
+	$(CC) -c src/matrix.c -o obj/matrix.o $(CFLAGS)
 
-$(OBJDIR)/smp.o: src/smp.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/mmp.o: src/mmp.c
+	$(CC) -c src/mmp.c -o obj/mmp.o $(CFLAGS)
 
-$(OBJDIR)/stringTools.o: src/stringTools.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/mp5.o: src/mp5.c
+	$(CC) -c src/mp5.c -o obj/mp5.o $(CFLAGS)
 
-$(OBJDIR)/tools.o: src/tools.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/queue.o: src/queue.c
+	$(CC) -c src/queue.c -o obj/queue.o $(CFLAGS)
 
-$(OBJDIR)/vector.o: src/vector.c
-	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
+obj/r250.o: src/r250.c
+	$(CC) -c src/r250.c -o obj/r250.o $(CFLAGS)
 
-include src/.depands
+obj/smp.o: src/smp.c
+	$(CC) -c src/smp.c -o obj/smp.o $(CFLAGS)
+
+obj/stringTools.o: src/stringTools.c
+	$(CC) -c src/stringTools.c -o obj/stringTools.o $(CFLAGS)
+
+obj/tools.o: src/tools.c
+	$(CC) -c src/tools.c -o obj/tools.o $(CFLAGS)
+
+obj/vector.o: src/vector.c
+	$(CC) -c src/vector.c -o obj/vector.o $(CFLAGS)

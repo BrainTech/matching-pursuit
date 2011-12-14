@@ -36,6 +36,7 @@
  ******************************************************************************/
 
 #include<stdlib.h>
+#include<stdio.h>
 #include"include/r250.h"
 
 /**** Static variables ****/
@@ -153,7 +154,7 @@ unsigned int r250(void)
 
 /**** Function: r250n Description: returns a random unsigned integer k
       uniformly distributed in the interval 0 <= k < n ****/
-unsigned int r250n(unsigned n)
+unsigned int r250n(unsigned int n)
 {
 	/*---------------------------------------------------------------------------*/
 	register int    j;
@@ -161,7 +162,7 @@ unsigned int r250n(unsigned n)
 	/*---------------------------------------------------------------------------*/
 
 	limit = (65535U/n)*n;
-
+	
 	do
 	{
 		new_rand = r250();

@@ -1,24 +1,24 @@
-/***************************************************************************
- *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak   *
- *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	*
- *   Department of Biomedical Physics at Warsaw University			     		*
- *   http://brain.fuw.edu.pl, http://eeg.pl						     		*
- *												     		*
- *   This program is free software; you can redistribute it and/or modify	     		*
- *   it under the terms of the GNU General Public License as published by	     		*
- *   the Free Software Foundation; either version 2 of the License, or 		     	*
- *   (at your option) any later version.							     		*
- *												     		*
- *   This program is distributed in the hope that it will be useful,		     		*
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     	*
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 		*
- *   GNU General Public License for more details.					     		*
- *												     		*
- *   You should have received a copy of the GNU General Public License		     	*
- *   along with this program; if not, write to the					     		*
- *   Free Software Foundation, Inc.,							     		*
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			     	*
- ***************************************************************************/
+/*************************************************************************************
+ *   Copyright (C) 2006 by Piotr J. Durka Dobieslaw Ircha, Rafal Kus, Marek Matysiak *
+ *   durka@fuw.edu.pl, rircha@fuw.edu.pl, rkus@fuw.edu.pl				     	     *
+ *   Department of Biomedical Physics at Warsaw University			     		     *
+ *   http://brain.fuw.edu.pl, http://eeg.pl						     		         *
+ *												    								 *
+ *   This program is free software; you can redistribute it and/or modify			 *
+ *   it under the terms of the GNU General Public License as published by			 *
+ *   the Free Software Foundation; either version 2 of the License, or				 *
+ *   (at your option) any later version.											 *
+ *												     								 *
+ *   This program is distributed in the hope that it will be useful,	     		 *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of	     			 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 					 *
+ *   GNU General Public License for more details.					   		   		 *
+ *												     								 *
+ *   You should have received a copy of the GNU General Public License		     	 *
+ *   along with this program; if not, write to the					     			 *
+ *   Free Software Foundation, Inc.,							    				 *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
+ *************************************************************************************/
 
 #define _GNU_SOURCE
 
@@ -35,8 +35,8 @@
 Atom* allocateAtom(unsigned short int numberOfAllocatedChannels, unsigned char mp5Type)
 {
 	Atom *atom = (Atom *)malloc(sizeof(Atom));
-	
-	if(mp5Type & MMP1) // in case of mmp1 algorithm, the additional, last channel is assign to keep intermediate values, which helps to speed up mmp1 algotihm many times
+
+	if((mp5Type & MMP1) || (mp5Type & MMP11) || (mp5Type & MMP12) || (mp5Type & MMP21)) // in case of mmp1 algorithm, the additional, last channel is assign to keep intermediate values, which helps to speed up mmp1 algotihm many times
 	{
 		atom->RS      = fVectorAllocate(numberOfAllocatedChannels + 1);
 		atom->RC      = fVectorAllocate(numberOfAllocatedChannels + 1);
@@ -46,7 +46,7 @@ Atom* allocateAtom(unsigned short int numberOfAllocatedChannels, unsigned char m
 		atom->RS      = fVectorAllocate(numberOfAllocatedChannels);
 		atom->RC      = fVectorAllocate(numberOfAllocatedChannels);
 	}
-	
+
 	atom->phase   = fVectorAllocate(numberOfAllocatedChannels);
 	atom->feature = 0x0;
 
@@ -59,12 +59,12 @@ void freeAtom(Atom *atom)
 	fVectorFree(atom->RC);
 	fVectorFree(atom->phase);
 
-	free(atom);    
+	free(atom);
 }
 
 void allocateAtomElements(Atom *atom, unsigned short int numberOfAllocatedChannels, unsigned char mp5Type)
 {
-	if(mp5Type & MMP1) // in case of mmp1 algorithm, the additional, last channel is assign to keep intermediate values, which helps to speed up mmp1 algotihm many times
+	if((mp5Type & MMP1) || (mp5Type & MMP11) || (mp5Type & MMP12) || (mp5Type & MMP21)) // in case of mmp1 algorithm, the additional, last channel is assign to keep intermediate values, which helps to speed up mmp1 algotihm many times
 	{
 		atom->RS      = fVectorAllocate(numberOfAllocatedChannels + 1);
 		atom->RC      = fVectorAllocate(numberOfAllocatedChannels + 1);
@@ -74,7 +74,7 @@ void allocateAtomElements(Atom *atom, unsigned short int numberOfAllocatedChanne
 		atom->RS      = fVectorAllocate(numberOfAllocatedChannels);
 		atom->RC      = fVectorAllocate(numberOfAllocatedChannels);
 	}
-	
+
 	atom->phase   = fVectorAllocate(numberOfAllocatedChannels);
 	atom->feature = 0x0;
 }
@@ -88,16 +88,15 @@ void freeAtomElements(Atom *atom)
 
 void copyAtom(const Atom *sourceAtom, Atom *copyAtom, unsigned short int numberOfAllocatedChannels)
 {
-	unsigned short int channel;
+	unsigned int channel;
 
-	copyAtom->scaleIndex             = sourceAtom->scaleIndex;  
+	copyAtom->scaleIndex             = sourceAtom->scaleIndex;
 	copyAtom->position               = sourceAtom->position;
 	copyAtom->rifling                = sourceAtom->rifling;
-	copyAtom->randomShiftInFrequency = sourceAtom->randomShiftInFrequency;
 	copyAtom->KS                     = sourceAtom->KS;
 	copyAtom->KC                     = sourceAtom->KC;
 	copyAtom->KM                     = sourceAtom->KM;
-	
+
 	for(channel=0;channel<numberOfAllocatedChannels;channel++)
 	{
 		*(copyAtom->RS + channel)    = *(sourceAtom->RS    + channel);
@@ -106,4 +105,18 @@ void copyAtom(const Atom *sourceAtom, Atom *copyAtom, unsigned short int numberO
 	}
 
 	copyAtom->feature  = sourceAtom->feature;
+}
+
+unsigned int estimateSizeOfAtom(unsigned short int numberOfAllocatedChannels, unsigned char mp5Type)
+{
+    unsigned int sizeOfAtom = sizeof(Atom);
+
+	if((mp5Type & MMP1) || (mp5Type & MMP11) || (mp5Type & MMP12) || (mp5Type & MMP21)) // in case of mmp1 algorithm, the additional, last channel is assign to keep intermediate values, which helps to speed up mmp1 algotihm many times
+        sizeOfAtom = sizeOfAtom + 2*(numberOfAllocatedChannels + 1)*sizeof(float);
+	else
+        sizeOfAtom = sizeOfAtom + 2*numberOfAllocatedChannels*sizeof(float);
+
+    sizeOfAtom = sizeOfAtom + numberOfAllocatedChannels*sizeof(float);
+
+    return sizeOfAtom;
 }

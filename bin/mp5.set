@@ -1,0 +1,22 @@
+nameOfDataFile         test.dat
+nameOfOutputDirectory  ./
+writingMode            CREATE 
+samplingFrequency      512.0
+numberOfChannels       3  
+selectedChannels       1-3
+numberOfSamplesInEpoch 64
+selectedEpochs         1
+typeOfDictionary       OCTAVE_STOCH
+dilationFactor         1.3 90.00
+randomSeed             auto
+reinitDictionary       NO_REINIT_AT_ALL
+maximalNumberOfIterations 3
+energyPercent             99.99999999
+MP                        SMP
+scaleToPeriodFactor       1.0
+pointsPerMicrovolt        2.0
+diracInDictionary         YES
+gaussInDictionary         NO
+sinCosInDictionary        NO
+gaborInDictionary         NO
+progressBar               ON

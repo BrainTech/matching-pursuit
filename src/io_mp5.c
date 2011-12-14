@@ -648,7 +648,7 @@ static STATUS writeAtom(MP5Parameters *mp5Parameters, Dictionary *dictionary, At
 	}
 	else if((mp5Parameters->MPType & MMP2)  || (mp5Parameters->MPType & MMP22))
 	{
-		returnAmplitudeAndModulusForMMP2DI(mp5Parameters,dictionary,atom,&amplitude,&modulus,0);
+		returnAmplitudeAndModulusForMMP2DI(mp5Parameters,dictionary,atom,&amplitude,&modulus,channelNumber);
 		phase      = (float)(*(atom->phase));
 	}
 	else if((mp5Parameters->MPType & MMP12) || (mp5Parameters->MPType & MMP21) ||

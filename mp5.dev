@@ -1,7 +1,7 @@
 [Project]
 FileName=mp5.dev
 Name=mp5
-UnitCount=14
+UnitCount=15
 Type=1
 Ver=1
 ObjFiles=
@@ -29,7 +29,7 @@ SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000001000000000
 
-[Unit1]
+[Unit2]
 FileName=src\atom.c
 CompileCpp=0
 Folder=mp5
@@ -39,7 +39,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit2]
+[Unit3]
 FileName=src\cmd.c
 CompileCpp=0
 Folder=mp5
@@ -49,7 +49,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit3]
+[Unit4]
 FileName=src\dic.c
 CompileCpp=0
 Folder=mp5
@@ -59,7 +59,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit4]
+[Unit5]
 FileName=src\io_mp5.c
 CompileCpp=0
 Folder=mp5
@@ -69,7 +69,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit5]
+[Unit6]
 FileName=src\main.c
 CompileCpp=0
 Folder=mp5
@@ -79,7 +79,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit6]
+[Unit7]
 FileName=src\matrix.c
 CompileCpp=0
 Folder=mp5
@@ -89,7 +89,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit7]
+[Unit8]
 FileName=src\mmp.c
 CompileCpp=0
 Folder=mp5
@@ -99,7 +99,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit8]
+[Unit9]
 FileName=src\mp5.c
 CompileCpp=0
 Folder=mp5
@@ -109,7 +109,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit9]
+[Unit10]
 FileName=src\queue.c
 CompileCpp=0
 Folder=mp5
@@ -119,7 +119,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit10]
+[Unit11]
 FileName=src\r250.c
 CompileCpp=0
 Folder=mp5
@@ -129,17 +129,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit11]
-FileName=src\smp.c
-CompileCpp=0
-Folder=mp5
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit12]
+[Unit13]
 FileName=src\stringTools.c
 CompileCpp=0
 Folder=mp5
@@ -149,18 +139,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit13]
-FileName=src\tools.c
-CompileCpp=0
-Folder=mp5
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit14]
-FileName=src\vector.c
+FileName=src\tools.c
 CompileCpp=0
 Folder=mp5
 Compile=1
@@ -186,4 +166,43 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
+
+[Unit1]
+FileName=src\.depands
+Folder=mp5
+Compile=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit15]
+FileName=src\vector.c
+CompileCpp=0
+Folder=mp5
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit16]
+FileName=src\vector.c
+CompileCpp=0
+Folder=mp5
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit12]
+FileName=src\smp.c
+CompileCpp=0
+Folder=mp5
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
 

@@ -245,9 +245,10 @@ void analyseDictionarySizeAndType(Dictionary *dictionary, MP5Parameters *mp5Para
 	gaussCounter  = 0U;
 	gaborsCounter = 0U;
 
-    constA = log(0.5*(dictionary->dilationFactor + 1.0/dictionary->dilationFactor));
+//    constA = log(0.5*(dictionary->dilationFactor + 1.0/dictionary->dilationFactor));
+    constA = -log(sqrt(dictionary->dilationFactor/(dictionary->dilationFactor + 1.0)));
 
-    basicStepInPeriodInOptimalDictionary = (unsigned int)(sqrt(M_PI/constA)); // ((unsigned int)(M_2PI/(2.0*sqrt(M_PI*constA))));
+    basicStepInPeriodInOptimalDictionary = (unsigned int)(sqrt(M_PI/(2.0*constA))); // ((unsigned int)(M_2PI/(2.0*sqrt(M_PI*constA))));
                                             // basicStepInFrequencyInOptimalDictionary is in radians degree
                                             // if we want to get period in samples, we have to use the following, simple equation:
                                             // T = 2pi/w
@@ -261,7 +262,7 @@ void analyseDictionarySizeAndType(Dictionary *dictionary, MP5Parameters *mp5Para
     dictionary->basicStepInFrequencyInOptimalDictionary = basicStepInFrequencyInOptimalDictionary;
 	dictionary->basicStepInPeriodInOptimalDictionary    = basicStepInPeriodInOptimalDictionary;
 
-	basicStepInPositionInOptimalDictionary = sqrt(constA/M_PI);
+	basicStepInPositionInOptimalDictionary = sqrt((2.0*constA)/M_PI);
 
 	tableOfScalesInOptimalDictionary       = dictionary->tableOfScalesInOptimalDictionary;
     tableOfPeriodsInOptimalDictionary      = dictionary->tableOfPeriodsInOptimalDictionary;

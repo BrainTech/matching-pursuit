@@ -612,7 +612,7 @@ void setNumberOfAnalysedChannelsAndNumberOfResultsFiles(MP5Parameters *mp5Parame
 	}
 	else if(mp5Parameters->MPType & MMP2)
 	{
-		mp5Parameters->numberOfAllocatedChannels = 1;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfSelectedChannels;
 		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
 	}
 	else if(mp5Parameters->MPType & MMP3)

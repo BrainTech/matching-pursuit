@@ -4,9 +4,9 @@ nameOfOutputDirectory  ./
 writingMode            CREATE
 samplingFrequency      512.0
 numberOfChannels       3
-selectedChannels       1 3-4
+selectedChannels       1 2-3
 numberOfSamplesInEpoch 64
-selectedEpochs         1-10
+selectedEpochs         1
 typeOfDictionary       OCTAVE_STOCH
 dilationFactor         1.3 90.00
 randomSeed             auto
@@ -16,7 +16,9 @@ energyPercent             99.99999999
 MP                        SMP
 scaleToPeriodFactor       1.0
 pointsPerMicrovolt        2.0
+
 # ADDITIONAL PARAMETERS
+
 diracInDictionary         YES
 gaussInDictionary         NO
 sinCosInDictionary        NO

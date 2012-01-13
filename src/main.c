@@ -22,6 +22,7 @@
 
 #include<math.h>
 #include<stdio.h>
+#include"config.h"
 #include"atom.h"
 #include"cmd.h"
 #include"def.h"
@@ -33,8 +34,6 @@
 #include"smp.h"
 #include"stringTools.h"
 #include"types.h"
-
-#define PROGRAM_VERSION "0.1"
 
 unsigned char applicationMode = 0x00;
 
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
     int print_version = argc >= 2 && !strcmp(argv[1], "--version");
 
     if (print_version) {
-	    fprintf(stdout, "mp5 " PROGRAM_VERSION "\n");
+	    fprintf(stdout, PACKAGE_STRING "\n");
 	    return 0;
     }
 
@@ -102,19 +101,20 @@ int main(int argc, char *argv[])
 				              ((strcmp(argv[1],"-m")!=0) && (strcmp(argv[2],"-N")!=0) && (strcmp(argv[4],"-a")!=0)))) ||
 	    print_help)
     {
-		fprintf(stderr," \n");
+		FILE *channel = print_help ? stdout : stderr;
+		fprintf(channel," \n");
 		if (!print_help) {
-			fprintf(stderr," ERROR: \n");
-			fprintf(stderr," INCORRECT CALL OF mp5Parameters PROGRAM \n");
+			fprintf(channel," ERROR: \n");
+			fprintf(channel," INCORRECT CALL OF mp5Parameters PROGRAM \n");
 		}
-		fprintf(stderr," THE PROPER USE IS AS FOLLOWS: \n");
-		fprintf(stderr," mp5 --help | --version         - print help or version\n");
-		fprintf(stderr," mp5 -g                         - generate default config file \n");
-		fprintf(stderr," mp5 -e                         - generate xml file with errors codes and translations\n");
-		fprintf(stderr," mp5 -t [ name of config file ] - test config file \n");
-		fprintf(stderr," mp5 -f [ name of config file ] - process of mp decomposition (user mode)\n");
-		fprintf(stderr," mp5 -x [ name of config file ] - process of mp decomposition (server mode)\n");
-		fprintf(stderr," \n");
+		fprintf(channel," THE PROPER USE IS AS FOLLOWS: \n");
+		fprintf(channel," mp5 --help | --version         - print help or version\n");
+		fprintf(channel," mp5 -g                         - generate default config file \n");
+		fprintf(channel," mp5 -e                         - generate xml file with errors codes and translations\n");
+		fprintf(channel," mp5 -t [ name of config file ] - test config file \n");
+		fprintf(channel," mp5 -f [ name of config file ] - process of mp decomposition (user mode)\n");
+		fprintf(channel," mp5 -x [ name of config file ] - process of mp decomposition (server mode)\n");
+		fprintf(channel," \n");
 		return print_help ? 0 : 1;
     }
 

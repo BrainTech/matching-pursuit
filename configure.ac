@@ -16,7 +16,10 @@ AC_CONFIG_HEADERS([config/config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CHECK_LIB([fftw3], [fftw_execute])
+AC_SEARCH_LIBS([fftw_execute], [fftw3], [],
+               [AC_MSG_ERROR([*** fftw3 library not found])])
+AC_CHECK_HEADER([fftw3.h], [],
+               [AC_MSG_ERROR([*** fftw3 header file not found])])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

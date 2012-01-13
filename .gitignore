@@ -4,3 +4,13 @@ obj/
 src/.depends
 
 *~
+
+# new autogeny stuff
+/Makefile
+/Makefile.in
+/aclocal.m4
+/autom4te.cache/
+/config.*
+/config/
+/configure
+/mp5

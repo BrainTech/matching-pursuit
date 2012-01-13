@@ -163,7 +163,7 @@ typeOfDictionary       OCTAVE_STOCH\n\
 dilationFactor         1.3 90.00\n\
 randomSeed             auto\n\
 reinitDictionary       NO_REINIT_AT_ALL\n\
-maximalNumberOfIterations 3\n\ 
+maximalNumberOfIterations 3\n\
 energyPercent             99.99999999\n\
 MP                        SMP\n\
 scaleToPeriodFactor       1.0\n\

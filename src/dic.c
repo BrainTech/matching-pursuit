@@ -164,10 +164,6 @@ static void printSizeOfDictionaryAndSizeOfSinCosExpTables(const Dictionary *dict
     unsigned long int numberOfPointsInSinCosTables = 0;
     unsigned long int numberOfPointsInExpTables    = 0;
     unsigned long int totalNumberOfPoints          = 0;
-	unsigned int initialNumberOfAtoms = dictionary->numberOfInitialDiracFunctions  +
-									    dictionary->numberOfInitialGaussFunctions  +
-									    dictionary->numberOfInitialSinCosFunctions +
-									    dictionary->numberOfInitialGaborFunctions;
 
     unsigned int sizeOfOneAtom = estimateSizeOfAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
 
@@ -382,7 +378,6 @@ void allocateDictionary(Dictionary *dictionary, const MP5Parameters *mp5Paramete
     unsigned int             atomsCounter = 0;
     const unsigned short int numberOfAllocatedChannels = mp5Parameters->numberOfAllocatedChannels;
     Atom *atomPointer = NULL;
-    Atom *maskPointer = NULL;
 
     dictionary->atomsTable              = (Atom **)malloc(4*sizeof(Atom*));
 
@@ -473,7 +468,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
     const unsigned short int numberOfStepsInScale       = dictionary->numberOfStepsInScale;
 
-    const double *tableOfFrequenciesInOptimalDictionary = dictionary->tableOfFrequenciesInOptimalDictionary;
     const double *tableOfPositionsInOptimalDictionary   = dictionary->tableOfPositionsInOptimalDictionary;
 
     const unsigned int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
@@ -486,14 +480,8 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
     unsigned       int frequencyIndex = 0;
     unsigned       int positionIndex  = 0;
     unsigned       int rifling        = 0;
-    double             frequency      = 0.0;
 
-    double DF              = 0.0;
-    double DU              = 0.0;
-    double stepInFrequency = 0.0;
-    double        dr250Position  = 0.0;
-    short  int    dn250Frequency = 0;
-    double        dr250Frequency = 0.0;
+    double DU;
 
     seed = time(&seedTime);
 
@@ -598,8 +586,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 	    atomPointer = dictionary->sinCosAtomsTable;	    
 		atomPointer->feature = 0x0000;
 
-		DF = *(tableOfFrequenciesInOptimalDictionary + numberOfStepsInScale - 1);
-
 		numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);
 
 		for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling++)
@@ -608,7 +594,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 																					   // because this fild can not be empty. However in case of FFT WAVE
 																				       // this fild is not used, so it will not cause any disturbance
 
-            frequency               = stepInFrequency*(frequencyIndex + 1);
             atomPointer->rifling    = rifling;
 
             if((epochSize%2)==0)
@@ -654,9 +639,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
 	    for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
 		{
-			DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex);
 			DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);
-            stepInFrequency = DF;
 
 			numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);
 			numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale  + scaleIndex);
@@ -666,7 +649,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
                 for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling=rifling+1)
                 {
 				    atomPointer->scaleIndex = scaleIndex;
-					frequency               = stepInFrequency*(frequencyIndex + 1);
 					atomPointer->rifling    = rifling;
 					atomPointer->position   = (unsigned int)(DU*(positionIndex + 1));
 

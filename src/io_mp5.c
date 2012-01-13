@@ -37,10 +37,11 @@
 #include"queue.h"
 #include"types.h"
 #include"vector.h"
+#include"tools.h"
 
 extern unsigned char applicationMode;
 
-static char aTmp[50], bTmp[50], cTmp[50];
+static char aTmp[50], bTmp[50];
 
 struct ErrorCodeAndText
 {
@@ -731,15 +732,6 @@ static STATUS writeAtom(MP5Parameters *mp5Parameters, Dictionary *dictionary, At
 	fflush(stdout);
 
 	return SUCCESS;
-}
-
-static void asciiFileSeek(FILE *asciiFile, unsigned long int lineNumber)
-{
-	unsigned long int line;
-	fseek(asciiFile,0L,SEEK_SET);
-
-	for(line=0;line<lineNumber;line++)
-	    fscanf(asciiFile,"%*[^\n]\n");
 }
 
 static unsigned char getNumberOfDigits(unsigned int number)

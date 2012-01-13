@@ -62,14 +62,6 @@ void firstIterationSMPMMP2(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     progress.stepInToolbar   = dictionary->initialNumberOfAtoms/NUMBER_OF_STEPS_IN_TOOLBAR;
     progress.step            = 1;
 
-	unsigned int channel;
-	unsigned int numberOfAnalysedChannels = mp5Parameters->numberOfAnalysedChannels;
-
-	float tmpAmplitude = 0;
-	float tmpModulus   = 0;
-	double totalMMP2Modulus = 0.0;
-	double totalMMP2Residue = 0.0;
-
 	const unsigned short int numberOfStepsInScale                       = dictionary->numberOfStepsInScale;
 	const unsigned       int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
 	const unsigned       int *numberOfStepsInPositionAtParticularScale  = dictionary->numberOfStepsInPositionAtParticularScale;
@@ -301,13 +293,6 @@ void nextIterationSMPMMP2(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     progress.stepInToolbar   = dictionary->initialNumberOfAtoms/NUMBER_OF_STEPS_IN_TOOLBAR;
     progress.step            = 1;
 
-	unsigned int channel;
-
-	float tmpAmplitude = 0;
-	float tmpModulus   = 0;
-	double totalMMP2Modulus = 0.0;
-	double totalMMP2Residue = 0.0;
-
 	const unsigned short int numberOfStepsInScale                       = dictionary->numberOfStepsInScale;
 	const unsigned       int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
 	const unsigned       int *numberOfStepsInPositionAtParticularScale  = dictionary->numberOfStepsInPositionAtParticularScale;
@@ -347,9 +332,6 @@ void nextIterationSMPMMP2(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 		tmpAtomsCounter  = 0;
 
 		bestAtom = allocateAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
-
-		totalMMP2Modulus = 0.0;
-		totalMMP2Residue = 0.0;
 
 		if(mp5Parameters->FFT)
 		{

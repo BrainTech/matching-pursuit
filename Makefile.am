@@ -19,4 +19,19 @@ mp5_SOURCES = src/atom.c \
 	src/smp.c \
 	src/stringTools.c \
 	src/tools.c \
-	src/vector.c
+	src/vector.c \
+	src/include/atom.h \
+	src/include/cmd.h \
+	src/include/def.h \
+	src/include/dic.h \
+	src/include/io_mp5.h \
+	src/include/matrix.h \
+	src/include/mmp.h \
+	src/include/mp5.h \
+	src/include/queue.h \
+	src/include/r250.h \
+	src/include/smp.h \
+	src/include/stringTools.h \
+	src/include/tools.h \
+	src/include/types.h \
+	src/include/vector.h

@@ -6,7 +6,7 @@ AC_INIT([MP Engine], [5],
         [rkus@fuw.edu.pl],
         [mp_engine], [https://escher.fuw.edu.pl/git/mp_engine])
 AC_CONFIG_AUX_DIR([config])
-AM_INIT_AUTOMAKE(foreign dist-bzip2 dist-lzma std-options silent-rules subdir-objects tar-pax -Wall -Werror -Wno-portability)
+AM_INIT_AUTOMAKE(foreign dist-bzip2 dist-xz std-options silent-rules subdir-objects tar-pax -Wall -Werror -Wno-portability)
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([src/mp5.c])

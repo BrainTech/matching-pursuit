@@ -5,9 +5,8 @@ CCFLAGS  = -O3 -Wall -DINTELSWP -DINLINE
 OBJDIR   = obj
 BINDIR   = bin
 TARGET   = mp5
-LIBDIR   = ./lib
-LIBS     = $(LIBDIR)/fftw-3.2.2/.libs/libfftw3.a
-INCPATH  = -Isrc/include -I$(LIBDIR)/fftw-3.2.2/api
+LIBS     = -lfftw3 -lfftw3_threads
+INCPATH  = -Isrc/include
 
 OBJECTS = $(OBJDIR)/atom.o        \
 		  $(OBJDIR)/cmd.o         \
@@ -35,11 +34,11 @@ $(TARGET): $(OBJECTS)
 	$(CC) $^ $(LIBS) -lpthread -lm -o $(BINDIR)/$@
 
 dep:
-	$(CC) -M $(INCPATH) -c src/*.c > src/.depands 
+	$(CC) -M $(INCPATH) -c src/*.c > src/.depends
 	
 clean:
 	rm -f obj/*.o
-	>src/.depands
+	>src/.depends
 
 mp5:
 $(OBJDIR)/atom.o: src/atom.c
@@ -84,4 +83,4 @@ $(OBJDIR)/tools.o: src/tools.c
 $(OBJDIR)/vector.o: src/vector.c
 	$(CC) -c $(INCPATH) $(CCFLAGS) -o $@ $<
 
-include src/.depands
+-include src/.depends

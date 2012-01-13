@@ -34,6 +34,8 @@
 #include"stringTools.h"
 #include"types.h"
 
+#define PROGRAM_VERSION "0.1"
+
 unsigned char applicationMode = 0x00;
 
 #ifdef __MINGW32__
@@ -84,24 +86,36 @@ int main(int argc, char *argv[])
                              0x0,0x0,0x0,0x0,
                              NULL,NULL,NULL,NULL,NULL};
 
+    int print_help = argc >= 2 && !strcmp(argv[1], "--help");
+    int print_version = argc >= 2 && !strcmp(argv[1], "--version");
+
+    if (print_version) {
+	    fprintf(stdout, "mp5 " PROGRAM_VERSION "\n");
+	    return 0;
+    }
+
     if(argc>6 || argc==1
 			  || (argc==2 && ((strcmp(argv[1],"-g")!=0) && (strcmp(argv[1],"-e")!=0)))
 			  || ((strcmp(argv[1],"-g")==0) && (argc>2))
 			  || ((strcmp(argv[1],"-e")==0) && (argc>2))
 			  || (argc==5 && (((strcmp(argv[1],"-m")!=0) && (strcmp(argv[2],"-a")!=0) && (strcmp(argv[4],"-N")!=0)) ||
-				              ((strcmp(argv[1],"-m")!=0) && (strcmp(argv[2],"-N")!=0) && (strcmp(argv[4],"-a")!=0)))))
+				              ((strcmp(argv[1],"-m")!=0) && (strcmp(argv[2],"-N")!=0) && (strcmp(argv[4],"-a")!=0)))) ||
+	    print_help)
     {
 		fprintf(stderr," \n");
-		fprintf(stderr," ERROR: \n");
-		fprintf(stderr," INCORRECT CALL OF mp5Parameters PROGRAM \n");
+		if (!print_help) {
+			fprintf(stderr," ERROR: \n");
+			fprintf(stderr," INCORRECT CALL OF mp5Parameters PROGRAM \n");
+		}
 		fprintf(stderr," THE PROPER USE IS AS FOLLOWS: \n");
+		fprintf(stderr," mp5 --help | --version         - print help or version\n");
 		fprintf(stderr," mp5 -g                         - generate default config file \n");
 		fprintf(stderr," mp5 -e                         - generate xml file with errors codes and translations\n");
 		fprintf(stderr," mp5 -t [ name of config file ] - test config file \n");
 		fprintf(stderr," mp5 -f [ name of config file ] - process of mp decomposition (user mode)\n");
 		fprintf(stderr," mp5 -x [ name of config file ] - process of mp decomposition (server mode)\n");
 		fprintf(stderr," \n");
-		return 1;
+		return print_help ? 0 : 1;
     }
 
     if(strcmp(argv[1],"-g")==0)

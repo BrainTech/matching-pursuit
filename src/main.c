@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr," mp5 -f [ name of config file ] - process of mp decomposition (user mode)\n");
 		fprintf(stderr," mp5 -x [ name of config file ] - process of mp decomposition (server mode)\n");
 		fprintf(stderr," \n");
-		return ERROR;
+		return 1;
     }
 
     if(strcmp(argv[1],"-g")==0)
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr," mp5 -f [ name of config file ] - process of mp decomposition (USER MODE)\n");
 		fprintf(stderr," mp5 -x [ name of config file ] - process of mp decomposition (SERVER MODE)\n");
 		fprintf(stderr," \n");
-		return ERROR;
+		return 1;
     }
 
 	if((applicationMode & PROCESS_USER_MODE) || (applicationMode & CONFIG_MODE) || (applicationMode & ERROR_MODE))

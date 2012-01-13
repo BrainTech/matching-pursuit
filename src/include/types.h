@@ -32,7 +32,10 @@
     #ifdef __MINGW32__
         #define bzero(ptr,size) memset (ptr, 0, size);
         #define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }
-        #define sleep(X) _sleep( X )
+
+        // v3.11 of mingw-runtime deprecates _sleep in favor of Win32 API Sleep
+        void __stdcall Sleep(unsigned);
+        #define sleep(t) Sleep(1000*t);
     #endif
 
 	struct Node

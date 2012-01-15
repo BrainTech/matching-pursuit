@@ -26,7 +26,7 @@
 
 	double Clock(void);
 	STATUS solveSystemOfEquestions(const double *A11, const double *A12, const double *A21, const double *A22, double *X1, double *X2, const double *B1, const double *B2);
-	void toolbar(unsigned long int step);
+	void toolbar(int step);
 	double findMax(double firstNumber, double secondNumber);
 
 #endif

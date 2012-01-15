@@ -102,7 +102,7 @@ STATUS solveSystemOfEquestions(const double *A11, const double *A12, const doubl
 	return SUCCESS;
 }
 
-void toolbar(unsigned long int step)
+void toolbar(int step)
 {
 //    printf(" step: %lu \n",step);
 	char bar[NUMBER_OF_STEPS_IN_TOOLBAR+2];

@@ -20,6 +20,7 @@ AC_PROG_INSTALL
 m4_pattern_forbid([^_?PKG_[A-Z_]+$],[*** pkg.m4 missing, please install pkg-config])
 
 AC_SEARCH_LIBS([atan2], [m])
+AC_SEARCH_LIBS([sincos], [m])
 PKG_CHECK_MODULES(FFTW3, [ fftw3 ])
 
 AC_CONFIG_FILES([Makefile])

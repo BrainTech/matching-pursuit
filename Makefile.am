@@ -5,6 +5,10 @@
 
 mp5_CPPFLAGS = -I$(top_srcdir)/src/include/ -DINTELSWP -DINLINE
 
+mp5_CFLAGS = $(FFTW3_CFLAGS)
+
+mp5_LDADD = $(FFTW3_LIBS)
+
 bin_PROGRAMS=mp5
 mp5_SOURCES = src/atom.c \
 	src/cmd.c \

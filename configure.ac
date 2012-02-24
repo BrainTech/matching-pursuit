@@ -16,11 +16,11 @@ AC_CONFIG_HEADERS([config/config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 
+# This makes sure pkg.m4 is available.
+m4_pattern_forbid([^_?PKG_[A-Z_]+$],[*** pkg.m4 missing, please install pkg-config])
+
 AC_SEARCH_LIBS([atan2], [m])
-AC_SEARCH_LIBS([fftw_execute], [fftw3], [],
-               [AC_MSG_ERROR([*** fftw3 library not found])])
-AC_CHECK_HEADER([fftw3.h], [],
-               [AC_MSG_ERROR([*** fftw3 header file not found])])
+PKG_CHECK_MODULES(FFTW3, [ fftw3 ])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

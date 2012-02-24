@@ -27,10 +27,10 @@
 #include<string.h>
 #include<strings.h>
 #include<unistd.h>
+#include<fftw3.h>
 #include"atom.h"
 #include"def.h"
 #include"dic.h"
-#include"fftw3.h"
 #include"matrix.h"
 #include"mp5.h"
 #include"queue.h"

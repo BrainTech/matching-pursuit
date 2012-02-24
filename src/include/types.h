@@ -26,8 +26,8 @@
 	#define __TYPES_H__
 
 	#include<stdio.h>
+	#include<fftw3.h>
 	#include"def.h"
-	#include"fftw3.h"
 
     #ifdef __MINGW32__
         #define bzero(ptr,size) memset (ptr, 0, size);

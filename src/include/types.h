@@ -169,12 +169,13 @@
 		unsigned       int numberOfInitialGaborFunctions;
 		unsigned       int numberOfInitialCorrectGabors;
 		unsigned       int initialNumberOfAtoms;
+		unsigned       int *tmpRandomTable;
         
 		unsigned       int numberOfFinalDiracFunctions;
 		unsigned       int numberOfFinalGaussFunctions;
 		unsigned       int numberOfFinalSinCosFunctions;
 		unsigned       int numberOfFinalGaborFunctions;
-		unsigned       int numberOfFinalCorrectGabors;
+//		unsigned       int numberOfFinalCorrectGabors;
         unsigned       int finalNumberOfAtoms;
 
 		unsigned char diracInDictionary;

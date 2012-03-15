@@ -29,9 +29,9 @@
 	void freeAtom(Atom *atom);
 	void allocateAtomElements(Atom *atom, unsigned short int numberOfAllocatedChannels, unsigned char mp5Type);
 	void freeAtomElements(Atom *atom);
+	unsigned int estimateSizeOfAtom(unsigned short int numberOfAllocatedChannels, unsigned char mp5Type);
 	void copyAtom(const Atom *sourceAtom, Atom *copyAtom, unsigned short int numberOfAllocatedChannels);
 	void printFitedAtoms(const MP5Parameters *mp5Parameters, const Dictionary *dictionary, Atom *atom, char where, unsigned short int orderIndex);
-        unsigned int estimateSizeOfAtom(unsigned short int numberOfAllocatedChannels, unsigned char mp5Type);
 
 #endif
 

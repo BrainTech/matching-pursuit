@@ -24,6 +24,8 @@ mp5_SOURCES = src/atom.c \
 	src/stringTools.c \
 	src/tools.c \
 	src/vector.c \
+	src/random.c \
+	src/mtwist.c \
 	src/include/atom.h \
 	src/include/cmd.h \
 	src/include/def.h \
@@ -38,4 +40,6 @@ mp5_SOURCES = src/atom.c \
 	src/include/stringTools.h \
 	src/include/tools.h \
 	src/include/types.h \
-	src/include/vector.h
+	src/include/vector.h \
+	src/include/random.h \
+	src/include/mtwist.h

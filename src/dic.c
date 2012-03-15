@@ -29,7 +29,7 @@
 #include"dic.h"
 #include"matrix.h"
 #include"mp5.h"
-#include"r250.h"
+#include"random.h"
 #include"types.h"
 #include"vector.h"
 
@@ -190,7 +190,7 @@ static void printSizeOfDictionaryAndSizeOfSinCosExpTables(const Dictionary *dict
     printf(" NUMBER OF GAUSS FUNCTIONS:                     %12u, SIZE: %10.3lf (MB) \n",dictionary->numberOfFinalGaussFunctions,dictionary->numberOfFinalGaussFunctions*sizeOfOneAtom/megaByte);
     printf(" NUMBER OF SIN/COS:                             %12u, SIZE: %10.3lf (MB) \n",dictionary->numberOfFinalSinCosFunctions,dictionary->numberOfFinalSinCosFunctions*sizeOfOneAtom/megaByte);
     printf(" NUMBER OF ALL GABORS:                          %12u, SIZE: %10.3lf (MB) \n",dictionary->numberOfFinalGaborFunctions,dictionary->numberOfFinalGaborFunctions*sizeOfOneAtom/megaByte);
-    printf(" NUMBER OF CORRECT GABORS:                      %12u, SIZE: %10.3lf (MB) \n",dictionary->numberOfFinalCorrectGabors,dictionary->numberOfFinalCorrectGabors*sizeOfOneAtom/megaByte);
+//    printf(" NUMBER OF CORRECT GABORS:                      %12u, SIZE: %10.3lf (MB) \n",dictionary->numberOfFinalCorrectGabors,dictionary->numberOfFinalCorrectGabors*sizeOfOneAtom/megaByte);
     printf(" TOTAL NUMBER OF ATOMS (WITH INCORRECT GABORS): %12u, SIZE: %10.3lf (MB) \n",dictionary->finalNumberOfAtoms,(1.0*dictionary->finalNumberOfAtoms*sizeOfOneAtom)/megaByte);
     printf(" \n");
     printf(" SIZE OF SIN TABLES:                            %10.3lf (MB)\n",(1.0*numberOfPointsInSinCosTables*sizeof(double))/megaByte);
@@ -386,6 +386,8 @@ void allocateDictionary(Dictionary *dictionary, const MP5Parameters *mp5Paramete
     dictionary->atomsTable[2] = (Atom *)malloc(dictionary->numberOfInitialSinCosFunctions*sizeof(Atom));
     dictionary->atomsTable[3] = (Atom *)malloc(dictionary->numberOfInitialGaborFunctions*sizeof(Atom));
 
+	dictionary->tmpRandomTable = uiVectorAllocate(dictionary->initialNumberOfAtoms);
+
     dictionary->diracAtomsTable  = dictionary->atomsTable[0];
 	dictionary->gaussAtomsTable  = dictionary->atomsTable[1];
 	dictionary->sinCosAtomsTable = dictionary->atomsTable[2];
@@ -433,6 +435,9 @@ void freeDictionary(Dictionary *dictionary)
 	if(dictionary->numberOfStepsInPositionAtParticularScale!=NULL)
 		uiVectorFree(dictionary->numberOfStepsInPositionAtParticularScale);
 
+	if(dictionary->numberOfStepsInPositionAtParticularScale!=NULL)
+		uiVectorFree(dictionary->tmpRandomTable);
+
 	if(dictionary->atomsTable!=NULL)
 	{
 	    for(atomsCounter=0;atomsCounter<dictionary->numberOfInitialDiracFunctions;atomsCounter++)
@@ -455,12 +460,8 @@ void freeDictionary(Dictionary *dictionary)
 void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 {
     unsigned int numberOfCorrectGabors = 0;
-	time_t       seedTime = 0;
-    long int     seed     = 0;
+	unsigned int atomNumber            = 0;
     Atom        *atomPointer = NULL;
-    unsigned int randomSelectedAtomNumber;
-    unsigned int numberOfRandomSelectedAtoms;
-
 
 	double scaleToPeriodFactor = dictionary->scaleToPeriodFactor;
     const unsigned int epochSize = mp5Parameters->epochSize;
@@ -468,6 +469,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
     const unsigned short int numberOfStepsInScale       = dictionary->numberOfStepsInScale;
 
+    const double *tableOfFrequenciesInOptimalDictionary = dictionary->tableOfFrequenciesInOptimalDictionary;
     const double *tableOfPositionsInOptimalDictionary   = dictionary->tableOfPositionsInOptimalDictionary;
 
     const unsigned int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
@@ -481,11 +483,22 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
     unsigned       int positionIndex  = 0;
     unsigned       int rifling        = 0;
 
-    double DU;
+    double DF              = 0.0;
+    double DU              = 0.0;
+    double stepInFrequency = 0.0;
 
-    seed = time(&seedTime);
+	if(dictionary->typeOfDictionary & OCTAVE_STOCH)
+	{
+		if(dictionary->randomSeed == AUTO_RANDOM_SEED)
+			mt_seed();
+		else
+			mt_seed32new(dictionary->randomSeed);
 
-    r250_init(seed);
+		for(atomNumber = 0;atomNumber<dictionary->initialNumberOfAtoms;atomNumber++)
+			dictionary->tmpRandomTable[atomNumber] = atomNumber;
+
+		permuteTable(dictionary->tmpRandomTable,dictionary->initialNumberOfAtoms);
+	}
 
 	if(applicationMode & PROCESS_USER_MODE)
 		printf("\n START DICTIONARY GENERAITING \n\n");
@@ -518,19 +531,12 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
         if((dictionary->typeOfDictionary) & OCTAVE_STOCH)
         {
-            numberOfRandomSelectedAtoms = 0;
             atomPointer                 = dictionary->diracAtomsTable;
 
-            while(numberOfRandomSelectedAtoms < dictionary->numberOfFinalDiracFunctions)
-            {
-                randomSelectedAtomNumber = r250n(dictionary->numberOfInitialDiracFunctions);
+			permuteTable(dictionary->tmpRandomTable,dictionary->initialNumberOfAtoms);
 
-                if(((atomPointer + randomSelectedAtomNumber)->feature & STOCHASTIC_ATOM)==0)
-                {
-					((atomPointer + randomSelectedAtomNumber)->feature)|= STOCHASTIC_ATOM;                                        
-                    numberOfRandomSelectedAtoms++;
-                }                                
-            }                        
+			for(atomNumber = 0;atomNumber<dictionary->numberOfFinalDiracFunctions;atomNumber++)
+				((atomPointer + atomNumber)->feature)|= STOCHASTIC_ATOM;
         }                
 	}
 	
@@ -564,19 +570,13 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
         if((dictionary->typeOfDictionary) & OCTAVE_STOCH)
         {
-            numberOfRandomSelectedAtoms = 0;
             atomPointer                 = dictionary->gaussAtomsTable;
 
-            while(numberOfRandomSelectedAtoms < dictionary->numberOfFinalGaussFunctions)
-            {
-                randomSelectedAtomNumber = r250n(dictionary->numberOfInitialGaussFunctions);
+			permuteTable(dictionary->tmpRandomTable,dictionary->initialNumberOfAtoms);
 
-                if(((atomPointer + randomSelectedAtomNumber)->feature & STOCHASTIC_ATOM)==0)
-                {
-                    ((atomPointer + randomSelectedAtomNumber)->feature) |= STOCHASTIC_ATOM;
-                    numberOfRandomSelectedAtoms++;
-                }
-            }
+			for(atomNumber = 0;atomNumber<dictionary->numberOfFinalGaussFunctions;atomNumber++)
+				((atomPointer + atomNumber)->feature)|= STOCHASTIC_ATOM;
+
         }
 	}
 
@@ -585,6 +585,8 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 	{
 	    atomPointer = dictionary->sinCosAtomsTable;	    
 		atomPointer->feature = 0x0000;
+
+		DF = *(tableOfFrequenciesInOptimalDictionary + numberOfStepsInScale - 1);
 
 		numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);
 
@@ -614,19 +616,12 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
         if((dictionary->typeOfDictionary) & OCTAVE_STOCH)
         {
-            numberOfRandomSelectedAtoms = 0;
             atomPointer                 = dictionary->sinCosAtomsTable;
 
-            while(numberOfRandomSelectedAtoms < dictionary->numberOfFinalSinCosFunctions)
-            {
-                randomSelectedAtomNumber = r250n(dictionary->numberOfInitialSinCosFunctions);
+			permuteTable(dictionary->tmpRandomTable,dictionary->initialNumberOfAtoms);
 
-                if(((atomPointer + randomSelectedAtomNumber)->feature & STOCHASTIC_ATOM)==0)
-                {
-                    ((atomPointer + randomSelectedAtomNumber)->feature)|= STOCHASTIC_ATOM;
-                    numberOfRandomSelectedAtoms++;
-                }
-            }
+			for(atomNumber = 0;atomNumber<dictionary->numberOfFinalSinCosFunctions;atomNumber++)
+				((atomPointer + atomNumber)->feature)|= STOCHASTIC_ATOM;
         }
 	}
 
@@ -639,7 +634,9 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
 	    for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
 		{
+			DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex);
 			DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);
+            stepInFrequency = DF;
 
 			numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);
 			numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale  + scaleIndex);
@@ -672,27 +669,20 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
         if((dictionary->typeOfDictionary) & OCTAVE_STOCH)
         {
-            numberOfRandomSelectedAtoms = 0;
             atomPointer                 = dictionary->gaborAtomsTable;
 
-            while(numberOfRandomSelectedAtoms < dictionary->numberOfFinalGaborFunctions)
-            {
-                randomSelectedAtomNumber = r250n(dictionary->numberOfInitialGaborFunctions);
+			permuteTable(dictionary->tmpRandomTable,dictionary->initialNumberOfAtoms);
 
-                if(((atomPointer + randomSelectedAtomNumber)->feature & STOCHASTIC_ATOM)==0)
-                {
-                    ((atomPointer + randomSelectedAtomNumber)->feature)|= STOCHASTIC_ATOM;
-                    numberOfRandomSelectedAtoms++;
-                }
-            }
+			for(atomNumber = 0;atomNumber<dictionary->numberOfFinalGaborFunctions;atomNumber++)
+				((atomPointer + atomNumber)->feature)|= STOCHASTIC_ATOM;
         }
 
 		dictionary->numberOfInitialCorrectGabors = numberOfCorrectGabors;
 		
-		if((dictionary->typeOfDictionary) & OCTAVE_STOCH)	
+/*		if((dictionary->typeOfDictionary) & OCTAVE_STOCH)
 			dictionary->numberOfFinalCorrectGabors = numberOfRandomSelectedAtoms;
 		else
-			dictionary->numberOfFinalCorrectGabors = dictionary->numberOfInitialCorrectGabors;		
+			dictionary->numberOfFinalCorrectGabors = dictionary->numberOfInitialCorrectGabors;		*/
 	}
 		
 /*

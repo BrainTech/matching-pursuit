@@ -469,7 +469,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
     const unsigned short int numberOfStepsInScale       = dictionary->numberOfStepsInScale;
 
-    const double *tableOfFrequenciesInOptimalDictionary = dictionary->tableOfFrequenciesInOptimalDictionary;
     const double *tableOfPositionsInOptimalDictionary   = dictionary->tableOfPositionsInOptimalDictionary;
 
     const unsigned int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
@@ -483,9 +482,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
     unsigned       int positionIndex  = 0;
     unsigned       int rifling        = 0;
 
-    double DF              = 0.0;
     double DU              = 0.0;
-    double stepInFrequency = 0.0;
 
 	if(dictionary->typeOfDictionary & OCTAVE_STOCH)
 	{
@@ -586,8 +583,6 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 	    atomPointer = dictionary->sinCosAtomsTable;	    
 		atomPointer->feature = 0x0000;
 
-		DF = *(tableOfFrequenciesInOptimalDictionary + numberOfStepsInScale - 1);
-
 		numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);
 
 		for(frequencyIndex=0,rifling=1;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++,rifling++)
@@ -634,9 +629,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
 
 	    for(scaleIndex=0;scaleIndex<numberOfStepsInScale;scaleIndex++)
 		{
-			DF = *(tableOfFrequenciesInOptimalDictionary + scaleIndex);
 			DU = *(tableOfPositionsInOptimalDictionary   + scaleIndex);
-            stepInFrequency = DF;
 
 			numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);
 			numberOfStepsInPosition  = *(numberOfStepsInPositionAtParticularScale  + scaleIndex);

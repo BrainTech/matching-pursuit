@@ -39,3 +39,6 @@ mp5_SOURCES = src/atom.c \
 	src/include/tools.h \
 	src/include/types.h \
 	src/include/vector.h
+
+install-exec-local:
+	test -z "$(FFTW3DLL)" || $(INSTALL) "$(FFTW3DLL)" "$(DESTDIR)$(bindir)"

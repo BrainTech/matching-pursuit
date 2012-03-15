@@ -36,6 +36,7 @@ AS_CASE([$with_fftw3],
 	[[FFTW3_LIBS=$with_fftw3]
 	 [FFTW3_CFLAGS=-I`dirname $with_fftw3`]
 	 AC_MSG_RESULT([FFTW3 library detection overriden])
+	 AC_SUBST([FFTW3DLL], [$with_fftw3])
 	]
 )
 

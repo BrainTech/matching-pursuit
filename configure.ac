@@ -40,7 +40,25 @@ AS_CASE([$with_fftw3],
 	]
 )
 
-PKG_CHECK_MODULES(FFTW3, [ fftw3 ])
+PKG_CHECK_MODULES(FFTW3, [ fftw3 ], [], [AC_MSG_ERROR([
+  *** fftw3 library not found
+
+  FFTW3 development package is required. It is best to use the package
+  from your distribution (e.g. libfftw3-dev on Debian/Ubuntu,
+  fftw-devel on Fedora/RHEL/CentOS, etc).
+
+  Under MacOS X, you can use precompiled library from the Fink Project:
+  http://pdb.finkproject.org/pdb/package.php/fftw3
+
+  Under MS Windows, the --with-fftw3 option can be used to link
+  against a precompiled DLL. Download the FFTW3 development package
+  from http://www.fftw.org/install/windows.html, unpack the ZIP file
+  to a directory, and rerun configure with
+
+     ./configure --with-fftw3=.../path-to-fftw3/libfftw3-3.dll
+
+  The header file fftw3.h should be present in this directory too.
+])])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

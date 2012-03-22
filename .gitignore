@@ -15,4 +15,4 @@ src/.depends
 /configure
 /mp5
 /mp5.exe
-mp_engine-*.tar.*
+mp_engine-?.*

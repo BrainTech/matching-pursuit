@@ -43,3 +43,6 @@ mp5_SOURCES = src/atom.c \
 	src/include/vector.h \
 	src/include/random.h \
 	src/include/mtwist.h
+
+install-exec-local:
+	test -z "$(FFTW3DLL)" || $(INSTALL) "$(FFTW3DLL)" "$(DESTDIR)$(bindir)"

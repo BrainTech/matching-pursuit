@@ -24,6 +24,11 @@ m4_pattern_forbid([^_?PKG_[A-Z_]+$],
 AC_SEARCH_LIBS([atan2], [m])
 AC_SEARCH_LIBS([sincos], [m])
 
+AC_ARG_ENABLE([static],
+	AS_HELP_STRING([--enable-static], [link statically]))
+AS_IF([test "x$enable_static" = "xyes"],
+	[LDFLAGS="$LDFLAGS -static"])
+
 AC_ARG_WITH([fftw3],
 	AS_HELP_STRING([--with-fftw3=...], [explicit path to FFTW3 DLL]))
 AS_CASE([$with_fftw3],

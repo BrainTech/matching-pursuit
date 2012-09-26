@@ -1,0 +1,7 @@
+/files
+/*.debhelper.log
+/*.substvars
+/matching-pursuit-*.*.debhelper
+/matching-pursuit/
+/tmp/
+/build/

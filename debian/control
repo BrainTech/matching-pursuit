@@ -5,6 +5,7 @@ Maintainer: Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl>
 Build-Depends: debhelper (>= 8.0.0),
       autoconf,
       automake,
+      pkg-config,
       libfftw3-dev
 Standards-Version: 3.9.3
 Vcs-Git: git://escher.fuw.edu.pl/git/mp_engine

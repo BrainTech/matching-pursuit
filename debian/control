@@ -1,15 +1,15 @@
 Source: matching-pursuit
 Section: net
 Priority: extra
-Maintainer: Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl>
+Maintainer: Karol Auguštin <karol@augustin.pl>
 Build-Depends: debhelper (>= 8.0.0),
       autoconf,
       automake,
       pkg-config,
       libfftw3-dev
 Standards-Version: 3.9.3
-Vcs-Git: git://escher.fuw.edu.pl/git/mp_engine
-Vcs-Browser: http://escher.fuw.edu.pl/git/mp_engine
+Vcs-Git: git://git.braintech.pl/matching_pursuit
+Vcs-Browser: http://git.braintech.pl/matching_pursuit
 
 Package: matching-pursuit
 Architecture: amd64 i386

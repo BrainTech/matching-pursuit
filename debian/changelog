@@ -1,4 +1,4 @@
-matching-pursuit (5-1-ubuntu1) precise; urgency=low
+matching-pursuit (5-1ubuntu1) precise; urgency=low
 
   * Initial ubuntu package.
 

@@ -20,11 +20,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
  *************************************************************************************/
 
-
+#include<float.h>
+#include<math.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
-#include<math.h>
 #include"atom.h"
 #include"dic.h"
 #include"io_mp5.h"
@@ -39,6 +39,10 @@ extern unsigned char applicationMode;
 
 /* MMP - MULTICHANNEL MATCHING PURSUIT */
 
+static BOOLEAN bestModulusUpdateL1(double bestModulusL1, double modulusL1)
+{
+	return modulusL1<bestModulusL1 ? TRUE : FALSE;
+}
 
 static BOOLEAN getBestModulusesTable(unsigned short int MMPType,
 									 Atom *atom,
@@ -102,12 +106,14 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
     double t1, t2;
 
-    double modulusesTable[numberOfAnalysedChannels];
-    double bestSumOfModuluses;
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
-    float  *bestPhasesTable    = mp5Parameters->bestPhasesTable;
+	double modulusL1     = 0.0;
+	double bestModulusL1 = FLT_MAX;
+    double modulusesTableL2[numberOfAnalysedChannels];
+    double bestSumOfModulusesL2;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
+    float  *bestPhasesTable      = mp5Parameters->bestPhasesTable;
 
-    double tmpBestModulusesTable[numberOfAnalysedChannels];
+    double tmpBestModulusesTableL2[numberOfAnalysedChannels];
 
     Atom *atom;
     Atom *bestAtom = allocateAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
@@ -129,7 +135,10 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 		fflush(stdout);
 	}
 
-    bestSumOfModuluses = 0.0;
+	modulusL1     = 0.0;
+	bestModulusL1 = FLT_MAX;
+
+    bestSumOfModulusesL2 = 0.0;
     mp5Parameters->totalResidueEnergy = 0.0;
 
 	atomsCounter    = 0;
@@ -153,15 +162,35 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 						findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 							break;						
 						}							
 					}
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 				}
@@ -185,15 +214,35 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 						findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 							break;						
 						}							
 					}
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 
@@ -223,14 +272,34 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 					normAtomTable(dictionary,mp5Parameters,atom);
 
 					for(channel=0;channel<numberOfAnalysedChannels;channel++)
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 							break;						
 						}							
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 	
@@ -267,14 +336,36 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 							for(channel=0;channel<numberOfAnalysedChannels;channel++)
 							{
-								if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+								if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 								{
 									printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 									break;						
 								}							
 							}
-							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-								indexAtom = atomsCounter;
+
+							if(mp5Parameters->normType & L1)
+							{
+								if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+								{
+									printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+									break;
+								}
+
+								modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+								if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+								{
+									bestModulusL1 = modulusL1;
+									memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+									indexAtom     = atomsCounter;
+								}
+
+							}
+							else
+							{
+								if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+									indexAtom = atomsCounter;
+							}
 
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 						}
@@ -305,15 +396,35 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 				findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-				if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+				if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 				{
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 					break;						
 				}
 			}
 
-			if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-				indexAtom = atomsCounter;
+			if(mp5Parameters->normType & L1)
+			{
+				if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+				{
+					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+					break;
+				}
+
+				modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+				if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+				{
+					bestModulusL1 = modulusL1;
+					memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+					indexAtom     = atomsCounter;
+				}
+			}
+			else
+			{
+				if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+					indexAtom = atomsCounter;
+			}
 
 			printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 		}
@@ -324,17 +435,18 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     mp5Parameters->previousAtom = atom;
     atom->feature|=ATOM_WAS_SELECTED;
     copyAtom(atom,bestAtom,mp5Parameters->numberOfAnalysedChannels);
-    memcpy((void *)bestModulusesTable,(void *)tmpBestModulusesTable,numberOfAnalysedChannels*sizeof(double));
+
+	memcpy((void *)bestModulusesTableL2,(void *)tmpBestModulusesTableL2,numberOfAnalysedChannels*sizeof(double));
     memcpy((void *)bestPhasesTable,(void *)(bestAtom->phase),numberOfAnalysedChannels*sizeof(float));
 
     makeSinCosExpAtomTable(dictionary,mp5Parameters,bestAtom);
 
     for(channel=0;channel<numberOfAnalysedChannels;channel++)
     {
-        makeAtomTable(mp5Parameters,bestAtom,channel);
-		residueTable  = *(multiChannelResidueTable + channel);
         prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-        findResidue(residueTable,prevAtomTable,*(bestModulusesTable + channel),epochExpandedSize);        
+        makeAtomTable(prevAtomTable,mp5Parameters,bestAtom,channel);
+		residueTable  = *(multiChannelResidueTable + channel);
+        findResidue(residueTable,prevAtomTable,*(bestModulusesTableL2 + channel),epochExpandedSize);
     }
 
     for(channel=0;channel<numberOfAnalysedChannels;channel++)
@@ -350,7 +462,7 @@ void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 	if(applicationMode & PROCESS_USER_MODE)
 	{
-		printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",1,(t2-t1),mp5Parameters->totalSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTable,inc,bestModulusesTable,inc),mp5Parameters->totalResidueEnergy,(mp5Parameters->totalResidueEnergy/mp5Parameters->totalSignalEnergy)*100.0);
+		printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",1,(t2-t1),mp5Parameters->totalSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTableL2,inc,bestModulusesTableL2,inc),mp5Parameters->totalResidueEnergy,(mp5Parameters->totalResidueEnergy/mp5Parameters->totalSignalEnergy)*100.0);
 
 		if(atom->feature & DIRACDELTA)
 			printf(" D\n");
@@ -400,11 +512,13 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
     double t1, t2;
 	double energyProgress, iterationProgress;
 
-    double modulusesTable[numberOfAnalysedChannels];
-    double bestSumOfModuluses;
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
-    float  *bestPhasesTable    = mp5Parameters->bestPhasesTable;
-    double tmpBestModulusesTable[numberOfAnalysedChannels];
+	double modulusL1     = 0.0;
+	double bestModulusL1 = FLT_MAX;
+    double modulusesTableL2[numberOfAnalysedChannels];
+    double bestSumOfModulusesL2;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
+    float  *bestPhasesTable      = mp5Parameters->bestPhasesTable;
+    double tmpBestModulusesTableL2[numberOfAnalysedChannels];
     double energyStopCondition = mp5Parameters->totalSignalEnergy *(1 - mp5Parameters->energyPercent/100.0);
 	double RC = 0.0;
 	double RS = 0.0;
@@ -429,7 +543,9 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 	    progress.step   = 1;
 		atomsCounter    = 0;
 		tmpAtomsCounter = 0;
-		bestSumOfModuluses = 0.0;
+		modulusL1       = 0.0;
+		bestModulusL1  = FLT_MAX;
+		bestSumOfModulusesL2 = 0.0;
 		mp5Parameters->totalResidueEnergy = 0.0;
 		bestAtom = allocateAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
 
@@ -466,25 +582,45 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 							{
 								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTableL2 + channel))*RC;
 								}
 								else
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTableL2 + channel))*RC;
 								}
 							}
 
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 								break;
 							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 					}
@@ -524,25 +660,45 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 							{
 								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTableL2 + channel))*RC;
 								}
 								else
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTableL2 + channel))*RC;
 								}
 							}
 
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 								break;
 							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 
@@ -557,7 +713,7 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 			{
 				atom = dictionary->sinCosAtomsTable;
 
-				if(mp5Parameters->MPType & MMP1)
+				if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
 				{
 					prevAtomTable = *mp5Parameters->prevAtomTable;
 					findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
@@ -589,25 +745,45 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 							{
 								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTableL2 + channel))*RC;
 								}
 								else
 								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
+									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTableL2 + channel))*RS;
+									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTableL2 + channel))*RC;
 								}
 							}
 
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 								break;
 							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 						
@@ -661,25 +837,46 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 									{
 										if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
 										{
-											*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-											*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
+											*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTableL2 + channel))*RS;
+											*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTableL2 + channel))*RC;
 										}
 										else
 										{
-											*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-											*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
+											*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTableL2 + channel))*RS;
+											*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTableL2 + channel))*RC;
 										}
 									}
 
-									if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+									if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 									{
 										printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 										break;
 									}
 								}
 
-								if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-									indexAtom = atomsCounter;
+								if(mp5Parameters->normType & L1)
+								{
+									if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+									{
+										printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+										break;
+									}
+
+									modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+									if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+									{
+										bestModulusL1 = modulusL1;
+										memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+										indexAtom     = atomsCounter;
+
+									}
+								}
+								else
+								{
+									if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+										indexAtom = atomsCounter;
+								}
 
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 							}
@@ -725,25 +922,45 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 					{
 						if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0)
 						{
-							*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-							*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
+							*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTableL2 + channel))*RS;
+							*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTableL2 + channel))*RC;
 						}
 						else
 						{
-							*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-							*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
+							*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTableL2 + channel))*RS;
+							*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTableL2 + channel))*RC;
 						}
 					}
 
-					if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+					if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 					{
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 						break;
 					}
 				}
 
-				if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-					indexAtom = atomsCounter;
+				if(mp5Parameters->normType & L1)
+				{
+					if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+					{
+						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+						break;
+					}
+
+					modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+					if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+					{
+						bestModulusL1 = modulusL1;
+						memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+						indexAtom     = atomsCounter;
+					}
+				}
+				else
+				{
+					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+						indexAtom = atomsCounter;
+				}
 
 				printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 			}
@@ -754,18 +971,17 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 		mp5Parameters->previousAtom = atom;
 		atom->feature|=ATOM_WAS_SELECTED;
 		copyAtom(atom,bestAtom,mp5Parameters->numberOfAnalysedChannels);
-	   	memcpy((void *)bestModulusesTable,(void *)tmpBestModulusesTable,numberOfAnalysedChannels*sizeof(double));
+	   	memcpy((void *)bestModulusesTableL2,(void *)tmpBestModulusesTableL2,numberOfAnalysedChannels*sizeof(double));
 		memcpy((void *)bestPhasesTable,(void *)(bestAtom->phase),numberOfAnalysedChannels*sizeof(float));
 
 		makeSinCosExpAtomTable(dictionary,mp5Parameters,bestAtom);
 
 		for(channel=0;channel<numberOfAnalysedChannels;channel++)
 		{
-			makeAtomTable(mp5Parameters,bestAtom,channel);
-
 			prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+			makeAtomTable(prevAtomTable,mp5Parameters,bestAtom,channel);
 			residueTable  = *(multiChannelResidueTable + channel);
-			findResidue(residueTable,prevAtomTable,*(bestModulusesTable + channel),epochExpandedSize);
+			findResidue(residueTable,prevAtomTable,*(bestModulusesTableL2 + channel),epochExpandedSize);
 		}
 
 		for(channel=0;channel<numberOfAnalysedChannels;channel++)
@@ -783,7 +999,7 @@ void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 
 		if(applicationMode & PROCESS_USER_MODE)
 		{
-			printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",iterationCounter,(t2-t1),mp5Parameters->totalSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTable,inc,bestModulusesTable,inc),mp5Parameters->totalResidueEnergy,(mp5Parameters->totalResidueEnergy/mp5Parameters->totalSignalEnergy)*100.0);
+			printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",iterationCounter,(t2-t1),mp5Parameters->totalSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTableL2,inc,bestModulusesTableL2,inc),mp5Parameters->totalResidueEnergy,(mp5Parameters->totalResidueEnergy/mp5Parameters->totalSignalEnergy)*100.0);
 
 			if(atom->feature & DIRACDELTA)
 				printf(" D\n");
@@ -806,8 +1022,8 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
     unsigned       int channel;
     unsigned       int numberOfAnalysedChannels      = mp5Parameters->numberOfAnalysedChannels;
     unsigned       int numberOfReadChannelsAndEpochs = mp5Parameters->numberOfReadChannelsAndEpochs;
-    unsigned       int atomsCounter;
     unsigned       int tmpAtomsCounter;
+    unsigned       int atomsCounter;
     unsigned       int indexAtom = 0;
 	unsigned short int scaleIndex;
 	unsigned       int positionIndex;
@@ -819,11 +1035,6 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 	progress.applicationMode = applicationMode;
     progress.stepInToolbar   = dictionary->initialNumberOfAtoms/NUMBER_OF_STEPS_IN_TOOLBAR;
     progress.step            = 1;
-
-//	float tmpAmplitude = 0;
-//	float tmpModulus   = 0;
-//	double totalMMP2Modulus = 0.0;
-//	double totalMMP2Residue = 0.0;
 
 	const unsigned short int numberOfStepsInScale                       = dictionary->numberOfStepsInScale;
 	const unsigned       int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
@@ -840,12 +1051,14 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
     double t1, t2;
 
-    double modulusesTable[numberOfAnalysedChannels];
-    double bestSumOfModuluses;
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
-    float  *bestPhasesTable    = mp5Parameters->bestPhasesTable;
+	double modulusL1     = 0.0;
+	double bestModulusL1 = FLT_MAX;
+    double modulusesTableL2[numberOfAnalysedChannels];
+    double bestSumOfModulusesL2;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
+    float  *bestPhasesTable      = mp5Parameters->bestPhasesTable;
 
-    double tmpBestModulusesTable[numberOfAnalysedChannels];
+    double tmpBestModulusesTableL2[numberOfAnalysedChannels];
 
     Atom *atom;
     Atom *bestAtom = allocateAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
@@ -879,11 +1092,10 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 		fflush(stdout);
 	}
 
-    bestSumOfModuluses = 0.0;
+    bestSumOfModulusesL2 = 0.0;
     mp5Parameters->totalResidueEnergy = 0.0;
 
 	atomsCounter    = 0;
-	tmpAtomsCounter = 0;
 
 	if(mp5Parameters->FFT)
 	{
@@ -903,18 +1115,37 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
 						findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-							break;						
-						}							
+							break;
+						}
 					}
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-					
 				}
 				atom++;
 			}
@@ -936,18 +1167,38 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
 						findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-							break;						
-						}							
+							break;
+						}
 					}
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-		
+
 				}
 				atom++;
 				atomsCounter++;
@@ -974,14 +1225,34 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 					normAtomTable(dictionary,mp5Parameters,atom);
 
 					for(channel=0;channel<numberOfAnalysedChannels;channel++)
-						if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+						if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 						{
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-							break;						
-						}							
+							break;
+						}
 
-					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-						indexAtom = atomsCounter;
+					if(mp5Parameters->normType & L1)
+					{
+						if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+						{
+							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+							break;
+						}
+
+						modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+						if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+						{
+							bestModulusL1 = modulusL1;
+							memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+							indexAtom     = atomsCounter;
+						}
+					}
+					else
+					{
+						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+							indexAtom = atomsCounter;
+					}
 
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 
@@ -1018,17 +1289,38 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
 							for(channel=0;channel<numberOfAnalysedChannels;channel++)
 							{
-								if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+								if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 								{
 									printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-									break;						
-								}							
+									break;
+								}
 							}
-							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-								indexAtom = atomsCounter;
+
+							if(mp5Parameters->normType & L1)
+							{
+								if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+								{
+									printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+									break;
+								}
+
+								modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+								if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+								{
+									bestModulusL1 = modulusL1;
+									memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+									indexAtom     = atomsCounter;
+								}
+
+							}
+							else
+							{
+								if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+									indexAtom = atomsCounter;
+							}
 
 							printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-					
 						}
 						atom++;
 						atomsCounter++;
@@ -1042,13 +1334,13 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 		for(atomsCounter=0;atomsCounter<dictionary->initialNumberOfAtoms;atomsCounter++)
 		{
 			atom = getAtom(dictionary,atomsCounter);
-			
+
 			if((atom->feature & INCORRECTGABOR) || ((atom->feature & STOCHASTIC_ATOM)==0))
 			{
 				printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 				continue;
-			}							
-			
+			}
+
 			normAtomTable(dictionary,mp5Parameters,atom);
 
 			for(channel=0;channel<numberOfAnalysedChannels;channel++)
@@ -1057,36 +1349,55 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
 				findAtomDataDotProduct(dictionary,mp5Parameters,atom,signalTable,channel,FIRST_ITERATION);
 
-				if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+				if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 				{
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-					break;						
-				}							
+					break;
+				}
 			}
 
-			if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-				indexAtom = atomsCounter;
+			if(mp5Parameters->normType & L1)
+			{
+				if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+				{
+					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+					break;
+				}
 
-			printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);								
+				modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
 
+				if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+				{
+					bestModulusL1 = modulusL1;
+					memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+					indexAtom     = atomsCounter;
+				}
+			}
+			else
+			{
+				if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+					indexAtom = atomsCounter;
+			}
+
+			printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 		}
-    }
+	}
 
 	atom = getAtom(dictionary,indexAtom);
     mp5Parameters->previousAtom = atom;
     atom->feature|=ATOM_WAS_SELECTED;
     copyAtom(atom,bestAtom,mp5Parameters->numberOfAnalysedChannels);
-    memcpy((void *)bestModulusesTable,(void *)tmpBestModulusesTable,numberOfAnalysedChannels*sizeof(double));
+    memcpy((void *)bestModulusesTableL2,(void *)tmpBestModulusesTableL2,numberOfAnalysedChannels*sizeof(double));
     memcpy((void *)bestPhasesTable,(void *)(bestAtom->phase),numberOfAnalysedChannels*sizeof(float));
 
     makeSinCosExpAtomTable(dictionary,mp5Parameters,bestAtom);
 
     for(channel=0;channel<numberOfAnalysedChannels;channel++)
     {
-        makeAtomTable(mp5Parameters,bestAtom,channel);
-		residueTable  = *(meanResidueTable + channel);
         prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-        findResidue(residueTable,prevAtomTable,*(bestModulusesTable + channel),epochExpandedSize);
+        makeAtomTable(prevAtomTable,mp5Parameters,bestAtom,channel);
+		residueTable  = *(meanResidueTable + channel);
+        findResidue(residueTable,prevAtomTable,*(bestModulusesTableL2 + channel),epochExpandedSize);
     }
 
     for(channel=0;channel<numberOfAnalysedChannels;channel++)
@@ -1098,23 +1409,11 @@ void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters 
 
     addNode(mp5Parameters->fitted,(void *)bestAtom);
 
-	/*
-		for(channel=0;channel<numberOfReadChannelsAndEpochs;channel++)
-		{
-			returnAmplitudeAndModulusForMMP2DI(mp5Parameters,dictionary,bestAtom,&tmpAmplitude,&tmpModulus,channel);
-			totalMMP2Modulus = totalMMP2Modulus + tmpModulus*tmpModulus;
-			signalTable = *(mp5Parameters->multiChannelSignalTable + channel);
-			*(mp5Parameters->residueEnergyInEachChannel + channel) = findSignalEnergy(signalTable,epochExpandedSize);
-			totalMMP2Residue = totalMMP2Residue + (*(mp5Parameters->residueEnergyInEachChannel + channel));
-		}
-	*/
-
     t2 = Clock();
 
 	if(applicationMode & PROCESS_USER_MODE)
 	{
-		printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",1,(t2-t1),mp5Parameters->oneChannelSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTable,inc,bestModulusesTable,inc),mp5Parameters->oneChannelResidueEnergy,(mp5Parameters->oneChannelResidueEnergy/mp5Parameters->oneChannelSignalEnergy)*100.0);
-//		printf(" SIG: %-6.2f, MOD: %-6.2f, RES: %-6.2f, RES/SIG: %-6.2f %% ",mp5Parameters->totalSignalEnergy,totalMMP2Modulus,totalMMP2Residue,(totalMMP2Residue/mp5Parameters->totalSignalEnergy)*100.0);
+		printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",1,(t2-t1),mp5Parameters->oneChannelSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTableL2,inc,bestModulusesTableL2,inc),mp5Parameters->oneChannelResidueEnergy,(mp5Parameters->oneChannelResidueEnergy/mp5Parameters->oneChannelSignalEnergy)*100.0);
 
 		if(atom->feature & DIRACDELTA)
 			printf(" D\n");
@@ -1140,6 +1439,7 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
     unsigned       int atomsCounter;
     unsigned       int tmpAtomsCounter;
     unsigned       int indexAtom = 0;
+
 	unsigned short int scaleIndex;
 	unsigned       int positionIndex;
 	unsigned 	   int frequencyIndex;
@@ -1149,12 +1449,7 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 	Progress       progress;
 	progress.applicationMode = applicationMode;
     progress.stepInToolbar   = dictionary->initialNumberOfAtoms/NUMBER_OF_STEPS_IN_TOOLBAR;
-    progress.step            = 1;   
-
-//	float tmpAmplitude = 0;
-//	float tmpModulus   = 0;
-//	double totalMMP2Modulus = 0.0;
-//	double totalMMP2Residue = 0.0;
+    progress.step            = 1;
 
 	const unsigned short int numberOfStepsInScale                       = dictionary->numberOfStepsInScale;
 	const unsigned       int *numberOfStepsInFrequencyAtParticularScale = dictionary->numberOfStepsInFrequencyAtParticularScale;
@@ -1170,12 +1465,15 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
     double t1, t2;
 	double energyProgress, iterationProgress;
 
-    double modulusesTable[numberOfAnalysedChannels];
-    double bestSumOfModuluses;
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
-    float  *bestPhasesTable    = mp5Parameters->bestPhasesTable;
-    double tmpBestModulusesTable[numberOfAnalysedChannels];
-    double energyStopCondition = mp5Parameters->totalSignalEnergy *(1 - mp5Parameters->energyPercent/100.0);    
+	double modulusL1     = 0.0;
+	double bestModulusL1 = FLT_MAX;
+    double modulusesTableL2[numberOfAnalysedChannels];
+    double bestSumOfModulusesL2;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
+    float  *bestPhasesTable      = mp5Parameters->bestPhasesTable;
+
+    double tmpBestModulusesTableL2[numberOfAnalysedChannels];
+    double energyStopCondition = mp5Parameters->totalSignalEnergy *(1 - mp5Parameters->energyPercent/100.0);
 	double RC = 0.0;
 	double RS = 0.0;
 
@@ -1184,7 +1482,7 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 
     iterationCounter = 1;
 
-    while((mp5Parameters->oneChannelResidueEnergy>energyStopCondition) && (iterationCounter<mp5Parameters->maximalNumberOfIterations))
+    while((mp5Parameters->oneChannelResidueEnergy > energyStopCondition) && (iterationCounter<mp5Parameters->maximalNumberOfIterations))
     {
 		if(applicationMode & PROCESS_SERVER_MODE)
 		{
@@ -1196,18 +1494,15 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 
 		t1 = Clock();
 
-	    progress.step   = 1;   
+	    progress.step   = 1;
 		atomsCounter    = 0;
 		tmpAtomsCounter = 0;
-		bestSumOfModuluses = 0.0;
+		modulusL1       = 0.0;
+		bestModulusL1  = FLT_MAX;
+		bestSumOfModulusesL2 = 0.0;
 		mp5Parameters->totalResidueEnergy = 0.0;
 		mp5Parameters->oneChannelResidueEnergy = 0.0;
 		bestAtom = allocateAtom(mp5Parameters->numberOfAllocatedChannels,mp5Parameters->MPType);
-
-//		tmpAmplitude = 0.0;
-//		tmpModulus   = 0.0;
-//		totalMMP2Modulus = 0.0;
-//		totalMMP2Residue = 0.0;
 
 		if(mp5Parameters->FFT)
 		{
@@ -1219,51 +1514,47 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 				{
 					if(((atom->feature & ATOM_WAS_SELECTED)==0) && ((atom->feature & INCORRECTGABOR)==0))
 					{
-						if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
+						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							prevAtomTable = *mp5Parameters->prevAtomTable;
-							findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
-
-							RS = *(atom->RS + lastChannel);
-							RC = *(atom->RC + lastChannel);
-						}
-						else
-						{
-							for(channel=0;channel<numberOfAnalysedChannels;channel++)
-							{
-								prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-								findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
-							}
+							prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+							findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
 						}
 
 						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-							{
-								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
-								}
-								else
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
-								}
-							}
-
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-								break;						
-							}							
+								break;
+							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 					}
+
 					atom++;
 				}
 			}
@@ -1274,53 +1565,48 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 
 				for(tmpAtomsCounter=0;tmpAtomsCounter<dictionary->numberOfFinalGaussFunctions;tmpAtomsCounter++)
 				{
-					if(!(atom->feature & ATOM_WAS_SELECTED) && !(atom->feature & INCORRECTGABOR))
+					if(((atom->feature & ATOM_WAS_SELECTED)==0) && ((atom->feature & INCORRECTGABOR)==0))
 					{
-						if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
+						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							prevAtomTable = *mp5Parameters->prevAtomTable;
-							findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
-
-							RS = *(atom->RS + lastChannel);
-							RC = *(atom->RC + lastChannel);
-						}
-						else
-						{
-							for(channel=0;channel<numberOfAnalysedChannels;channel++)
-							{
-								prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-								findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
-							}
+							prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+							findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
 						}
 
 						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-							{
-								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
-								}
-								else
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
-								}
-							}
-
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-								break;						
-							}							
+								break;
+							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-		
+
 					}
 					atom++;
 					atomsCounter++;
@@ -1332,18 +1618,10 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 			{
 				atom = dictionary->sinCosAtomsTable;
 
-				if(mp5Parameters->MPType & MMP1)
+				for(channel=0;channel<numberOfAnalysedChannels;channel++)
 				{
-					prevAtomTable = *mp5Parameters->prevAtomTable;
-					findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
-				}
-				else
-				{
-					for(channel=0;channel<numberOfAnalysedChannels;channel++)
-					{
-						prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-						findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
-					}
+					prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+					findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
 				}
 
 				numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + numberOfStepsInScale - 1);
@@ -1352,40 +1630,42 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 				{
 					if(((atom->feature & ATOM_WAS_SELECTED)==0) && ((atom->feature & INCORRECTGABOR)==0))
 					{
-						if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-						{
-							RS = *(atom->RS + lastChannel);
-							RC = *(atom->RC + lastChannel);
-						}
-
 						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-							{
-								if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
-								}
-								else
-								{
-									*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-									*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
-								}
-							}
-
-							if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+							if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 							{
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-								break;						
-							}							
+								break;
+							}
 						}
 
-						if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-							indexAtom = atomsCounter;
+						if(mp5Parameters->normType & L1)
+						{
+							if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+							{
+								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+								break;
+							}
+
+							modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+							if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+							{
+								bestModulusL1 = modulusL1;
+								memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+								indexAtom     = atomsCounter;
+							}
+						}
+						else
+						{
+							if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+								indexAtom = atomsCounter;
+						}
 
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+
 					}
+
 					atom++;
 					atomsCounter++;
 				}
@@ -1402,60 +1682,52 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 
 					for(positionIndex=0;positionIndex<numberOfStepsInPosition;positionIndex++)
 					{
-						if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
+						for(channel=0;channel<numberOfAnalysedChannels;channel++)
 						{
-							prevAtomTable = *mp5Parameters->prevAtomTable;
-							findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
-						}
-						else
-						{
-							for(channel=0;channel<numberOfAnalysedChannels;channel++)
-							{
-								prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-								findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
-							}
+							prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+							findGaborDataDotProductFFT(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
 						}
 
 						numberOfStepsInFrequency = *(numberOfStepsInFrequencyAtParticularScale + scaleIndex);
 
 						for(frequencyIndex=0;frequencyIndex<numberOfStepsInFrequency;frequencyIndex++)
 						{
-							if(!(atom->feature & ATOM_WAS_SELECTED) && !(atom->feature & INCORRECTGABOR))
+							if(((atom->feature & ATOM_WAS_SELECTED)==0) && ((atom->feature & INCORRECTGABOR)==0))
 							{
-								if(mp5Parameters->MPType & MMP1)
-								{
-									RS = *(atom->RS + lastChannel);
-									RC = *(atom->RC + lastChannel);
-								}
-
 								for(channel=0;channel<numberOfAnalysedChannels;channel++)
 								{
-									if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-									{
-										if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0 )
-										{
-											*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-											*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
-										}
-										else
-										{
-											*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-											*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
-										}
-									}
-
-									if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+									if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 									{
 										printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-										break;						
-									}							
+										break;
+									}
 								}
 
-								if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-									indexAtom = atomsCounter;
+								if(mp5Parameters->normType & L1)
+								{
+									if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+									{
+										printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+										break;
+									}
+
+									modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+									if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+									{
+										bestModulusL1 = modulusL1;
+										memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+										indexAtom     = atomsCounter;
+
+									}
+								}
+								else
+								{
+									if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+										indexAtom = atomsCounter;
+								}
 
 								printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-
 							}
 							atom++;
 							atomsCounter++;
@@ -1468,100 +1740,91 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 		{
 			for(atomsCounter=0;atomsCounter<dictionary->initialNumberOfAtoms;atomsCounter++)
 			{
-				atom = getAtom(dictionary,atomsCounter);
+	 			atom = getAtom(dictionary,atomsCounter);
 
 				if((atom->feature & ATOM_WAS_SELECTED) || (atom->feature & INCORRECTGABOR) || ((atom->feature & STOCHASTIC_ATOM)==0))
 				{
 					printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 					continue;
-				}							
-
-				if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-				{
-					prevAtomTable = *mp5Parameters->prevAtomTable;
-					findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,lastChannel,MMP1_NEXT_ITERATION);
-
-					RS = *(atom->RS + lastChannel);
-					RC = *(atom->RC + lastChannel);
-				}
-				else
-				{
-					for(channel=0;channel<numberOfAnalysedChannels;channel++)
-					{
-						prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
-						findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
-					}
 				}
 
 				for(channel=0;channel<numberOfAnalysedChannels;channel++)
 				{
-					if((mp5Parameters->MPType & MMP1) || (mp5Parameters->MPType & MMP11))
-					{
-						if(((*(bestPhasesTable))*(*(bestPhasesTable + channel))) > 0)
-						{
-							*(atom->RS + channel) = (*(atom->RS + channel)) - (*(bestModulusesTable + channel))*RS;
-							*(atom->RC + channel) = (*(atom->RC + channel)) - (*(bestModulusesTable + channel))*RC;
-						}
-						else
-						{
-							*(atom->RS + channel) = (*(atom->RS + channel)) + (*(bestModulusesTable + channel))*RS;
-							*(atom->RC + channel) = (*(atom->RC + channel)) + (*(bestModulusesTable + channel))*RC;
-						}
-					}
+					prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+					findAtomDataDotProduct(dictionary,mp5Parameters,atom,prevAtomTable,channel,NEXT_ITERATION);
+				}
 
-					if(findUnknowPhaseDI(atom,(modulusesTable + channel),channel) == ERROR)
+				for(channel=0;channel<numberOfAnalysedChannels;channel++)
+				{
+					if(findUnknowPhaseDI(atom,(modulusesTableL2 + channel),channel) == ERROR)
 					{
 						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
 						break;
-					}							
-						
+					}
 				}
 
-				if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTable,tmpBestModulusesTable,numberOfAnalysedChannels,&bestSumOfModuluses))
-					indexAtom = atomsCounter;
+				if(mp5Parameters->normType & L1)
+				{
+					if(findUnknowPhaseAM(atom,modulusesTableL2,numberOfAnalysedChannels)==ERROR)
+					{
+						printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
+						break;
+					}
+
+					modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
+
+					if(bestModulusUpdateL1(bestModulusL1,modulusL1))
+					{
+						bestModulusL1 = modulusL1;
+						memcpy((void *)tmpBestModulusesTableL2,(void *)modulusesTableL2,numberOfAnalysedChannels*sizeof(double));
+						indexAtom     = atomsCounter;
+					}
+				}
+				else
+				{
+					if(getBestModulusesTable(mp5Parameters->MPType,atom,modulusesTableL2,tmpBestModulusesTableL2,numberOfAnalysedChannels,&bestSumOfModulusesL2))
+						indexAtom = atomsCounter;
+				}
 
 				printInformationAboutProgress(mp5Parameters,&progress,atomsCounter);
-				
 			}
 		}
-		
+
 		atom = getAtom(dictionary,indexAtom);
 		mp5Parameters->previousAtom = atom;
 		atom->feature|=ATOM_WAS_SELECTED;
 		copyAtom(atom,bestAtom,mp5Parameters->numberOfAnalysedChannels);
-	   	memcpy((void *)bestModulusesTable,(void *)tmpBestModulusesTable,numberOfAnalysedChannels*sizeof(double));
+	   	memcpy((void *)bestModulusesTableL2,(void *)tmpBestModulusesTableL2,numberOfAnalysedChannels*sizeof(double));
 		memcpy((void *)bestPhasesTable,(void *)(bestAtom->phase),numberOfAnalysedChannels*sizeof(float));
-	
+
 		makeSinCosExpAtomTable(dictionary,mp5Parameters,bestAtom);
-	
+
 		for(channel=0;channel<numberOfAnalysedChannels;channel++)
 		{
-
-			makeAtomTable(mp5Parameters,bestAtom,channel);
-	
 			prevAtomTable = *(mp5Parameters->prevAtomTable + channel);
+			makeAtomTable(prevAtomTable,mp5Parameters,bestAtom,channel);
 			residueTable  = *(meanResidueTable + channel);
-			findResidue(residueTable,prevAtomTable,*(bestModulusesTable + channel),epochExpandedSize);
+			findResidue(residueTable,prevAtomTable,*(bestModulusesTableL2 + channel),epochExpandedSize);
 		}
-	
+
 		for(channel=0;channel<numberOfAnalysedChannels;channel++)
 		{
 			residueTable = *(meanResidueTable + channel);
 			*(mp5Parameters->meanResidueEnergyInEachChannel + channel) = findSignalEnergy(residueTable,epochExpandedSize);
-			mp5Parameters->oneChannelResidueEnergy+= (*(mp5Parameters->meanResidueEnergyInEachChannel + channel));
+			mp5Parameters->oneChannelResidueEnergy+=(*(mp5Parameters->meanResidueEnergyInEachChannel + channel));
 		}
-	
+
 		addNode(mp5Parameters->fitted,(void *)bestAtom);
-	
+
 		iterationCounter++;
-	
+
 		t2 = Clock();
-	
+
 		if(applicationMode & PROCESS_USER_MODE)
 		{
-			printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",iterationCounter,(t2-t1),mp5Parameters->oneChannelSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTable,inc,bestModulusesTable,inc),mp5Parameters->oneChannelResidueEnergy,(mp5Parameters->oneChannelResidueEnergy/mp5Parameters->oneChannelSignalEnergy)*100.0);
+			printf(" ATOM: [%3d], SEC.: %6.2f, SIG: %6.2f, MOD: %6.2f, RES: %6.2f, RES/SIG: %6.2f",iterationCounter,(t2-t1),mp5Parameters->oneChannelSignalEnergy,ddot(numberOfAnalysedChannels,bestModulusesTableL2,inc,bestModulusesTableL2,inc),mp5Parameters->oneChannelResidueEnergy,(mp5Parameters->oneChannelResidueEnergy/mp5Parameters->oneChannelSignalEnergy)*100.0);
 	//			printf(" SIG: %-6.2f, MOD: %-6.2f, RES: %-6.2f, RES/SIG: %-6.2f %% ",mp5Parameters->totalSignalEnergy,totalMMP2Modulus,totalMMP2Residue,(totalMMP2Residue/mp5Parameters->totalSignalEnergy)*100.0);
-	
+
 			if(atom->feature & DIRACDELTA)
 				printf(" D\n");
 			else if(atom->feature & GAUSSFUNCTION)
@@ -1570,9 +1833,9 @@ void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *
 				printf(" H\n");
 			else if(atom->feature & GABORWAVE)
 				printf(" G\n");
-	
+
 			printf("\n");
 			fflush(stdout);
 		}
-	}		
+	}
 }

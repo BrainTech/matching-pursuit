@@ -122,7 +122,37 @@ void fSetMatrixZero(float **matrix, unsigned int numberOfRows, unsigned int numb
 		bzero((void *)(*(matrix + row)),numberOfColumns*sizeof(float));
 }
 
-void countMeanSignalOverChannelsInOneEpoch(MP5Parameters *mp5Parameters)
+unsigned int **iuMatrixAllocate(unsigned int numberOfRows, unsigned int numberOfColumns)
+{
+	unsigned int row;
+	unsigned int **matrix = NULL;
+	unsigned int  *vector = NULL;
+
+	vector = (unsigned int *)malloc(numberOfRows*numberOfColumns*sizeof(double));
+
+	matrix = (unsigned int **)malloc(numberOfRows*sizeof(unsigned int *));
+
+	for(row=0;row<numberOfRows;row++)
+		*(matrix + row) = vector + row*numberOfColumns;
+
+	return matrix;
+}
+
+void uiMatrixFree(unsigned int **matrix)
+{
+	free(matrix[0]);
+	free(matrix);
+}
+
+void uiSetMatrixZero(unsigned int **matrix, unsigned int numberOfRows, unsigned int numberOfColumns)
+{
+	unsigned int row;
+
+	for(row=0;row<numberOfRows;row++)
+		bzero((void *)(*(matrix + row)),numberOfColumns*sizeof(unsigned int));
+}
+
+void countMeanSignalOverChannelsInSingleEpoch(MP5Parameters *mp5Parameters)
 {
 	const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
 	unsigned int sample;
@@ -156,7 +186,7 @@ void countMeanSignalOrResidumOverChannelsAndTrials(MP5Parameters *mp5Parameters)
 	for(sample=0;sample<epochExpandedSize;sample++)
 	{
 		tmpDataValue = 0.0;
-		
+
 		for(channel=0;channel<mp5Parameters->numberOfAnalysedChannels;channel++)
 			tmpDataValue+= (*(*(multiChannelSignalTable + channel) + sample));
 
@@ -174,10 +204,10 @@ void countMeanSignalOrResidumOverChannels(MP5Parameters *mp5Parameters, double *
 	unsigned int channelEpochNumber;
 	unsigned short int channel;
 	unsigned short int epoch;
-						
+
 	for(sample=0;sample<epochExpandedSize;sample++)
 	{
-				
+
 		for(epoch=0;epoch<mp5Parameters->numberOfSelectedEpochs;epoch++)
 		{
 			tmpDataValue = 0.0;
@@ -185,16 +215,15 @@ void countMeanSignalOrResidumOverChannels(MP5Parameters *mp5Parameters, double *
 			for(channel=0;channel<mp5Parameters->numberOfSelectedChannels;channel++)
 			{
 				channelEpochNumber = epoch*mp5Parameters->numberOfSelectedChannels + channel;
-
 				tmpDataValue+= (*(*(multiChannelSignalTable + channelEpochNumber) + sample));
-			
+
 			}
-					
+
 			*(*(meanSignalTable + epoch) + sample)= tmpDataValue/mp5Parameters->numberOfSelectedChannels;
-	
+
 		}
 	}
-		
+
 }
 
 void countMeanSignalOrResidumOverEpochs(MP5Parameters *mp5Parameters, double **multiChannelSignalTable)

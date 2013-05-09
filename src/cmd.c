@@ -45,13 +45,14 @@ static struct CommandsList
 		{"numberOfSamplesInEpoch",FALSE},
 		{"selectedEpochs",FALSE},
 		{"typeOfDictionary",FALSE},
-		{"dilationFactor",FALSE},
+		{"energyError",FALSE},
 		{"randomSeed",FALSE},
 		{"reinitDictionary",FALSE},
 		{"maximalNumberOfIterations",FALSE},
 		{"energyPercent",FALSE},
 		{"MP",FALSE},
 		{"scaleToPeriodFactor",FALSE}, 	
+     	{"normType",FALSE},
      	{"pointsPerMicrovolt",FALSE},
 		{"diracInDictionary",FALSE},
 		{"gaussInDictionary",FALSE},
@@ -722,16 +723,16 @@ STATUS findDataParametersInConfigFile(ConfigFile *configFile, Dictionary *dictio
 			{
 				dictionary->typeOfDictionary|= OCTAVE_STOCH;
 				mp5Parameters->FFT = OFF;
-			}				
+         	}
 
 			commandsList[8].found = TRUE;
 		}
-		else if(strstr(text,"dilationFactor")!=NULL)
+		else if(strstr(text,"energyError")!=NULL)
 		{
 			if(countWords(text)!=3)
 			{
 				sprintf(numberToString,"%hu",lineNumber);
-				const char *tmpString[] = {"dilationFactor",numberToString};
+				const char *tmpString[] = {"energyError",numberToString};
 				printError(infoMessage,INCORRECT_NUMBER_OF_ARGUMENTS,tmpString,2);
 				return ERROR;
 			}
@@ -739,15 +740,23 @@ STATUS findDataParametersInConfigFile(ConfigFile *configFile, Dictionary *dictio
 			parameterPosition = (char *)strtok(text," \n\t");
 			parameterPosition = (char *)strtok(NULL," \n\t\0");
 
-			if(!isReal(parameterPosition,"realgz"))
+			if(!isReal(parameterPosition,"real"))
 			{
 				sprintf(numberToString,"%hu",lineNumber);
-				const char *tmpString[] = {"dilationFactor",numberToString};
-				printError(infoMessage,ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE,tmpString,2);
+				const char *tmpString[] = {"energyError",numberToString};
+				printError(infoMessage,ARGUMENT_SHOUDL_BE_FLOAT,tmpString,2);
 				return ERROR;
 			}
 
-			dictionary->dilationFactor = (double)atof(parameterPosition);
+			if(((double)atof(parameterPosition) <= 0.0) || (double)atof(parameterPosition) >= 1.0)
+			{
+				sprintf(numberToString,"%hu",lineNumber);
+				const char *tmpString[] = {"energyError",numberToString};
+				printError(infoMessage,ARGUMENT_SHOUDL_BE_FLOAT_BETWEEN_ZERO_AND_ONE,tmpString,2);
+				return ERROR;
+			}
+
+			dictionary->energyError = (double)atof(parameterPosition);
 			parameterPosition = (char *)strtok(NULL," \n\t\0");
 
 			if(!isReal(parameterPosition,"realgz"))
@@ -909,17 +918,17 @@ STATUS findDataParametersInConfigFile(ConfigFile *configFile, Dictionary *dictio
 				return ERROR;
 			}
 
-			if(strcmp(parameterPosition,"SMP")==0)        mp5Parameters->MPType|= SMP;
-			else if(strcmp(parameterPosition,"MMP1")==0)  mp5Parameters->MPType|= MMP1;
-			else if(strcmp(parameterPosition,"MMP11")==0) mp5Parameters->MPType|= MMP11;
-			else if(strcmp(parameterPosition,"MMP12")==0) mp5Parameters->MPType|= MMP12;
-			else if(strcmp(parameterPosition,"MMP21")==0) mp5Parameters->MPType|= MMP21;
-			else if(strcmp(parameterPosition,"MMP2")==0)  mp5Parameters->MPType|= MMP2;
-			else if(strcmp(parameterPosition,"MMP22")==0) mp5Parameters->MPType|= MMP22;
-			else if(strcmp(parameterPosition,"MMP23")==0) mp5Parameters->MPType|= MMP23;
-			else if(strcmp(parameterPosition,"MMP3")==0)  mp5Parameters->MPType|= MMP3;
-			else if(strcmp(parameterPosition,"MMP32")==0) mp5Parameters->MPType|= MMP32;
-			else if(strcmp(parameterPosition,"MMP33")==0) mp5Parameters->MPType|= MMP33;
+			if(strcmp(parameterPosition,"SMP")==0)        mp5Parameters->MPType= SMP;
+			else if(strcmp(parameterPosition,"MMP1")==0)  mp5Parameters->MPType= MMP1;
+			else if(strcmp(parameterPosition,"MMP11")==0) mp5Parameters->MPType= MMP11;
+			else if(strcmp(parameterPosition,"MMP12")==0) mp5Parameters->MPType= MMP12;
+			else if(strcmp(parameterPosition,"MMP21")==0) mp5Parameters->MPType= MMP21;
+			else if(strcmp(parameterPosition,"MMP2")==0)  mp5Parameters->MPType= MMP2;
+			else if(strcmp(parameterPosition,"MMP22")==0) mp5Parameters->MPType= MMP22;
+			else if(strcmp(parameterPosition,"MMP23")==0) mp5Parameters->MPType= MMP23;
+			else if(strcmp(parameterPosition,"MMP3")==0)  mp5Parameters->MPType= MMP3;
+			else if(strcmp(parameterPosition,"MMP32")==0) mp5Parameters->MPType= MMP32;
+			else if(strcmp(parameterPosition,"MMP33")==0) mp5Parameters->MPType= MMP33;
 
 			commandsList[14].found = TRUE;
 		}
@@ -970,6 +979,30 @@ STATUS findDataParametersInConfigFile(ConfigFile *configFile, Dictionary *dictio
 
 			mp5Parameters->pointsPerMicrovolt = (double)atof(parameterPosition);
 			commandsList[16].found = TRUE;
+		}
+		else if(strstr(text,"normType")!=NULL)
+		{
+			if(countWords(text)!=2)
+			{
+				sprintf(numberToString,"%hu",lineNumber);
+				const char *tmpString[] = {"normType",numberToString};
+				printError(infoMessage,INCORRECT_NUMBER_OF_ARGUMENTS,tmpString,2);
+				return ERROR;
+			}
+
+			parameterPosition = (char *)strtok(text," \n\t");
+			parameterPosition = (char *)strtok(NULL," \n\t\0");
+
+			if(strcmp(parameterPosition,"L1")!=0 && strcmp(parameterPosition,"L2")!=0)
+			{
+				sprintf(numberToString,"%hu",lineNumber);
+				const char *tmpString[] = {"normType",numberToString,"L1/L2"};
+				printError(infoMessage,INCORRECT_TYPE_OF_ARGUMENT,tmpString,3);
+				return ERROR;
+			}
+
+			if(strcmp(parameterPosition,"L1")==0)       mp5Parameters->normType = L1;
+			else if(strcmp(parameterPosition,"YES")==0) mp5Parameters->normType = L2;
 		}
 		else if(strstr(text,"diracInDictionary")!=NULL)
 		{

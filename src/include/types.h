@@ -142,12 +142,12 @@
 		unsigned char typeOfDictionary;
 		double scaleToPeriodFactor; 
 
+		double energyError;
 		double dilationFactor;                           /* parameter of the Optimal Dictionary - "density factor" */
 		double stochasticDictionaryReductionCoefficient; /* parameter of the Optimal Dictionary - "density factor" */
         long int randomSeed;
 
     	unsigned short int numberOfStepsInScale;
-
 		double       basicStepInPositionInSignal;
 		double       basicStepInFrequencyInSignal;
 
@@ -208,6 +208,7 @@
 		unsigned short int numberOfEpochs;
 
 		double              samplingFrequency;
+
 		unsigned short int  numberOfSelectedChannels;
 		unsigned short int *selectedChannels;
 		unsigned short int  numberOfSelectedEpochs;
@@ -220,7 +221,8 @@
 
 		unsigned char writingMode;
 
-		unsigned short int numberOfAllocatedChannels;
+		unsigned short int numberOfAllocatedChannels; //number of channels need to anlysed the signal + 1 (the last channel is treaded as a tmp
+													  //for example for mean of the signal of rest channels
 		unsigned       int numberOfAnalysedChannels;
 		unsigned 	   int numberOfReadChannelsAndEpochs;
 		unsigned       int epochSize;               /* number of samples in epoch */
@@ -249,15 +251,17 @@
 
 		Atom   *previousAtom;
 		double **prevAtomTable;
+		double *tmpAtomTable; // needed by L1 norm
 
 		double *zeroSignalTable;
 		double *gaussSignalTable;
 		double *singleChannelSignalTable;
-		double **multiChannelSignalTable;
 		double *singleChannelResidueTable;
+		double **multiChannelSignalTable;
 		double **multiChannelResidueTable;
 		double **meanSignalTable;
 		double **meanResidueTable;
+		double *tmpResidueTable; // needed by L1 norm
 
 		double totalSignalEnergy;           /* inlcudes sum of energies over all channels */
 		double totalResidueEnergy;          /* includes sum of residue over all channels  */
@@ -272,14 +276,15 @@
 		unsigned short int maximalNumberOfIterations;
 		double             energyPercent;
 
-		double *bestModulusesTable;
+		double *bestModulusesTableL2;
 		float  *bestPhasesTable;
 
-		unsigned char  reinitDictionary;
+		unsigned char reinitDictionary;
 		unsigned short int MPType;
 
 		Queue  *fitted;
 
+		unsigned char normType;
 		unsigned char bookWithSignal;
 		unsigned char progressBar;
 

@@ -36,7 +36,7 @@
 	#define LENGTH_OF_TMP_STRING		         256
 	#define SIZE_OF_OUTPUT_BUFFOR		         32
 
-	#define NUMBER_OF_ALL_COMMANDS 				 22
+	#define NUMBER_OF_ALL_COMMANDS 				 23
 	#define NUMBER_OF_PERMAMENT_COMMANDS     	 17
 	#define LENGHT_OF_MAGIC_IN_RESULT_FILE		 6
 
@@ -45,13 +45,18 @@
 	typedef enum {NO,YES}        CHOICE;
 	typedef enum {OFF,ON}        SWITCH;
 
+	// norm type
+	#define L1 0x01
+	#define L2 0x02
+
 	// FFT MODE
 
 	#define OFF     0x00
 	#define  ON     0x01
 
-	#define M_2PI 6.28318530717958623200  /* 2pi */
-	#define EXP   2.71828182845905        /* e */
+	#define M_2PI  6.28318530717958623200  /* 2pi */
+	#define EXP    2.71828182845905        /* e */
+	#define SQR2   2.828427124746190       /* 2sqrt(2) */
 
 	#define NOT_ALLOCATED 0x01
 	#define ALLOCATED     0x02
@@ -150,7 +155,7 @@
 
 	#define strtokMask "{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}"
 
-	#define NUMBER_OF_ERRORS			      34
+	#define NUMBER_OF_ERRORS			      33
 
 	#define CAN_NOT_OPEN_CONFIG_FILE          1
 	#define LINE_DOES_NOT_INCLUDE_COMMAND     2
@@ -163,34 +168,32 @@
 
 	#define ARGUMENT_SHOUDL_BE_INTEGER_GREATER_OR_EQUAL_TO_ZERO  9
 	#define ARGUMENT_SHOUDL_BE_INTEGER_GREATER_TO_ZERO          10
-	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_OR_EQUAL_TO_ZERO   11
-	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ZERO            12
-	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE             13
+	#define ARGUMENT_SHOUDL_BE_FLOAT                            11
+	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_OR_EQUAL_TO_ZERO   12
+	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ZERO            13
+	#define ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE             14
+	#define ARGUMENT_SHOUDL_BE_FLOAT_BETWEEN_ZERO_AND_ONE       15
+
+	#define CAN_NOT_OPEN_DIRECTORY             16
+	#define OVERWRITE_RESULTS_ALARM            17
+	#define BAD_NUMBER_OF_SELECTED_CHANNELS    18
+	#define BAD_NUMBER_OF_SELECTED_EPOCHS      19
+	#define BAD_ENERGY_PERCENT                 20
+	#define BAD_REINIT_ALL                     21
+	#define BAD_REINIT_MMP                     22
+	#define BAD_MP_ALGORITHM                   23
 
 
-	#define CAN_NOT_OPEN_DIRECTORY             14
-	#define OVERWRITE_RESULTS_ALARM            15
-	#define BAD_NUMBER_OF_SELECTED_CHANNELS    16
-	#define BAD_NUMBER_OF_SELECTED_EPOCHS      17
-	#define BAD_PERIOD_DENSITY_EQUAL           18
-	#define BAD_PERIOD_DENSITY_GREATER         19
-	#define BAD_PERIOD_DENSITY_GREATER_FFT     20
-	#define BAD_ENERGY_PERCENT                 21
-	#define BAD_REINIT_ALL                     22
-	#define BAD_REINIT_MMP                     23
-	#define BAD_MP_ALGORITHM                   24
-
-
-	#define CAN_NOT_OPEN_DATA_FILE             25
-	#define CAN_NOT_OPEN_RESULTS_FILE          26
-	#define BAD_NUMBER_OF_SAMPLES_PER_CHANNEL  27
-	#define BAD_NUMBER_OF_SAMPLES              28
-	#define CAN_NOT_READ_SAMPLE				   29
-	#define CAN_NOT_WRITE_HEADER               30
-	#define CAN_NOT_WRITE_RESULTS              31
-	#define CAN_NOT_READ_EPOCH_IN_BINARY_FILE  32
-	#define CAN_NOT_READ_EPOCH_IN_ASCII_FILE   33
-	#define BAD_NAME_OF_OUTPUT_DIRECTORY       34
+	#define CAN_NOT_OPEN_DATA_FILE             24
+	#define CAN_NOT_OPEN_RESULTS_FILE          25
+	#define BAD_NUMBER_OF_SAMPLES_PER_CHANNEL  26
+	#define BAD_NUMBER_OF_SAMPLES              27
+	#define CAN_NOT_READ_SAMPLE				   28
+	#define CAN_NOT_WRITE_HEADER               29
+	#define CAN_NOT_WRITE_RESULTS              30
+	#define CAN_NOT_READ_EPOCH_IN_BINARY_FILE  31
+	#define CAN_NOT_READ_EPOCH_IN_ASCII_FILE   32
+	#define BAD_NAME_OF_OUTPUT_DIRECTORY       33
 
 	#define WSAVE_DIMENSION 				   1024
     #define SCALE_TO_PERIOD_FACTOR             1

@@ -20,6 +20,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.			 			 *
  *************************************************************************************/
 
+// TO DO:
+// sprawdziæ czy reinit s¹ dobrze ustawione
+
+
 #include<math.h>
 #include<stdio.h>
 #include"config.h"
@@ -52,38 +56,38 @@ int main(int argc, char *argv[])
 							 NULL,
 							 NULL};
 
-    MP5Parameters  mp5Parameters = {"","","",
-                                    NULL,NULL,
-                                    0,0,0,0,0,
-                                    0.0,
-                                    0,NULL,0,NULL,
-                                    0,
-                                    0.0,
-                                    NULL,NULL,
-                                    0x0,
-                                    0,0,0,0,0,0,0,0,
-                                    NULL,NULL,NULL,
-                                    ON,
-                                    NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-                                    NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-                                    0.0,0.0,0.0,0.0,
-                                    NULL,NULL,NULL,NULL,
-                                    0,0.0,
-                                    NULL,NULL,
-                                    0x0,0,
-                                    NULL,
-                                    YES,0x0};
+	MP5Parameters  mp5Parameters = {"","","",
+									NULL,NULL,
+									0,0,0,0,0,
+									0.0,
+									0,NULL,0,NULL,
+									0,
+									0.0,NULL,NULL,
+									0x0,
+									0,0,0,0,0,0,0,0,
+									NULL,NULL,NULL,
+									YES,
+									NULL,NULL,NULL,
+									NULL,NULL,NULL,
+									NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+									0.0,0.0,0,0,
+									NULL,NULL,NULL,NULL,
+									0,0.0,
+									NULL,NULL,
+									NO,SMP,
+									NULL,
+									L2,YES,YES};
 
-    Dictionary dictionary = {0x0,SCALE_TO_PERIOD_FACTOR,
-                             0.0,0.0,
-                             0L,0,
-                             0.0,0.0,0.0,
-                             0,
-                             0.0,
-                             NULL,NULL,NULL,NULL,NULL,NULL,
-                             0,0,0,0,0,0,NULL,0,0,0,0,0,
-                             0x0,0x0,0x0,0x0,
-                             NULL,NULL,NULL,NULL,NULL};
+	Dictionary dictionary = {0x0,SCALE_TO_PERIOD_FACTOR,
+							0.0,0.0,0.0,0L,
+							0,0.0,0.0,
+							0.0,0,0.0,
+							NULL,NULL,NULL,NULL,NULL,NULL,
+							0,0,0,0,0,0,
+							NULL,
+							0,0,0,0,0,
+							YES,YES,YES,YES,
+							NULL,NULL,NULL,NULL,NULL};
 
     int print_help = argc >= 2 && !strcmp(argv[1], "--help");
     int print_version = argc >= 2 && !strcmp(argv[1], "--version");
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
 		fprintf(channel," \n");
 		if (!print_help) {
 			fprintf(channel," ERROR: \n");
-			fprintf(channel," INCORRECT CALL OF mp5Parameters PROGRAM \n");
+			fprintf(channel," INCORRECT CALL OF PROGRAM \n");
 		}
 		fprintf(channel," THE PROPER USE IS AS FOLLOWS: \n");
 		fprintf(channel," mp5 --help | --version         - print help or version\n");
@@ -174,7 +178,7 @@ selectedChannels       1 2-3\n\
 numberOfSamplesInEpoch 64\n\
 selectedEpochs         1\n\
 typeOfDictionary       OCTAVE_STOCH\n\
-dilationFactor         1.3 90.00\n\
+energyError            0.3 90.00\n\
 randomSeed             auto\n\
 reinitDictionary       NO_REINIT_AT_ALL\n\
 maximalNumberOfIterations 3\n\
@@ -324,6 +328,18 @@ progressBar               ON"
 
 			if(mp5Parameters.MPType & SMP)
 			{
+				unsigned short int counter;
+				time_t       seedTime;
+				long int     seed[mp5Parameters.numberOfSelectedChannels];
+
+				for(counter=0;counter<mp5Parameters.numberOfSelectedChannels;counter++)
+				{
+					if(dictionary.randomSeed==AUTO_RANDOM_SEED)
+						seed[counter] = time(&seedTime);
+					else
+						seed[counter] = dictionary.randomSeed;
+				}
+
 				if(applicationMode & PROCESS_SERVER_MODE)
 				{
 					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
@@ -333,201 +349,62 @@ progressBar               ON"
 					fflush(stdout);
 				}
 
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
+				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)/* create dicionary */
 					makeDictionary(&dictionary,&mp5Parameters);
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
 
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
-					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						for(channelNumber=0;channelNumber<mp5Parameters.numberOfSelectedChannels;channelNumber++)
-						{
-							if(applicationMode & PROCESS_SERVER_MODE)
-							{
-								printf("CHANNEL %hu\n",channelNumber);
-								fflush(stdout);
-							}
-							else if(applicationMode & PROCESS_USER_MODE)
-							{
-								printf("\n --EPOCH--: %d, |CHANNEL|: %d\n\n",mp5Parameters.selectedEpochs[epochNumber],mp5Parameters.selectedChannels[channelNumber]);
-								fflush(stdout);
-							}
-
-							mp5Parameters.singleChannelSignalTable = *(mp5Parameters.processedDataMatrix + channelNumber);
-
-							firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-							nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-							if(writeSMPResults(&dictionary,&mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
-								goto ERROR_PROCEDURE;
-
-							resetDictionary(&dictionary);
-						}
-					}
-				}
-				else if(mp5Parameters.reinitDictionary & REINIT_IN_CHANNEL_DOMAIN)
+				for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
 				{
-					unsigned short int counter;
-					time_t       seedTime;
-					long int     seed[mp5Parameters.numberOfSelectedChannels];
-
-					for(counter=0;counter<mp5Parameters.numberOfSelectedChannels;counter++)
-						if(dictionary.randomSeed==AUTO_RANDOM_SEED)
-							seed[counter] = time(&seedTime);
-						else
-							seed[counter] = dictionary.randomSeed;
-
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					if(applicationMode & PROCESS_SERVER_MODE)
 					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						for(channelNumber=0;channelNumber<mp5Parameters.numberOfSelectedChannels;channelNumber++)
-						{
-							dictionary.randomSeed = seed[channelNumber];
-
-							/* create dicionary */
-							reinitDictionary(&dictionary,&mp5Parameters);
-
-							/* test atom's feature, for example find INCORRECT atoms */
-//							testAtomFeature(&dictionary);
-
-							if(applicationMode & PROCESS_SERVER_MODE)
-							{
-								printf("CHANNEL  %hu\n",channelNumber);
-								fflush(stdout);
-							}
-
-							if(applicationMode & PROCESS_USER_MODE)
-							{
-								printf("\n |CHANNEL|: %d, --EPOCH--: %d\n\n",mp5Parameters.selectedChannels[channelNumber],mp5Parameters.selectedEpochs[epochNumber]);
-								fflush(stdout);
-							}
-
-							mp5Parameters.singleChannelSignalTable = *(mp5Parameters.processedDataMatrix + channelNumber);
-
-							firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-							nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-							if(writeSMPResults(&dictionary,&mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
-								goto ERROR_PROCEDURE;
-
-							resetDictionary(&dictionary);
-						}
+						printf("EPOCH  %hu\n",epochNumber);
+						fflush(stdout);
 					}
-				}
-				else if(mp5Parameters.reinitDictionary & REINIT_IN_EPOCH_DOMAIN)
-				{
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
-					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
 
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
+					if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+						goto ERROR_PROCEDURE;
 
-						/* create dicionary */
+					if(mp5Parameters.reinitDictionary & REINIT_IN_EPOCH_DOMAIN)/* create dicionary */
 						reinitDictionary(&dictionary,&mp5Parameters);
 
-						/* test atom's feature, for example find INCORRECT atoms */
-//						testAtomFeature(&dictionary);
-
-						for(channelNumber=0;channelNumber<mp5Parameters.numberOfSelectedChannels;channelNumber++)
-						{
-							if(applicationMode & PROCESS_SERVER_MODE)
-							{
-								printf("CHANNEL  %hu\n",channelNumber);
-								fflush(stdout);
-							}
-
-							if(applicationMode & PROCESS_USER_MODE)
-							{
-								printf("\n |CHANNEL|: %d, --EPOCH--: %d\n\n",mp5Parameters.selectedChannels[channelNumber],mp5Parameters.selectedEpochs[epochNumber]);
-								fflush(stdout);
-							}
-
-							mp5Parameters.singleChannelSignalTable = *(mp5Parameters.processedDataMatrix + channelNumber);
-
-							firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-							nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-							if(writeSMPResults(&dictionary,&mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
-								goto ERROR_PROCEDURE;
-
-							resetDictionary(&dictionary);
-						}
-					}
-				}
-				else if(mp5Parameters.reinitDictionary & REINIT_AT_ALL)
-				{
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					for(channelNumber=0;channelNumber<mp5Parameters.numberOfSelectedChannels;channelNumber++)
 					{
 						if(applicationMode & PROCESS_SERVER_MODE)
 						{
-							printf("EPOCH  %hu\n",epochNumber);
+							printf("CHANNEL %hu\n",channelNumber);
+							fflush(stdout);
+						}
+						else if(applicationMode & PROCESS_USER_MODE)
+						{
+							printf("\n --EPOCH--: %d, |CHANNEL|: %d\n\n",mp5Parameters.selectedEpochs[epochNumber],mp5Parameters.selectedChannels[channelNumber]);
 							fflush(stdout);
 						}
 
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						for(channelNumber=0;channelNumber<mp5Parameters.numberOfSelectedChannels;channelNumber++)
+						if(mp5Parameters.reinitDictionary & REINIT_IN_CHANNEL_DOMAIN)
 						{
-							if(applicationMode & PROCESS_SERVER_MODE)
-							{
-								printf("CHANNEL  %hu\n",channelNumber);
-								fflush(stdout);
-							}
-
+							dictionary.randomSeed = seed[channelNumber];
 							/* create dicionary */
 							reinitDictionary(&dictionary,&mp5Parameters);
-
-							/* test atom's feature, for example find INCORRECT atoms */
-//							testAtomFeature(&dictionary);
-
-							if(applicationMode & PROCESS_USER_MODE)
-							{
-								printf("\n --EPOCH--: %d, |CHANNEL|: %d\n\n",mp5Parameters.selectedEpochs[epochNumber],mp5Parameters.selectedChannels[channelNumber]);
-								fflush(stdout);
-							}
-
-							mp5Parameters.singleChannelSignalTable = *(mp5Parameters.processedDataMatrix + channelNumber);
-
-							firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-							nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-							if(writeSMPResults(&dictionary,&mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
-								goto ERROR_PROCEDURE;
 						}
+
+						if(mp5Parameters.reinitDictionary & REINIT_AT_ALL)/* create dicionary */
+							reinitDictionary(&dictionary,&mp5Parameters);
+
+						mp5Parameters.singleChannelSignalTable = *(mp5Parameters.processedDataMatrix + channelNumber);
+
+						firstIterationSMPMMP2(&dictionary,&mp5Parameters);
+						nextIterationSMPMMP2(&dictionary,&mp5Parameters);
+
+						if(writeSMPResults(&dictionary,&mp5Parameters,epochNumber,channelNumber,infoMessage)==ERROR)
+							goto ERROR_PROCEDURE;
+
+						resetDictionary(&dictionary);
 					}
 				}
 			}
-			// writen by Artur Matysiak
-			else if(mp5Parameters.MPType & MMP1)
+			else
 			{
 				if(applicationMode & PROCESS_SERVER_MODE)
 				{
-
 					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
 															mp5Parameters.numberOfSelectedChannels,
 															mp5Parameters.maximalNumberOfIterations,
@@ -535,24 +412,20 @@ progressBar               ON"
 					fflush(stdout);
 				}
 
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
+				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)/* create dicionary */
 					makeDictionary(&dictionary,&mp5Parameters);
 
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
 
+				if((mp5Parameters.MPType & MMP1) || (mp5Parameters.MPType & MMP2) || (mp5Parameters.MPType & MMP3))
+				{
 					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
 					{
+
 						if(applicationMode & PROCESS_SERVER_MODE)
 						{
 							printf("EPOCH  %hu\n",epochNumber);
 							fflush(stdout);
 						}
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
 
 						if(applicationMode & PROCESS_USER_MODE)
 						{
@@ -560,487 +433,115 @@ progressBar               ON"
 							fflush(stdout);
 						}
 
+						if((mp5Parameters.MPType & MMP1) || (mp5Parameters.MPType & MMP3))
+						{
+							if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+								goto ERROR_PROCEDURE;
+						}
+						else if(mp5Parameters.MPType & MMP2)
+						{
+							if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+								goto ERROR_PROCEDURE;
+
+							mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
+							countMeanSignalOverChannelsInSingleEpoch(&mp5Parameters);
+							mp5Parameters.singleChannelSignalTable = *(mp5Parameters.meanSignalTable);
+						}
+
+						if(mp5Parameters.reinitDictionary & REINIT_IN_EPOCH_DOMAIN)/* create dicionary */
+							reinitDictionary(&dictionary,&mp5Parameters);
+
 						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
 
-						firstIterationMMP(&dictionary,&mp5Parameters);
-						nextIterationMMP(&dictionary,&mp5Parameters);
+						if((mp5Parameters.MPType & MMP1) || (mp5Parameters.MPType & MMP3))
+						{
+							firstIterationMMP(&dictionary,&mp5Parameters);
+							nextIterationMMP(&dictionary,&mp5Parameters);
 
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
+							if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+								goto ERROR_PROCEDURE;
+						}
+						else if(mp5Parameters.MPType & MMP2)
+						{
+							firstIterationSMPMMP2(&dictionary,&mp5Parameters);
+							nextIterationSMPMMP2(&dictionary,&mp5Parameters);
+
+							if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+						    	goto ERROR_PROCEDURE;
+
+							mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
+
+							if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+								goto ERROR_PROCEDURE;
+						}
 
 						resetDictionary(&dictionary);
 					}
 				}
-				if(mp5Parameters.reinitDictionary &  REINIT_IN_EPOCH_DOMAIN)
+				else
 				{
+					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
+						goto ERROR_PROCEDURE;
 
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
+
+					if((mp5Parameters.MPType & MMP11) || (mp5Parameters.MPType & MMP33))
 					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
-
-						/* create dicionary */
-						reinitDictionary(&dictionary,&mp5Parameters);
-
-						/* test atom's feature, for example find INCORRECT atoms */
-//						testAtomFeature(&dictionary);
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						if(applicationMode & PROCESS_USER_MODE)
-						{
-							printf("\n --EPOCH--: %d\n\n",mp5Parameters.selectedEpochs[epochNumber]);
-							fflush(stdout);
-						}
-
-						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
 						firstIterationMMP(&dictionary,&mp5Parameters);
 						nextIterationMMP(&dictionary,&mp5Parameters);
 
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+						if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
 
-						resetDictionary(&dictionary);
 					}
-				}
-		    }
-			//Artur Matysiak end
-			else if((mp5Parameters.MPType & MMP12) || (mp5Parameters.MPType & MMP21))
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-						fflush(stdout);
-				}
-
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-	                // testAtomFeature(&dictionary);
-					// if(applicationMode & PROCESS_SERVER_MODE)
-					// {
-					// printf("EPOCH  %hu\n",epochNumber);
-					// fflush(stdout);
-					// }
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					// if(applicationMode & PROCESS_USER_MODE)
-					// {
-					// printf("\n --EPOCH--: %d\n\n",mp5Parameters.chosenEpochs[epochNumber]);
-					// fflush(stdout);
-					// }
-
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					firstIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
-					nextIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-				}
-			}
-			else if(mp5Parameters.MPType & MMP11)
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
-
-					// if(applicationMode & PROCESS_SERVER_MODE)
-					// {
-						// printf("EPOCH  %hu\n",epochNumber);
-						// fflush(stdout);
-					// }
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					// if(applicationMode & PROCESS_USER_MODE)
-					// {
-						// printf("\n --EPOCH--: %d\n\n",mp5Parameters.chosenEpochs[epochNumber]);
-						// fflush(stdout);
-					// }
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					firstIterationMMP(&dictionary,&mp5Parameters);
-					nextIterationMMP(&dictionary,&mp5Parameters);
-
-					if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-				}
-			}
-		    else if(mp5Parameters.MPType & MMP2)
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
-
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					else if(mp5Parameters.MPType & MMP22)
 					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
+						countMeanSignalOrResidumOverChannelsAndTrials(&mp5Parameters);
 
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						if(applicationMode & PROCESS_USER_MODE)
-						{
-							printf("\n --EPOCH--: %d\n\n",mp5Parameters.selectedEpochs[epochNumber]);
-							fflush(stdout);
-						}
-
-						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-						countMeanSignalOverChannelsInOneEpoch(&mp5Parameters);
 						mp5Parameters.singleChannelSignalTable = *(mp5Parameters.meanSignalTable);
-
 						firstIterationSMPMMP2(&dictionary,&mp5Parameters);
 						nextIterationSMPMMP2(&dictionary,&mp5Parameters);
 
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-						    goto ERROR_PROCEDURE;
+						if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
+							goto ERROR_PROCEDURE;
 
 						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
 
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+						if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
-
-						resetDictionary(&dictionary);
 					}
-				}
-				if(mp5Parameters.reinitDictionary & REINIT_IN_EPOCH_DOMAIN)
-				{
-
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					else if((mp5Parameters.MPType & MMP12) || (mp5Parameters.MPType & MMP21))
 					{
+						printf("Obliczam MMP12 || MMP21\n");
+						firstIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
+						nextIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
 
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
-
-						/* create dicionary */
-						reinitDictionary(&dictionary,&mp5Parameters);
-
-						/* test atom's feature, for example find INCORRECT atoms */
-//						testAtomFeature(&dictionary);
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+						if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
-
-						if(applicationMode & PROCESS_USER_MODE)
-						{
-							printf("\n --EPOCH--: %d\n\n",mp5Parameters.selectedEpochs[epochNumber]);
-							fflush(stdout);
-						}
 
 						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
 
-						countMeanSignalOverChannelsInOneEpoch(&mp5Parameters);
-						mp5Parameters.singleChannelSignalTable = *(mp5Parameters.meanSignalTable);
-
-						firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-						nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-						    goto ERROR_PROCEDURE;
-
-						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+						if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
-
-						resetDictionary(&dictionary);
 					}
-				}
-		    }
-		    else if(mp5Parameters.MPType & MMP22)
-		    {				
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
-
-					// if(applicationMode & PROCESS_SERVER_MODE)
-					// {
-						// printf("EPOCH  %hu\n",epochNumber);
-						// fflush(stdout);
-					// }
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					// if(applicationMode & PROCESS_USER_MODE)
-					// {
-						// printf("\n --EPOCH--: %d\n\n",mp5Parameters.chosenEpochs[epochNumber]);
-						// fflush(stdout);
-					// }
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-					countMeanSignalOrResidumOverChannelsAndTrials(&mp5Parameters);
-
-					mp5Parameters.singleChannelSignalTable = *(mp5Parameters.meanSignalTable);
-					firstIterationSMPMMP2(&dictionary,&mp5Parameters);
-					nextIterationSMPMMP2(&dictionary,&mp5Parameters);
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-				}
-			}
-		    else if(mp5Parameters.MPType & MMP3)
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
-
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
+					else if((mp5Parameters.MPType & MMP23) || (mp5Parameters.MPType & MMP32))
 					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
+						printf("Obliczam MMP23 || MMP32\n");
+						firstIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
+						nextIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
 
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
+						if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
-
-						if(applicationMode & PROCESS_USER_MODE)
-						{
-							printf("\n --EPOCH--: %d\n\n",mp5Parameters.selectedEpochs[epochNumber]);
-							fflush(stdout);
-						}
 
 						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
 
-						firstIterationMMP(&dictionary,&mp5Parameters);
-						nextIterationMMP(&dictionary,&mp5Parameters);
-
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
+						if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
 							goto ERROR_PROCEDURE;
-
-						resetDictionary(&dictionary);
 					}
-				}
-				if(mp5Parameters.reinitDictionary &  REINIT_IN_EPOCH_DOMAIN)
-				{
-
-					for(epochNumber=0;epochNumber<mp5Parameters.numberOfSelectedEpochs;epochNumber++)
-					{
-						if(applicationMode & PROCESS_SERVER_MODE)
-						{
-							printf("EPOCH  %hu\n",epochNumber);
-							fflush(stdout);
-						}
-
-						/* create dicionary */
-						reinitDictionary(&dictionary,&mp5Parameters);
-
-						/* test atom's feature, for example find INCORRECT atoms */
-//						testAtomFeature(&dictionary);
-
-						if(readDataFileOneTrial(&mp5Parameters,mp5Parameters.selectedEpochs[epochNumber],infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						if(applicationMode & PROCESS_USER_MODE)
-						{
-							printf("\n --EPOCH--: %d\n\n",mp5Parameters.selectedEpochs[epochNumber]);
-							fflush(stdout);
-						}
-
-						mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-						firstIterationMMP(&dictionary,&mp5Parameters);
-						nextIterationMMP(&dictionary,&mp5Parameters);
-
-						if(writeMMPResults(&dictionary,&mp5Parameters,epochNumber,infoMessage)==ERROR)
-							goto ERROR_PROCEDURE;
-
-						resetDictionary(&dictionary);
-					}
-				}
-			}
-			else if((mp5Parameters.MPType & MMP32) || (mp5Parameters.MPType & MMP23))
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-					fflush(stdout);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-	                // testAtomFeature(&dictionary);
-					// if(applicationMode & PROCESS_SERVER_MODE)
-					// {
-					// printf("EPOCH  %hu\n",epochNumber);
-					// fflush(stdout);
-					// }
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					// if(applicationMode & PROCESS_USER_MODE)
-					// {
-					// printf("\n --EPOCH--: %d\n\n",mp5Parameters.chosenEpochs[epochNumber]);
-					// fflush(stdout);
-					// }
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					firstIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
-					nextIterationMultiChannelMultiTrial(&dictionary,&mp5Parameters);
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-				}
-			}
-			else if(mp5Parameters.MPType & MMP33)
-		    {
-				if(applicationMode & PROCESS_SERVER_MODE)
-				{
-
-					printf("\nSTART\t%hu\t%hu\t%u\t%6.2f\n",mp5Parameters.numberOfSelectedEpochs,
-															mp5Parameters.numberOfSelectedChannels,
-															mp5Parameters.maximalNumberOfIterations,
-															mp5Parameters.energyPercent);
-					fflush(stdout);
-				}
-
-
-				if(mp5Parameters.reinitDictionary & NO_REINIT_AT_ALL)
-				{
-					/* create dicionary */
-					makeDictionary(&dictionary,&mp5Parameters);
-
-					/* test atom's feature, for example find INCORRECT atoms */
-//					testAtomFeature(&dictionary);
-
-					// if(applicationMode & PROCESS_SERVER_MODE)
-					// {
-						// printf("EPOCH  %hu\n",epochNumber);
-						// fflush(stdout);
-					// }
-
-					if(readDataFileMultiTrial(&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
-					// if(applicationMode & PROCESS_USER_MODE)
-					// {
-						// printf("\n --EPOCH--: %d\n\n",mp5Parameters.chosenEpochs[epochNumber]);
-						// fflush(stdout);
-					// }
-
-					mp5Parameters.multiChannelSignalTable = mp5Parameters.processedDataMatrix;
-
-					firstIterationMMP(&dictionary,&mp5Parameters);
-					nextIterationMMP(&dictionary,&mp5Parameters);
-
-					if(writeMMPMultiTrialResults(&dictionary,&mp5Parameters,infoMessage)==ERROR)
-						goto ERROR_PROCEDURE;
-
 				}
 			}
 		}
+
     }
 
     freeConfigFile(&configFile);

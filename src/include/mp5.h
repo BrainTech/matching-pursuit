@@ -33,7 +33,7 @@
 	void makeSinCosExpTable(const Dictionary *dictionary, MP5Parameters *mp5Parameters);
 	void normAtomTable(const Dictionary *dictionary, const MP5Parameters *mp5Parameters, Atom *atom);
 	void makeSinCosExpAtomTable(const Dictionary *dictionary, MP5Parameters *mp5Parameters, const Atom *atom);
-	void makeAtomTable(MP5Parameters *mp5Parameters, const Atom *atom, unsigned short int channelNumber);
+	double makeAtomTable(double *atomTable, MP5Parameters *mp5Parameters, const Atom *atom, unsigned short int channelNumber);
 	double findSignalEnergy(const double *signalTable, unsigned int offsetExpandedDimension);
 	void findResidue(double *residueTable, const double *atomTable, double modulus, unsigned int offsetExpandedDimension);
 	STATUS returndAmplitudeAndModulus(const Atom *atom, float *amplitude, float *modulus, unsigned short int channelNumber, char *info);
@@ -41,6 +41,7 @@
 	STATUS findUnknowPhaseDI(Atom *currentAtom, double *modulus, unsigned int channelNumber);
 	STATUS findUnknowPhaseAM(Atom *currentAtom, double *modulus, unsigned int numberOfAnalysedChannels);
 	void findGaborDataDotProductFFT(const Dictionary *dictionary, const MP5Parameters *mp5Parameters, Atom *currentGabor, const double *dataTable, unsigned short int channelNumber, unsigned char mode);
+	double findModulusL1(Dictionary *dictionary, MP5Parameters *mp5Parameters,Atom *atom);
 	double findLambda(double residueEnergy);
 
 #endif

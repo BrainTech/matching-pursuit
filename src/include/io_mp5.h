@@ -52,5 +52,5 @@
 	STATUS writeMMPMultiTrialResults(Dictionary *dictionary, MP5Parameters *mp5Parameters, char *infoMessage);
 	void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary *dictionary, Atom *atom, float *amplitude, float *modulus, unsigned int channelNumber);
 	void printInformationAboutProgress(MP5Parameters *mp5Parameters, Progress *progress, unsigned int atomsCounter);
-	
+
 #endif

@@ -33,5 +33,6 @@
 	void copyAtom(const Atom *sourceAtom, Atom *copyAtom, unsigned short int numberOfAllocatedChannels);
 	void printFitedAtoms(const MP5Parameters *mp5Parameters, const Dictionary *dictionary, Atom *atom, char where, unsigned short int orderIndex);
 
+
 #endif
 

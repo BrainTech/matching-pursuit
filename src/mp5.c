@@ -180,18 +180,22 @@ static double findGaussGaussInterval(const Dictionary *dictionary,
 									 unsigned int *intervalCenter,
 									 unsigned int *intervalRange)
 {
+	const double energyError = dictionary->energyError;
 	unsigned int currentAtomPosition = currentAtom->position;
 	double currentAtomScale    = *(dictionary->tableOfScalesInOptimalDictionary + currentAtom->scaleIndex);
 
 	unsigned int previousAtomPosition = previousAtom->position;
-	double  previousAtomScale    = *(dictionary->tableOfScalesInOptimalDictionary + previousAtom->scaleIndex);
+	double  previousAtomScale         = *(dictionary->tableOfScalesInOptimalDictionary + previousAtom->scaleIndex);
 
 	const double sqrPreviousAtomScale = previousAtomScale*previousAtomScale;
 	const double sqrCurrentAtomScale  = currentAtomScale*currentAtomScale;
 	const double newScale = sqrPreviousAtomScale + sqrCurrentAtomScale;
 
-	double K = -((M_PI*((previousAtomPosition - currentAtomPosition)*(previousAtomPosition - currentAtomPosition)))/newScale);
+	double K = SQR2/(energyError*energyError);
 
+	K = K + log(sqrt((sqrPreviousAtomScale*sqrCurrentAtomScale)/(4.0*(sqrPreviousAtomScale + sqrCurrentAtomScale))));
+	K = K - ((M_PI*((previousAtomPosition - currentAtomPosition)*(previousAtomPosition - currentAtomPosition)))/newScale);
+	
 	if(K>=LOG_EPS_DOT_PRODUCT)
 	{
 		*intervalCenter = marginalSize + (unsigned int)(0.5 + (currentAtomPosition*sqrPreviousAtomScale + previousAtomPosition*sqrCurrentAtomScale)/newScale);
@@ -412,13 +416,22 @@ static void makeOneSinCosTable(double omega, double *sinTable, double *cosTable,
     }
 }
 
-static void makeOneExpTable(double alpha, double *expTable, unsigned int exponensTableSize)
+static void makeOneGaussTable(double alpha, double *gaussTable, unsigned int gaussTableSize)
 {
     unsigned int sample;
 
-    for(sample = 0;sample<exponensTableSize;sample++)
+    double const constAlpha  = exp(-alpha);
+    double const const2Alpha = exp(-2*alpha);
+	double expValue = 1.0;
+
+    gaussTable[0] = 1.0;
+    gaussTable[1] = constAlpha;
+
+    for(sample = 2;sample<gaussTableSize;sample++)
     {
-		*(expTable + sample) = exp(-(alpha*sample)*sample);
+		expValue = expValue*const2Alpha;
+        *(gaussTable + sample) = (*(gaussTable + sample - 1))*expValue*constAlpha;
+		//*(expTable + sample) = exp(-(alpha*sample)*sample);
     }
 }
 
@@ -597,65 +610,72 @@ void setNumberOfAnalysedChannelsAndNumberOfResultsFiles(MP5Parameters *mp5Parame
 	/*
 		numberOfChannelsIndataFile -> total number of channels in file with data. The same value for all algorithms.
 		numberOfSelectedChannels   -> selected channels, which will be analysed by mp5. The same value for all algorithms.
-		numberOfAllocatedChannels  -> the number of channels, for which memory is allocated during directly processing. Not the same value for all algorithms:
+		numberOfAllocatedChannels  -> the number of channels, for which memory is allocated during directly processing + 1 (the last channel is used as tmp).
+									  Not the same value for all algorithms.
 		numberOfAnalysedChannels   -> the number of channels, wich are directly analysed by mp5. Not the same value for all algorithms:
 	*/
 
 	if(mp5Parameters->MPType & SMP)
 	{
-		mp5Parameters->numberOfAnalysedChannels      = mp5Parameters->numberOfAllocatedChannels = 1;
+		mp5Parameters->numberOfAnalysedChannels  = 1;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfAnalysedChannels + 1;
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
 	}
 	else if(mp5Parameters->MPType & MMP1)
 	{
-		mp5Parameters->numberOfAnalysedChannels = mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
+		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfAnalysedChannels + 1;
 	}
 	else if(mp5Parameters->MPType & MMP2)
 	{
-		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfSelectedChannels;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfSelectedChannels + 1;
 		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
 	}
 	else if(mp5Parameters->MPType & MMP3)
 	{
-		mp5Parameters->numberOfAnalysedChannels = mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfSelectedChannels + 1;
+		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels;
 	}
 	else if(mp5Parameters->MPType & MMP11)
 	{
-		mp5Parameters->numberOfAnalysedChannels = mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
+		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
+		mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfAnalysedChannels + 1;
 	}
 	else if ((mp5Parameters->MPType & MMP12))
 	{
-		mp5Parameters->numberOfAnalysedChannels = mp5Parameters->numberOfAllocatedChannels = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAnalysedChannels      = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAllocatedChannels     = mp5Parameters->numberOfAnalysedChannels + 1;
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
 	}
 	else if ((mp5Parameters->MPType & MMP21))
 	{
-		mp5Parameters->numberOfAnalysedChannels      = 1;
-		mp5Parameters->numberOfAllocatedChannels     = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAnalysedChannels      = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAllocatedChannels     = mp5Parameters->numberOfAnalysedChannels + 1;
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
 	}
 	else if ((mp5Parameters->MPType & MMP22))
 	{
 		mp5Parameters->numberOfAnalysedChannels  = mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
-		mp5Parameters->numberOfAllocatedChannels = 1;		
+		mp5Parameters->numberOfAllocatedChannels = 2;
 	}
 	else if ((mp5Parameters->MPType & MMP23))
 	{
-		mp5Parameters->numberOfAnalysedChannels = 1;
-		mp5Parameters->numberOfAllocatedChannels     = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAnalysedChannels 	 = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAllocatedChannels 	 =  mp5Parameters->numberOfAnalysedChannels + 1;
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
 	}
 	else if ((mp5Parameters->MPType & MMP32))
 	{
-		mp5Parameters->numberOfAnalysedChannels      = mp5Parameters->numberOfAllocatedChannels = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAnalysedChannels      = max(mp5Parameters->numberOfSelectedChannels,mp5Parameters->numberOfSelectedEpochs);
+		mp5Parameters->numberOfAllocatedChannels     = mp5Parameters->numberOfAnalysedChannels + 1;
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
 	}
 	else if ((mp5Parameters->MPType & MMP33))
 	{
 		mp5Parameters->numberOfReadChannelsAndEpochs = mp5Parameters->numberOfSelectedChannels*mp5Parameters->numberOfSelectedEpochs;
-		mp5Parameters->numberOfAnalysedChannels      = mp5Parameters->numberOfAllocatedChannels = mp5Parameters->numberOfReadChannelsAndEpochs;
+		mp5Parameters->numberOfAnalysedChannels      = mp5Parameters->numberOfReadChannelsAndEpochs;
+		mp5Parameters->numberOfAllocatedChannels     = mp5Parameters->numberOfAnalysedChannels + 1;
 	}
-
 }
 
 void setMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameters)
@@ -679,9 +699,9 @@ void setMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameters
 	dSetVectorZero(mp5Parameters->zeroSignalTable,epochExpandedSize);
     mp5Parameters->gaussSignalTable    = dVectorAllocate(epochExpandedSize);
 
-    mp5Parameters->fitted             = createQueue();
-	mp5Parameters->bestModulusesTable = dVectorAllocate(numberOfAnalysedChannels);
-    mp5Parameters->bestPhasesTable    = fVectorAllocate(numberOfAnalysedChannels);
+    mp5Parameters->fitted               = createQueue();
+	mp5Parameters->bestModulusesTableL2 = dVectorAllocate(numberOfAnalysedChannels);
+    mp5Parameters->bestPhasesTable      = fVectorAllocate(numberOfAnalysedChannels);
 
     mp5Parameters->signalEnergyInEachChannel  = dVectorAllocate(numberOfReadChannelsAndEpochs);
     mp5Parameters->residueEnergyInEachChannel = dVectorAllocate(numberOfReadChannelsAndEpochs);
@@ -692,11 +712,11 @@ void setMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameters
 	if((MPType & MMP12) || (MPType & MMP21) || (MPType & MMP23) || (MPType & MMP32))
 	    mp5Parameters->meanSignalTable  = dMatrixAllocate(numberOfAnalysedChannels,epochExpandedSize);
 	else if((MPType & MMP2) || (MPType & MMP22))
-    	mp5Parameters->meanSignalTable  = dMatrixAllocate(numberOfAllocatedChannels,epochExpandedSize);
+		mp5Parameters->meanSignalTable  = dMatrixAllocate(numberOfAllocatedChannels,epochExpandedSize);
 
     mp5Parameters->prevAtomTable  = dMatrixAllocate(numberOfAllocatedChannels,epochExpandedSize);
 
-    /* sin/cos function are build for each scale */
+	/* sin/cos function are build for each scale */
 
     mp5Parameters->sinTable = dVariableMatrixAllocate(numberOfStepsInScale,tableOfPeriodsInOptimalDictionary);
     mp5Parameters->cosTable = dVariableMatrixAllocate(numberOfStepsInScale,tableOfPeriodsInOptimalDictionary);
@@ -710,6 +730,12 @@ void setMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameters
 
 	mp5Parameters->sinAtomTable = dVectorAllocate(epochExpandedSize);
 	mp5Parameters->cosAtomTable = dVectorAllocate(epochExpandedSize);
+
+	if(mp5Parameters->normType & L1)
+	{
+		mp5Parameters->tmpAtomTable    = dVectorAllocate(epochExpandedSize);
+		mp5Parameters->tmpResidueTable = dVectorAllocate(epochExpandedSize);
+	}
 
 }
 
@@ -757,8 +783,8 @@ void freeMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameter
 	if(mp5Parameters->expTable!=NULL)
 		dMatrixFree(mp5Parameters->expTable);
 
-	if(mp5Parameters->bestModulusesTable!=NULL)
-		dVectorFree(mp5Parameters->bestModulusesTable);
+	if(mp5Parameters->bestModulusesTableL2!=NULL)
+		dVectorFree(mp5Parameters->bestModulusesTableL2);
 
 	if(mp5Parameters->bestPhasesTable!=NULL)
 		fVectorFree(mp5Parameters->bestPhasesTable);
@@ -780,6 +806,12 @@ void freeMP5Parameters(const Dictionary *dictionary, MP5Parameters *mp5Parameter
 
 	if(mp5Parameters->gaussSignalTable!=NULL)
 		dVectorFree(mp5Parameters->gaussSignalTable);
+
+	if(mp5Parameters->tmpAtomTable!=NULL)
+		dVectorFree(mp5Parameters->tmpAtomTable);
+
+	if(mp5Parameters->tmpResidueTable!=NULL)
+		dVectorFree(mp5Parameters->tmpResidueTable);
 
 	freeQueue(mp5Parameters->fitted,(void (*)(void *))freeAtom);
 }
@@ -821,7 +853,7 @@ void makeSinCosExpTable(const Dictionary *dictionary, MP5Parameters *mp5Paramete
 
 		alpha = M_PI/(scale*scale);
 
-		makeOneExpTable(alpha,expTable,exponensTableSize);
+		makeOneGaussTable(alpha,expTable,exponensTableSize);
     }
 
 	if(applicationMode & PROCESS_USER_MODE)
@@ -968,6 +1000,7 @@ void makeSinCosExpAtomTable(const Dictionary *dictionary,
     {
 		double expVal;
 
+
 		resample = findStartResample(firstStart,rifling,commonPeriod);
 
 		sincos(0.0,&basicSin,&basicCos);
@@ -1071,7 +1104,7 @@ void normAtomTable(const Dictionary *dictionary, const MP5Parameters *mp5Paramet
     findKSKCKMVariables(mp5Parameters,dictionary,atom,firstStart,firstStop,secondStart,secondStop);
 }
 
-void makeAtomTable(MP5Parameters *mp5Parameters, const Atom *atom, unsigned short int channelNumber)
+double makeAtomTable(double *atomTable, MP5Parameters *mp5Parameters, const Atom *atom, unsigned short int channelNumber)
 {
     unsigned int sample;
     const unsigned int epochExpandedSize = mp5Parameters->epochExpandedSize;
@@ -1079,7 +1112,8 @@ void makeAtomTable(MP5Parameters *mp5Parameters, const Atom *atom, unsigned shor
     const double *cosAtomTable = mp5Parameters->cosAtomTable;
     const double *sinAtomTable = mp5Parameters->sinAtomTable;
 
-    double *prevAtomTable = *(mp5Parameters->prevAtomTable + channelNumber);
+    const double RS = *(atom->RS + channelNumber);
+    const double RC = *(atom->RC + channelNumber);
 
     double KS = atom->KS;
     double KC = atom->KC;
@@ -1088,6 +1122,7 @@ void makeAtomTable(MP5Parameters *mp5Parameters, const Atom *atom, unsigned shor
     const double phase = *(atom->phase + channelNumber);
 
     double amplitude;
+	double modulus;
     double sinPhase, cosPhase;
 
     sincos(phase,&sinPhase,&cosPhase);
@@ -1098,8 +1133,12 @@ void makeAtomTable(MP5Parameters *mp5Parameters, const Atom *atom, unsigned shor
 
     amplitude = sqrt((sinPart + cosPart) - sinCosPart);
 
+	modulus = (RC*cosPhase - RS*sinPhase)/amplitude;
+
     for(sample=0;sample<epochExpandedSize;sample++)
-		*(prevAtomTable + sample) = ((*(cosAtomTable + sample))*cosPhase - (*(sinAtomTable + sample))*sinPhase)/amplitude;
+		*(atomTable + sample) = ((*(cosAtomTable + sample))*cosPhase - (*(sinAtomTable + sample))*sinPhase)/amplitude;
+
+	return modulus;
 
 }
 
@@ -1114,7 +1153,7 @@ double findSignalEnergy(const double *signalTable, unsigned int epochExpandedSiz
     return energy;
 }
 
-void findResidue(double *residueTable, const double *atomTable, double modulus, unsigned int epochExpandedSize)
+void findResidue(double *residueTable, const double *atomTable, const double modulus, unsigned int epochExpandedSize)
 {
     unsigned int sample;
 
@@ -1139,7 +1178,7 @@ void findAtomDataDotProduct(const Dictionary *dictionary,
     unsigned       int secondStop  = 0;
 
     double RS, RC;
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
 
     Atom *previousAtom = mp5Parameters->previousAtom;
 
@@ -1233,8 +1272,8 @@ void findAtomDataDotProduct(const Dictionary *dictionary,
 	}
 	else
 	{
-		RS = (*(currentAtom->RS + channelNumber)) - (*(bestModulusesTable + channelNumber))*RS;
-		RC = (*(currentAtom->RC + channelNumber)) - (*(bestModulusesTable + channelNumber))*RC;
+		RS = (*(currentAtom->RS + channelNumber)) - (*(bestModulusesTableL2 + channelNumber))*RS;
+		RC = (*(currentAtom->RC + channelNumber)) - (*(bestModulusesTableL2 + channelNumber))*RC;
 
 		*(currentAtom->RS + channelNumber) = (float)RS;
 		*(currentAtom->RC + channelNumber) = (float)RC;
@@ -1568,7 +1607,7 @@ void findGaborDataDotProductFFT(const Dictionary *dictionary,
     fftw_complex *fftTableOut = mp5Parameters->fftTableOut;
 	fftw_plan    fftwPlan     = mp5Parameters->fftwPlan;
 
-    double *bestModulusesTable = mp5Parameters->bestModulusesTable;
+    double *bestModulusesTableL2 = mp5Parameters->bestModulusesTableL2;
 
 	double *expTable         = *(mp5Parameters->expTable + atomsFamilyScaleIndex);
 	double *gaussSignalTable = mp5Parameters->gaussSignalTable;
@@ -1666,7 +1705,7 @@ void findGaborDataDotProductFFT(const Dictionary *dictionary,
 
 		gaborDotProductUpdateFFT(atomsFamily,
 								 fftTableOut,
-								 bestModulusesTable,
+								 bestModulusesTableL2,
 								 numberOfStepsInFrequencyAtParticularScale,
 								 multiple,
 								 atomsFamilyPositionInExpandedSignal,
@@ -1684,7 +1723,7 @@ void findGaborDataDotProductFFT(const Dictionary *dictionary,
 		{
 			gaborDotProductUpdateFFT(atomsFamily,
 									fftTableOut,
-									bestModulusesTable,
+									bestModulusesTableL2,
 									numberOfStepsInFrequencyAtParticularScale,
 									multiple,
 									atomsFamilyPositionInExpandedSignal,
@@ -1760,6 +1799,11 @@ STATUS findUnknowPhaseDI(Atom *atom, double *modulus, unsigned int channelNumber
 
     *(atom->phase + channelNumber) = (float)phase;
 
+//	printf(" kana³ DI:   %u \n",channelNumber);
+//	printf(" phase DI:   %f \n",*(atom->phase + channelNumber));
+//	printf(" modulus DI: %f \n\n",*modulus);
+
+
     return SUCCESS;
 }
 
@@ -1789,6 +1833,8 @@ STATUS findUnknowPhaseAM(Atom *atom, double *modulusTable, unsigned int numberOf
 		}
 
 		const double tmpPhase = atan2(tmpSumY,tmpSumX)/2.0;
+
+//		printf(" wspolna faza: %f \n",tmpPhase);
 		
 		for(channel=0;channel<numberOfAnalysedChannels;channel++)
 		{
@@ -1854,3 +1900,41 @@ STATUS findUnknowPhaseAM(Atom *atom, double *modulusTable, unsigned int numberOf
     return SUCCESS;
 }
 
+double findModulusL1(Dictionary *dictionary, MP5Parameters *mp5Parameters,Atom *atom)
+{
+	double l1Minimum = 0.0;
+    unsigned short int channel;
+	unsigned int sample;
+
+    const unsigned int numberOfAnalysedChannels = mp5Parameters->numberOfAnalysedChannels;
+    const unsigned int epochExpandedSize        = mp5Parameters->epochExpandedSize;
+    double *residueTable = mp5Parameters->tmpResidueTable;
+    double **signalTable = NULL;
+    double *atomTable    = mp5Parameters->tmpAtomTable;
+    double modulus;
+
+	if(mp5Parameters->MPType & SMP)
+	    signalTable = &(mp5Parameters->singleChannelSignalTable);
+	else
+		signalTable = mp5Parameters->multiChannelSignalTable;
+
+	makeSinCosExpAtomTable(dictionary,mp5Parameters,atom);
+
+	for(channel=0;channel<numberOfAnalysedChannels;channel++)
+	{
+		memcpy((void *)residueTable,(void *)(*(signalTable + channel)),epochExpandedSize*sizeof(double));
+		modulus = makeAtomTable(atomTable,mp5Parameters,atom,channel);
+
+//		printf(" kanal   L1: %u\n",channel);
+//		printf(" modulus L1: %f\n",modulus);
+//		printf(" phase   L1: %f\n\n",*(atom->phase + channel));
+
+		findResidue(residueTable,atomTable,modulus,epochExpandedSize);
+
+		for(sample = 0;sample<epochExpandedSize;sample++)
+			l1Minimum = l1Minimum + fabs(*(residueTable + sample));
+	}
+
+	return l1Minimum;
+
+}

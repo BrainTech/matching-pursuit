@@ -26,9 +26,8 @@
 
 	void firstIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters);
 	void nextIterationMMP(Dictionary *dictionary, MP5Parameters *mp5Parameters);
-	void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *mp5Parameters);
-	void firstAndNextIterationMMP4(Dictionary *dictionary, MP5Parameters *mp5Parameters);
-	void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *mp5Parameters);
 
+	void firstIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *mp5Parameters);
+	void nextIterationMultiChannelMultiTrial(Dictionary *dictionary, MP5Parameters *mp5Parameters);
 
 #endif

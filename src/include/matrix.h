@@ -36,6 +36,10 @@
     void dVariableMatrixFree(double **matrix, unsigned int numberOfRows);
     void dVariableSetMatrixZero(double **matrix, unsigned int numberOfRows, unsigned int *tableOfNumbersOfColumns);
 
+	/* unsigned int matrix operation */
+	unsigned int **uiMatrixAllocate(unsigned int numberOfRows, unsigned int numberOfColumns);
+	void uiMatrixFree(unsigned int **matrix);
+	void uiSetMatrixZero(unsigned int **matrix, unsigned int numberOfRows, unsigned int numberOfColumns);
 	/* float matrix operation */
 
 	float **fMatrixAllocate(unsigned int numberOfRows, unsigned int numberOfColumns);
@@ -43,8 +47,7 @@
 	void fSetMatrixZero(float **matrix, unsigned int numberOfRows, unsigned int numberOfColumns);
 
 	/* operation on matrixes */
-
-	void countMeanSignalOverChannelsInOneEpoch(MP5Parameters *mp5Parameters);
+	void countMeanSignalOverChannelsInSingleEpoch(MP5Parameters *mp5Parameters);
 	void countMeanSignalOrResidumOverChannelsAndTrials(MP5Parameters *mp5Parameters);
 	void countMeanSignalOrResidumOverChannels(MP5Parameters *mp5Parameters, double **multiChannelSignalTable);
 	void countMeanSignalOrResidumOverEpochs(MP5Parameters *mp5Parameters, double **multiChannelSignalTable);

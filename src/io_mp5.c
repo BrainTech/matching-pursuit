@@ -61,15 +61,14 @@ struct ErrorCodeAndText
 {ARGUMENT_SHOUDL_BE_INTEGER_GREATER_OR_EQUAL_TO_ZERO,"error.mp5executable.argumentShouldBeIntegerGraterOrEqualToZero","The argument {0} in line #{1} of config file should be integer>=0"},
 {ARGUMENT_SHOUDL_BE_INTEGER_GREATER_TO_ZERO,         "error.mp5executable.argumentShouldBeIntegerGraterToZero",       "The argument {0} in line #{1} of config file shuold be integer>0"},
 {ARGUMENT_SHOUDL_BE_FLOAT_GREATER_OR_EQUAL_TO_ZERO,  "error.mp5executable.argumentShouldBeFloatGraterOrEqualToZero",  "The argument {0} in line #{1} of config file should be float>=0.0"},
-{ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ZERO,           "error.mp5executable.argumentShouldBeIntegerGraterZero",         "The argument {0} in line #{1} of config file should be float>0.0"},
-{ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE,            "error.mp5executable.argumentShouldBeIntegerGraterToOne",        "The argument {0} in line #{1} of config file should be float>1.0"},
+{ARGUMENT_SHOUDL_BE_FLOAT,                           "error.mp5executable.argumentShouldBeFloat",                     "The argument {0} in line #{1} of config file should be float"},
+{ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ZERO,           "error.mp5executable.argumentShouldBeFloatGraterZero",           "The argument {0} in line #{1} of config file should be float>0.0"},
+{ARGUMENT_SHOUDL_BE_FLOAT_GREATER_TO_ONE,            "error.mp5executable.argumentShouldBeFloatGraterToOne",          "The argument {0} in line #{1} of config file should be float>1.0"},
+{ARGUMENT_SHOUDL_BE_FLOAT_BETWEEN_ZERO_AND_ONE,      "error.mp5executable.argumentShouldBeBetweenZeroAndOne",         "The argument {0} in line #{1} of config file should be float in range (0.0 1.0)"},
 {CAN_NOT_OPEN_DIRECTORY,                             "error.mp5executable.badConfigFile",                             "Failed to open config file {0}"},
 {OVERWRITE_RESULTS_ALARM,                            "error.mp5executable.overwriteResultsAlarm",                     "You are trying to overwrite file {0} with results"},
 {BAD_NUMBER_OF_SELECTED_CHANNELS,                    "error.mp5executable.badNumberOfSelectedChannels",               "The number of declared selected channel - {0} is greater then number of channels - {1} in file {2}"},
 {BAD_NUMBER_OF_SELECTED_EPOCHS,                      "error.mp5executable.badNumberSelectedEpochs",                   "The number of declared selected epochs - {0} is greater then number of epochs - {1} in file {2}"},
-{BAD_PERIOD_DENSITY_EQUAL,                           "error.mp5executable.badPeriodDensityEqual",                     "If the type of dictionary is set to OCTAVE_STOCH the argument of periodDenstiy must be > 1"},
-{BAD_PERIOD_DENSITY_GREATER,                         "error.mp5executable.badPeriodDensityGreater",                   "If the type of dictionary is set to OCTAVE_FIXED there is no need to set periodDensity > 1"},
-{BAD_PERIOD_DENSITY_GREATER_FFT,                     "error.mp5executable.badPeriodDensityGreater",                   "If the type of dictionary is set to OCTAVE_STOCH, but FFT is set on there is no need to set periodDensity > 1"},
 {BAD_ENERGY_PERCENT,                                 "error.mp5executable.badEnergyPercent",                          "The value of argument energyPercent can not be greater or equal to 100 percent"},
 {BAD_REINIT_ALL,                                     "error.mp5executable.badReinitALL",                              "There is no sense to reinit dictionary with the same seed for eac epoch/channel"},
 {BAD_REINIT_MMP,                                     "error.mp5executable.badReinitMMP",                              "There is no sense to use Multichannel MP Algorithms and reinit dictionary in channel domain"},
@@ -578,7 +577,7 @@ void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary
 	double *prevAtomTable             = *(mp5Parameters->prevAtomTable + channelNumber);
 
 	makeSinCosExpAtomTable(dictionary,mp5Parameters,atom);
-	makeAtomTable(mp5Parameters,atom,channelNumber);
+	makeAtomTable(prevAtomTable,mp5Parameters,atom,channelNumber);
 
 	*modulus = 0.0;
 
@@ -587,7 +586,7 @@ void returnAmplitudeAndModulusForMMP2DI(MP5Parameters *mp5Parameters, Dictionary
 
 	findResidue(signalInParticularChannel,prevAtomTable,*modulus,epochExpandedSize);
 
-	makeAtomTable(mp5Parameters,atom,channelNumber);
+	makeAtomTable(prevAtomTable,mp5Parameters,atom,channelNumber);
 	*amplitude = (*modulus)/(2.0*sqrt((sinPart + cosPart) - sinCosPart));
 	
 }
@@ -933,7 +932,7 @@ void printInfoAboutData(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 	else if(mp5Parameters->MPType & MMP2)
 		printf("MULTICHANNEL MATCHING PURSUIT II\n");
 	else if(mp5Parameters->MPType & MMP22)
-		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT II\n");
+		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT II-II\n");
 	else if(mp5Parameters->MPType & MMP3)
 		printf("MULTICHANNEL MATCHING PURSUIT III\n");
 	else if(mp5Parameters->MPType & MMP23)
@@ -942,6 +941,7 @@ void printInfoAboutData(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT III-II\n");
     else if(mp5Parameters->MPType & MMP33)
 		printf("MULTICHANNEL MULTITRIAL MATCHING PURSUIT III-III\n");
+
     printf(" RESULTS WILL BE WRITTEN TO THE FOLLOWING FILE: \n");
 	printf("                                                %s\n",mp5Parameters->nameOfResultsFile);
 	if(mp5Parameters->FFT & ON)
@@ -1549,7 +1549,6 @@ static STATUS readBinaryData(MP5Parameters *mp5Parameters, unsigned short int ep
     return SUCCESS;
 }
 
-
 STATUS readDataFileOneTrial(MP5Parameters *mp5Parameters, unsigned short int epochNumber, char *infoMessage)
 {
     if(readBinaryData(mp5Parameters,epochNumber,0,infoMessage)==ERROR)
@@ -1578,7 +1577,7 @@ STATUS readDataFileMultiTrial(MP5Parameters *mp5Parameters, char *infoMessage)
 
         if(readBinaryData(mp5Parameters,selectedEpoch,epochOnset,infoMessage)==ERROR)
             return ERROR;
-			
+
 	}
 
     processRawData(mp5Parameters);

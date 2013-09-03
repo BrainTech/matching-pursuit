@@ -54,14 +54,14 @@
 			*__cosx = __cosr;
 	}
 
-	inline double in_atan2(double __y, double __x)
+/*	inline double in_atan2(double __y, double __x)
 	{
 		register long double __value;
 		__asm __volatile__("fpatan" : "=t" (__value) : "0" (__x), "u" (__y) : "st(1)");
 		return __value;
 	}
 
-	#define atan2(X,Y) in_atan2( (X), (Y))
+	#define atan2(X,Y) in_atan2( (X), (Y)) */
 
 #else
 	#define sincos(th,x,y) { (*(x))=sin(th); (*(y))=cos(th); }

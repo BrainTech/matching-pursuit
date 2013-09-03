@@ -756,7 +756,7 @@ STATUS findDataParametersInConfigFile(ConfigFile *configFile, Dictionary *dictio
 				return ERROR;
 			}
 
-			dictionary->energyError = (double)atof(parameterPosition);
+			dictionary->energyError = sqrt((double)atof(parameterPosition));
 			parameterPosition = (char *)strtok(NULL," \n\t\0");
 
 			if(!isReal(parameterPosition,"realgz"))

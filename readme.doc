@@ -1,19 +1,28 @@
-To compile fftw mp5 do:
-1. Go to lib/fftw-3.1.2 (cd lib/fftw-3.2.2)
-2. Print
+To compile FFTW for MP5 make following steps:
+---------------------------------------------
+1. Download source tarball from http://www.fftw.org
+2. Extract files from the archive to a separate directory (let's call it F)
+3. In directory F, run (in a terminal)
 
-make clean
-./configure --with-our-malloc16 --disable-shared --enable-static --disable-threads --enable-sse2
-print make
-go for coffe :-)
-
-2. Go to main directory (cd ../..)
-
-3. Print :
-rm src/.depands
-touch src/.depands
-make clean
-make dep
+./configure --with-our-malloc --enable-static --disable-shared \
+	--disable-threads --enable-sse2
 make
 
-4. Have a fun with mp5.
+4. Now you can go for a coffee :-]
+5. When compilation finishes, among the new files in the directory F
+should be a file named "libfftw3.a" or similarly. If it is not in the main
+directory, it should be in a hidden subdirectory ".libs".
+6. Move this file to a separate, empty directory. Remember its full path
+(e.g. /home/john/newdir/libfftw3.a) - let's call it A.
+
+To compile MP5 with your custom FFTW binary make following steps:
+---------------------------------------------------------------
+1. In the directory to which this file belongs, run following commands
+in a terminal, replacing [A] with the full path to FFTW binary built
+in the previous step:
+
+./configure --with-fftw3=[A]
+make
+
+3. That's it! MP5 executable (mp5) should be present in this directory.
+4. Have a fun with MP5.

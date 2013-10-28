@@ -21,6 +21,7 @@ To compile MP5 with your custom FFTW binary make following steps:
 in a terminal, replacing [A] with the full path to FFTW binary built
 in the previous step:
 
+./autogen.sh
 ./configure --with-fftw3=[A]
 make
 

@@ -35,8 +35,8 @@
 
 #define kiloByte 1024.0
 #define megaByte 1048576.0
-#define dOmegaCorrection (0.606)
-#define dUCorrection     (0.678)
+// #define dOmegaCorrection (0.606)
+// #define dUCorrection     (0.678)
 
 extern unsigned char applicationMode;
 
@@ -86,7 +86,7 @@ static double estimateDUInOptimalDictionary(double gaborScale, double dilationFa
 
 static double estimateDUInOptimalDictionary(double gaborScale, double energyError)
 {
-	const double constA = sqrt(-2.0*log(1.0 - 2.0*energyError*energyError)/M_PI);
+	const double constA = sqrt(-2.0*log(1.0 - energyError*energyError)/M_PI);
 	const double  dU = gaborScale*constA;
 	return dU < 1.0 ? 1.0: dU;
 }

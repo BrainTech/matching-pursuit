@@ -51,13 +51,12 @@ static void setPermuteTable(unsigned int *permuteTable, unsigned int numberOfAto
 static double estimateDilationFactor(double energyError)
 {
 	double a;
-	const double alpha = pow(2.0,1.5);
 	const double sqrEnergy = energyError*energyError;
-	const double firstTerm  = (1.0 - energyError*energyError);
-	const double secondTerm = (2.0*sqrEnergy*sqrEnergy - 2.0*energyError + 1);
-	const double thirdterm  = (1.0 - 2.0*sqrEnergy)*(1.0 - 2.0*sqrEnergy);
+	const double firstTerm  = (2.0 - sqrEnergy);
+	const double secondTerm = (sqrEnergy*sqrEnergy - 2.0*sqrEnergy + 2.0);
+	const double thirdterm  = (1.0 - sqrEnergy)*(1.0 - sqrEnergy);
 
-	a = (1.0 + alpha*sqrt(firstTerm*secondTerm))/thirdterm;
+	a = (1.0 + energyError*sqrt(firstTerm*secondTerm))/thirdterm;
 
 	return a;
 }

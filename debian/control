@@ -1,0 +1,20 @@
+Source: matching-pursuit
+Section: net
+Priority: extra
+Maintainer: Karol Auguštin <karol@augustin.pl>
+Build-Depends: debhelper (>= 8.0.0),
+      autoconf,
+      automake,
+      pkg-config,
+      libfftw3-dev
+Standards-Version: 3.9.3
+Vcs-Git: git://git.braintech.pl/matching_pursuit
+Vcs-Browser: http://git.braintech.pl/matching_pursuit
+
+Package: matching-pursuit
+Architecture: amd64 i386
+Depends:
+      ${misc:Depends},
+      ${shlibs:Depends}
+Description: Implementation of the Matching Pursuit algorithms
+  This is version 5 (MP5).

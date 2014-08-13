@@ -1,0 +1,31 @@
+matching-pursuit (5.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Change source to 3.0 (quilt).
+  * Updated energy error definition with sqrt (by RK).
+
+ -- Karol Auguštin <karol@augustin.pl>  Sun, 06 Oct 2013 12:13:08 +0200
+
+matching-pursuit (5.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Karol Auguštin <karol@augustin.pl>  Fri, 21 Jun 2013 11:07:26 +0200
+
+matching-pursuit (5-2) unstable; urgency=low
+
+  * Proper build for different architectures.
+
+ -- Karol Auguštin <karol@augustin.pl>  Sat, 22 Dec 2012 12:46:22 +0100
+
+matching-pursuit (5-1ubuntu1) precise; urgency=low
+
+  * Initial ubuntu package.
+
+ -- Karol Auguštin <karol@augustin.pl>  Sat, 29 Sep 2012 12:54:50 +0200
+
+matching-pursuit (5-1) unstable; urgency=low
+
+  * Initial debian package.
+
+ -- Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl>  Wed, 26 Sep 2012 17:24:44 +0200

@@ -1,3 +1,9 @@
+matching-pursuit (5.3-1) unstable; urgency=medium
+
+  * Updated dictionary construction.
+
+ -- Karol Auguštin <karol@augustin.pl>  Wed, 13 Aug 2014 11:29:10 +0200
+
 matching-pursuit (5.2-1) unstable; urgency=low
 
   * New upstream release.

@@ -1094,7 +1094,7 @@ void normAtomTable(const Dictionary *dictionary, const MP5Parameters *mp5Paramet
 									  &intervalCenter,
 							          &intervalRange);
 							          							          
-			unsigned int startInterval = intervalCenter - intervalRange;
+			unsigned int startInterval = (intervalCenter > intervalRange) ? intervalCenter - intervalRange :0;
 			unsigned int stopInterval  = intervalCenter + intervalRange;
 
 			findStartAndStopConditionsInLimitedRange(atomPosition + marginalSize,&startInterval,&stopInterval,&firstStart,&firstStop,&secondStart,&secondStop);						
@@ -1191,7 +1191,7 @@ void findAtomDataDotProduct(const Dictionary *dictionary,
 						  FULL_RANGE,&RS,&RC);
 
 	}
-	else if(((previousAtom!=NULL) & (previousAtom->feature & SINCOSWAVE)) || (currentAtom->feature & SINCOSWAVE))
+	else if(((previousAtom!=NULL) && (previousAtom->feature & SINCOSWAVE)) || (currentAtom->feature & SINCOSWAVE))
 	{
 			findStartAndStopConditionsInFullRange(currentAtom->position,marginalSize,exponensTableSize,&firstStart,&firstStop,&secondStart,&secondStop,currentAtom->feature);
 
@@ -1235,7 +1235,7 @@ void findAtomDataDotProduct(const Dictionary *dictionary,
 
 		if(K>=LOG_EPS_DOT_PRODUCT)
 		{
-			startInterval = intervalCenter - intervalRange;
+			startInterval = (intervalCenter > intervalRange) ? intervalCenter - intervalRange : 0;
 			stopInterval  = intervalCenter + intervalRange;
 
 			findStartAndStopConditionsInLimitedRange(currentAtomPosition + marginalSize,&startInterval,&stopInterval,&firstStart,&firstStop,&secondStart,&secondStop);
@@ -1301,7 +1301,16 @@ static void makeFFTTable(const double *signalTable,
 	else
 		*halfOfFFTSize = fftSize/2;
 
-	const double *shiftedSignalTable = signalTable + intervalCenter - *halfOfFFTSize;
+	int allocatedShiftedSignalTable = 0;
+	double *shiftedSignalTable;
+	if (intervalCenter < *halfOfFFTSize) {
+		unsigned int offset = *halfOfFFTSize - intervalCenter;
+		shiftedSignalTable = calloc(fftSize, sizeof (double));
+		dcopy(fftSize - offset, signalTable, 1, shiftedSignalTable + offset, 1);
+		allocatedShiftedSignalTable = 1;
+	} else {
+		shiftedSignalTable = (double*) signalTable + intervalCenter - *halfOfFFTSize;
+	}
 
 	if(mode & FIRST_ITERATION)
 	{
@@ -1361,12 +1370,12 @@ static void makeFFTTable(const double *signalTable,
 
 			if((fftSize%2)==0)
 			{
-				startInterval = intervalCenter - *halfOfFFTSize;
+				startInterval = (intervalCenter > *halfOfFFTSize) ? intervalCenter - *halfOfFFTSize : 0;
 				stopInterval  = intervalCenter + *halfOfFFTSize + 1;
 			}
 			else
 			{
-				startInterval = intervalCenter - *halfOfFFTSize;
+				startInterval = (intervalCenter > *halfOfFFTSize) ? intervalCenter - *halfOfFFTSize : 0;
 				stopInterval  = intervalCenter + *halfOfFFTSize;
 			}
 
@@ -1445,6 +1454,10 @@ static void makeFFTTable(const double *signalTable,
 
 			dxypz(fftSize,shiftedSignalTable,incx,gaussTable,incy,fftTableIn,incz);
 		}
+	}
+
+	if (allocatedShiftedSignalTable) {
+		free(shiftedSignalTable);
 	}
 }
 
@@ -1616,6 +1629,9 @@ void findGaborDataDotProductFFT(const Dictionary *dictionary,
 	unsigned int factor   = 0.0;
 	unsigned int multiple = 1;
 	unsigned int fftSize = *(dictionary->tableOfPeriodsInOptimalDictionary + atomsFamily->scaleIndex);
+	if (fftSize > mp5Parameters->fftTableSize) {
+		fftSize = mp5Parameters->fftTableSize;
+	}
 
 	if((mode & FIRST_ITERATION))
 	{
@@ -1685,6 +1701,9 @@ void findGaborDataDotProductFFT(const Dictionary *dictionary,
 				fftSize = multiple*fftSize;
 			}
 		}
+	}
+	if (fftSize > mp5Parameters->fftTableSize) {
+		fftSize = mp5Parameters->fftTableSize;
 	}
 
 	if(K>=LOG_EPS_DOT_PRODUCT)

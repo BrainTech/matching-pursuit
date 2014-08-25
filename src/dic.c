@@ -579,7 +579,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
             atomPointer = dictionary->diracAtomsTable;
 
 			for(atomNumber = 0;atomNumber<dictionary->numberOfInitialDiracFunctions;atomNumber++)
-				((atomPointer + atomNumber)->feature) & ~(STOCHASTIC_ATOM);
+				((atomPointer + atomNumber)->feature) &= ~(STOCHASTIC_ATOM);
 		}
 	}
 
@@ -627,7 +627,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
             atomPointer = dictionary->gaussAtomsTable;
 
 			for(atomNumber = 0;atomNumber<dictionary->numberOfInitialGaussFunctions;atomNumber++)
-				((atomPointer + atomNumber)->feature) & ~(STOCHASTIC_ATOM);
+				((atomPointer + atomNumber)->feature) &= ~(STOCHASTIC_ATOM);
 		}
 	}
 
@@ -684,7 +684,7 @@ void makeDictionary(Dictionary *dictionary, const MP5Parameters *mp5Parameters)
             atomPointer = dictionary->sinCosAtomsTable;
 
 			for(atomNumber = 0;atomNumber<dictionary->numberOfInitialSinCosFunctions;atomNumber++)
-				((atomPointer + atomNumber)->feature) & ~(STOCHASTIC_ATOM);
+				((atomPointer + atomNumber)->feature) &= ~(STOCHASTIC_ATOM);
 		}
 	}
 

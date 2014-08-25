@@ -473,7 +473,7 @@ void nextIterationSMPMMP2(Dictionary *dictionary, MP5Parameters *mp5Parameters)
 							{
 								modulusL1 = findModulusL1(dictionary,mp5Parameters,atom);
 
-								if(bestModulusUpdateL1(bestModulusL1,modulusL1));
+								if(bestModulusUpdateL1(bestModulusL1,modulusL1))
 								{
 									bestModulusL1 = modulusL1;
 									bestModulusL2 = modulusL2;
